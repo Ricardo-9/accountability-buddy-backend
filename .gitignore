@@ -1,0 +1,19 @@
+# Node
+node_modules/
+dist/
+.env
+
+# Prisma migrations data 
+prisma/migrations/**/node_modules/
+prisma/dev.db
+
+# DB dumps
+db/dumps/
+
+# Editor
+.vscode/
+.idea/
+*.log
+
+# OS
+.DS_Store
