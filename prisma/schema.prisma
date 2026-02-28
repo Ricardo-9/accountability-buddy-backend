@@ -57,22 +57,10 @@ enum RecipeSource {
 
 //BASE MODELS
 
-model User {
-  id        String   @id @db.Uuid
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  profile UserProfile?
-  areas   UserArea[]
-  fitness FitnessProfile?
-}
-
 model UserProfile {
-  id        String    @id @default(uuid()) @db.Uuid
-  userId    String    @unique @db.Uuid
+  id        String    @id @db.Uuid
   fullName  String
   birthDate DateTime?
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 }
@@ -81,7 +69,6 @@ model UserArea {
   id        String             @id @default(uuid()) @db.Uuid
   userId    String             @db.Uuid
   area      AccountabilityArea
-  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime           @default(now())
   updatedAt DateTime           @updatedAt
 
@@ -94,10 +81,9 @@ model FitnessProfile {
   userId    String        @unique @db.Uuid
   goal      String?
   heightCm  Int?
-  weightKg  Decimal?
+  weightKg  Decimal?      @db.Decimal(5, 2)
   injuries  String?
   level     FitnessLevel?
-  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
 }
