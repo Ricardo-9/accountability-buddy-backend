@@ -55,7 +55,7 @@ enum RecipeSource {
   USER
 }
 
-//BASE MODELS
+// BASE MODELS
 
 model UserProfile {
   id        String    @id @db.Uuid
@@ -86,4 +86,47 @@ model FitnessProfile {
   level     FitnessLevel?
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
+}
+
+// NUTRITION MODELS
+
+model NutritionProfile {
+  id String @id @default(uuid()) @db.Uuid
+  userId String @unique @db.Uuid
+  goal String?
+  heightCm Int?
+  weightKg Decimal? @db.Decimal(5, 2)
+  preference String?
+  allergies String?
+  waterGoalLiters Decimal? @db.Decimal(4, 2)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Diet {
+  id String @id @default(uuid()) @db.Uuid
+  userId String @db.Uuid
+  name String
+  structure Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Recipe {
+  id String @id @default(uuid()) @db.Uuid
+  userId String @db.Uuid
+  name String
+  ingredients String
+  preparation String
+  notes String?
+  source RecipeSource
+  editedByUser Boolean @default(false)
+  createdAt DateTime @default(now())
+}
+
+model WaterLog {
+  id String @id @default(uuid()) @db.Uuid
+  userId String @db.Uuid
+  amountMl Int
+  loggedAt DateTime
 }
