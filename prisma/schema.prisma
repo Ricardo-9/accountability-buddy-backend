@@ -91,42 +91,91 @@ model FitnessProfile {
 // NUTRITION MODELS
 
 model NutritionProfile {
-  id String @id @default(uuid()) @db.Uuid
-  userId String @unique @db.Uuid
-  goal String?
-  heightCm Int?
-  weightKg Decimal? @db.Decimal(5, 2)
-  preference String?
-  allergies String?
+  id              String   @id @default(uuid()) @db.Uuid
+  userId          String   @unique @db.Uuid
+  goal            String?
+  heightCm        Int?
+  weightKg        Decimal? @db.Decimal(5, 2)
+  preference      String?
+  allergies       String?
   waterGoalLiters Decimal? @db.Decimal(4, 2)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }
 
 model Diet {
-  id String @id @default(uuid()) @db.Uuid
-  userId String @db.Uuid
-  name String
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  name      String
   structure Json
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 model Recipe {
-  id String @id @default(uuid()) @db.Uuid
-  userId String @db.Uuid
-  name String
-  ingredients String
-  preparation String
-  notes String?
-  source RecipeSource
-  editedByUser Boolean @default(false)
-  createdAt DateTime @default(now())
+  id           String       @id @default(uuid()) @db.Uuid
+  userId       String       @db.Uuid
+  name         String
+  ingredients  String
+  preparation  String
+  notes        String?
+  source       RecipeSource
+  editedByUser Boolean      @default(false)
+  createdAt    DateTime     @default(now())
 }
 
 model WaterLog {
-  id String @id @default(uuid()) @db.Uuid
-  userId String @db.Uuid
+  id       String   @id @default(uuid()) @db.Uuid
+  userId   String   @db.Uuid
   amountMl Int
   loggedAt DateTime
+}
+
+// FINANCIAL MODELS
+
+model FinanceAccount {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @unique @db.Uuid
+  balance   Decimal  @db.Decimal(14, 2)
+  updatedAt DateTime @updatedAt
+}
+
+model FinancialGoal {
+  id            String        @id @default(uuid()) @db.Uuid
+  userId        String        @db.Uuid
+  deposit       GoalDeposit[]
+  name          String
+  durationValue Int
+  durationUnit  DurationUnit
+  style         InvestorStyle
+  initialAmount Decimal       @db.Decimal(14, 2)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+model FixedExpense {
+  id            String   @id @default(uuid()) @db.Uuid
+  userId        String   @db.Uuid
+  name          String
+  monthlyAmount Decimal  @db.Decimal(14, 2)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model VariableExpense {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @db.Uuid
+  name        String
+  amount      Decimal  @db.Decimal(14, 2)
+  expenseDate DateTime @db.Date
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model GoalDeposit {
+  id          String        @id @default(uuid()) @db.Uuid
+  goal        FinancialGoal @relation(fields: [goalId], references: [id])
+  goalId      String        @db.Uuid
+  amount      Decimal       @db.Decimal(14, 2)
+  depositDate DateTime      @db.Date
 }
