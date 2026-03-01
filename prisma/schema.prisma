@@ -55,33 +55,28 @@ enum RecipeSource {
   USER
 }
 
-//BASE MODELS
-
-model User {
-  id        String   @id @db.Uuid
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  profile UserProfile?
-  areas   UserArea[]
-  fitness FitnessProfile?
+enum Domain {
+  WORK
+  HOBBIES
+  SLEEP
+  LEASURE
 }
 
+// BASE MODELS
+
 model UserProfile {
-  id        String    @id @default(uuid()) @db.Uuid
-  userId    String    @unique @db.Uuid
+  id        String   @id @db.Uuid
   fullName  String
-  birthDate DateTime?
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  birthDate DateTime @db.Date
+  phone     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model UserArea {
   id        String             @id @default(uuid()) @db.Uuid
   userId    String             @db.Uuid
   area      AccountabilityArea
-  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime           @default(now())
   updatedAt DateTime           @updatedAt
 
@@ -94,10 +89,166 @@ model FitnessProfile {
   userId    String        @unique @db.Uuid
   goal      String?
   heightCm  Int?
-  weightKg  Decimal?
+  weightKg  Decimal?      @db.Decimal(5, 2)
   injuries  String?
   level     FitnessLevel?
-  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
+}
+
+// NUTRITION MODELS
+
+model NutritionProfile {
+  id              String   @id @default(uuid()) @db.Uuid
+  userId          String   @unique @db.Uuid
+  goal            String?
+  heightCm        Int?
+  weightKg        Decimal? @db.Decimal(5, 2)
+  preference      String?
+  allergies       String?
+  waterGoalLiters Decimal? @db.Decimal(4, 2)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Diet {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  name      String
+  structure Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Recipe {
+  id           String       @id @default(uuid()) @db.Uuid
+  userId       String       @db.Uuid
+  name         String
+  ingredients  String
+  preparation  String
+  notes        String?
+  source       RecipeSource
+  editedByUser Boolean      @default(false)
+  createdAt    DateTime     @default(now())
+}
+
+model WaterLog {
+  id       String   @id @default(uuid()) @db.Uuid
+  userId   String   @db.Uuid
+  amountMl Int
+  loggedAt DateTime
+}
+
+// FINANCIAL MODELS
+
+model FinanceAccount {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @unique @db.Uuid
+  balance   Decimal  @db.Decimal(14, 2)
+  updatedAt DateTime @updatedAt
+}
+
+model FinancialGoal {
+  id            String        @id @default(uuid()) @db.Uuid
+  userId        String        @db.Uuid
+  deposit       GoalDeposit[]
+  name          String
+  durationValue Int
+  durationUnit  DurationUnit
+  style         InvestorStyle
+  initialAmount Decimal       @db.Decimal(14, 2)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+model FixedExpense {
+  id            String   @id @default(uuid()) @db.Uuid
+  userId        String   @db.Uuid
+  name          String
+  monthlyAmount Decimal  @db.Decimal(14, 2)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model VariableExpense {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @db.Uuid
+  name        String
+  amount      Decimal  @db.Decimal(14, 2)
+  expenseDate DateTime @db.Date
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model GoalDeposit {
+  id          String        @id @default(uuid()) @db.Uuid
+  goal        FinancialGoal @relation(fields: [goalId], references: [id])
+  goalId      String        @db.Uuid
+  amount      Decimal       @db.Decimal(14, 2)
+  depositDate DateTime      @db.Date
+}
+
+// PRODUCTIVITY MODEL
+
+model Task {
+  id            String     @id @default(uuid()) @db.Uuid
+  userId        String     @db.Uuid
+  title         String
+  domain        Domain
+  scheduledDate DateTime   @db.Date
+  status        TaskStatus
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+}
+
+// FITNESS MODELS
+
+model WorkoutPlan {
+  id             String           @id @default(uuid()) @db.Uuid
+  userId         String           @db.Uuid
+  workoutPlanDay WorkoutPlanDay[]
+  name           String
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+}
+
+model WorkoutPlanDay {
+  id              String            @id @default(uuid()) @db.Uuid
+  workoutPlan     WorkoutPlan       @relation(fields: [workoutPlanId], references: [id])
+  workoutPlanId   String            @db.Uuid
+  workoutExercise WorkoutExercise[]
+  workoutTracking WorkoutTracking[]
+  weekDay         WeekDay
+}
+
+model WorkoutExercise {
+  id               String         @id @default(uuid()) @db.Uuid
+  workoutPlanDay   WorkoutPlanDay @relation(fields: [workoutPlanDayId], references: [id])
+  workoutPlanDayId String         @db.Uuid
+  name             String
+  sets             Int
+  repsMin          Int
+  repsMax          Int
+  restSeconds      Int
+  notes            String?
+}
+
+model WorkoutTracking {
+  id                      String                    @id @default(uuid()) @db.Uuid
+  workoutPlanDay          WorkoutPlanDay            @relation(fields: [workoutPlanDayId], references: [id])
+  workoutPlanDayId        String                    @db.Uuid
+  workoutTrackingExercise WorkoutTrackingExercise[]
+  createdAt               DateTime                  @default(now())
+}
+
+model WorkoutTrackingExercise {
+  id                String          @id @default(uuid()) @db.Uuid
+  workoutTracking   WorkoutTracking @relation(fields: [workoutTrackingId], references: [id])
+  workoutTrackingId String          @db.Uuid
+  name              String
+  maxWeight         Decimal?        @db.Decimal(6, 2)
+  maxSets           Int?
+  maxReps           Int?
+  restSeconds       Int?
+  notes             String?
 }
