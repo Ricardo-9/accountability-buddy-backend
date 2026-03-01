@@ -55,14 +55,22 @@ enum RecipeSource {
   USER
 }
 
+enum Domain {
+  WORK
+  HOBBIES
+  SLEEP
+  LEASURE
+}
+
 // BASE MODELS
 
 model UserProfile {
-  id        String    @id @db.Uuid
+  id        String   @id @db.Uuid
   fullName  String
-  birthDate DateTime?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  birthDate DateTime @db.Date
+  phone     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model UserArea {
@@ -178,4 +186,69 @@ model GoalDeposit {
   goalId      String        @db.Uuid
   amount      Decimal       @db.Decimal(14, 2)
   depositDate DateTime      @db.Date
+}
+
+// PRODUCTIVITY MODEL
+
+model Task {
+  id            String     @id @default(uuid()) @db.Uuid
+  userId        String     @db.Uuid
+  title         String
+  domain        Domain
+  scheduledDate DateTime   @db.Date
+  status        TaskStatus
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+}
+
+// FITNESS MODELS
+
+model WorkoutPlan {
+  id             String           @id @default(uuid()) @db.Uuid
+  userId         String           @db.Uuid
+  workoutPlanDay WorkoutPlanDay[]
+  name           String
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+}
+
+model WorkoutPlanDay {
+  id              String            @id @default(uuid()) @db.Uuid
+  workoutPlan     WorkoutPlan       @relation(fields: [workoutPlanId], references: [id])
+  workoutPlanId   String            @db.Uuid
+  workoutExercise WorkoutExercise[]
+  workoutTracking WorkoutTracking[]
+  weekDay         WeekDay
+}
+
+model WorkoutExercise {
+  id               String         @id @default(uuid()) @db.Uuid
+  workoutPlanDay   WorkoutPlanDay @relation(fields: [workoutPlanDayId], references: [id])
+  workoutPlanDayId String         @db.Uuid
+  name             String
+  sets             Int
+  repsMin          Int
+  repsMax          Int
+  restSeconds      Int
+  notes            String?
+}
+
+model WorkoutTracking {
+  id                      String                    @id @default(uuid()) @db.Uuid
+  workoutPlanDay          WorkoutPlanDay            @relation(fields: [workoutPlanDayId], references: [id])
+  workoutPlanDayId        String                    @db.Uuid
+  workoutTrackingExercise WorkoutTrackingExercise[]
+  createdAt               DateTime                  @default(now())
+}
+
+model WorkoutTrackingExercise {
+  id                String          @id @default(uuid()) @db.Uuid
+  workoutTracking   WorkoutTracking @relation(fields: [workoutTrackingId], references: [id])
+  workoutTrackingId String          @db.Uuid
+  name              String
+  maxWeight         Decimal?        @db.Decimal(6, 2)
+  maxSets           Int?
+  maxReps           Int?
+  restSeconds       Int?
+  notes             String?
 }
