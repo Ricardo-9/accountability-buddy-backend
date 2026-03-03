@@ -59,7 +59,7 @@ enum Domain {
   WORK
   HOBBIES
   SLEEP
-  LEASURE
+  LEISURE
 }
 
 // BASE MODELS
@@ -83,6 +83,8 @@ model UserArea {
   @@unique([userId, area])
   @@index([userId])
 }
+
+// FITNESS PROFILE
 
 model FitnessProfile {
   id        String        @id @default(uuid()) @db.Uuid
@@ -118,25 +120,57 @@ model Diet {
   structure Json
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model Ingredient {
+  id        String             @id @default(uuid()) @db.Uuid
+  userId    String             @db.Uuid
+  name      String
+  recipes   RecipeIngredient[]
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+
+  @@unique([userId, name])
+  @@index([userId])
 }
 
 model Recipe {
-  id           String       @id @default(uuid()) @db.Uuid
-  userId       String       @db.Uuid
+  id           String             @id @default(uuid()) @db.Uuid
+  userId       String             @db.Uuid
   name         String
-  ingredients  String
   preparation  String
   notes        String?
   source       RecipeSource
-  editedByUser Boolean      @default(false)
-  createdAt    DateTime     @default(now())
+  editedByUser Boolean            @default(false)
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  ingredients  RecipeIngredient[]
+
+  @@index([userId])
+}
+
+model RecipeIngredient {
+  id            String     @id @default(uuid()) @db.Uuid
+  recipe        Recipe     @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  recipeId      String     @db.Uuid
+  ingredient    Ingredient @relation(fields: [ingredientId], references: [id], onDelete: Restrict)
+  ingredientId  String     @db.Uuid
+  quantityGrams Decimal    @db.Decimal(8, 2)
+  createdAt     DateTime   @default(now())
+
+  @@unique([recipeId, ingredientId])
+  @@index([recipeId])
 }
 
 model WaterLog {
   id       String   @id @default(uuid()) @db.Uuid
   userId   String   @db.Uuid
   amountMl Int
-  loggedAt DateTime
+  loggedAt DateTime @default(now())
+
+  @@index([userId, loggedAt])
 }
 
 // FINANCIAL MODELS
@@ -145,47 +179,89 @@ model FinanceAccount {
   id        String   @id @default(uuid()) @db.Uuid
   userId    String   @unique @db.Uuid
   balance   Decimal  @db.Decimal(14, 2)
+  createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 model FinancialGoal {
-  id            String        @id @default(uuid()) @db.Uuid
-  userId        String        @db.Uuid
+  id            String             @id @default(uuid()) @db.Uuid
+  userId        String             @db.Uuid
+  category      FinancialCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  categoryId    String?            @db.Uuid
   deposit       GoalDeposit[]
   name          String
   durationValue Int
   durationUnit  DurationUnit
   style         InvestorStyle
-  initialAmount Decimal       @db.Decimal(14, 2)
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  initialAmount Decimal            @db.Decimal(14, 2)
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+
+  @@index([userId])
+  @@index([categoryId])
 }
 
 model FixedExpense {
-  id            String   @id @default(uuid()) @db.Uuid
-  userId        String   @db.Uuid
+  id            String             @id @default(uuid()) @db.Uuid
+  userId        String             @db.Uuid
+  category      FinancialCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  categoryId    String?            @db.Uuid
   name          String
-  monthlyAmount Decimal  @db.Decimal(14, 2)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  monthlyAmount Decimal            @db.Decimal(14, 2)
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+
+  @@index([userId])
+  @@index([categoryId])
 }
 
 model VariableExpense {
-  id          String   @id @default(uuid()) @db.Uuid
-  userId      String   @db.Uuid
+  id          String             @id @default(uuid()) @db.Uuid
+  userId      String             @db.Uuid
+  category    FinancialCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  categoryId  String?            @db.Uuid
   name        String
-  amount      Decimal  @db.Decimal(14, 2)
-  expenseDate DateTime @db.Date
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  amount      Decimal            @db.Decimal(14, 2)
+  expenseDate DateTime           @db.Date
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  @@index([userId, expenseDate])
+  @@index([categoryId])
 }
 
 model GoalDeposit {
   id          String        @id @default(uuid()) @db.Uuid
-  goal        FinancialGoal @relation(fields: [goalId], references: [id])
+  goal        FinancialGoal @relation(fields: [goalId], references: [id], onDelete: Cascade)
   goalId      String        @db.Uuid
   amount      Decimal       @db.Decimal(14, 2)
   depositDate DateTime      @db.Date
+  createdAt   DateTime      @default(now())
+
+  @@index([goalId, depositDate])
+}
+
+model FinanceBalanceHistory {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  balance   Decimal  @db.Decimal(14, 2)
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+}
+
+model FinancialCategory {
+  id               String            @id @default(uuid()) @db.Uuid
+  userId           String            @db.Uuid
+  name             String
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  fixedExpenses    FixedExpense[]
+  variableExpenses VariableExpense[]
+  financialGoals   FinancialGoal[]
+
+  @@unique([userId, name])
+  @@index([userId])
 }
 
 // PRODUCTIVITY MODEL
@@ -199,6 +275,8 @@ model Task {
   status        TaskStatus
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
+
+  @@index([userId, scheduledDate])
 }
 
 // FITNESS MODELS
@@ -210,20 +288,25 @@ model WorkoutPlan {
   name           String
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
+
+  @@index([userId])
 }
 
 model WorkoutPlanDay {
   id              String            @id @default(uuid()) @db.Uuid
-  workoutPlan     WorkoutPlan       @relation(fields: [workoutPlanId], references: [id])
+  workoutPlan     WorkoutPlan       @relation(fields: [workoutPlanId], references: [id], onDelete: Cascade)
   workoutPlanId   String            @db.Uuid
   workoutExercise WorkoutExercise[]
   workoutTracking WorkoutTracking[]
   weekDay         WeekDay
+
+  @@index([workoutPlanId])
+  @@unique([workoutPlanId,weekDay])
 }
 
 model WorkoutExercise {
   id               String         @id @default(uuid()) @db.Uuid
-  workoutPlanDay   WorkoutPlanDay @relation(fields: [workoutPlanDayId], references: [id])
+  workoutPlanDay   WorkoutPlanDay @relation(fields: [workoutPlanDayId], references: [id], onDelete: Cascade)
   workoutPlanDayId String         @db.Uuid
   name             String
   sets             Int
@@ -231,19 +314,23 @@ model WorkoutExercise {
   repsMax          Int
   restSeconds      Int
   notes            String?
+
+  @@index([workoutPlanDayId])
 }
 
 model WorkoutTracking {
   id                      String                    @id @default(uuid()) @db.Uuid
-  workoutPlanDay          WorkoutPlanDay            @relation(fields: [workoutPlanDayId], references: [id])
+  workoutPlanDay          WorkoutPlanDay            @relation(fields: [workoutPlanDayId], references: [id], onDelete: Cascade)
   workoutPlanDayId        String                    @db.Uuid
   workoutTrackingExercise WorkoutTrackingExercise[]
   createdAt               DateTime                  @default(now())
+
+  @@index([workoutPlanDayId, createdAt])
 }
 
 model WorkoutTrackingExercise {
   id                String          @id @default(uuid()) @db.Uuid
-  workoutTracking   WorkoutTracking @relation(fields: [workoutTrackingId], references: [id])
+  workoutTracking   WorkoutTracking @relation(fields: [workoutTrackingId], references: [id], onDelete: Cascade)
   workoutTrackingId String          @db.Uuid
   name              String
   maxWeight         Decimal?        @db.Decimal(6, 2)
@@ -251,4 +338,15 @@ model WorkoutTrackingExercise {
   maxReps           Int?
   restSeconds       Int?
   notes             String?
+
+  @@index([workoutTrackingId])
+}
+
+model WeightLog {
+  id       String   @id @default(uuid()) @db.Uuid
+  userId   String   @db.Uuid
+  weightKg Decimal  @db.Decimal(5, 2)
+  loggedAt DateTime @default(now())
+
+  @@index([userId, loggedAt])
 }
