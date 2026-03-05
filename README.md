@@ -8,7 +8,7 @@ A organização segue um padrão de camadas (Controller → Service → Reposito
 ##  Estrutura de Diretórios
 
 
-
+```
 ├── 📁 DB-docs
 |   ├── 📄 erd.png
 |   └── 📝 DB_README.md
@@ -66,7 +66,7 @@ A organização segue um padrão de camadas (Controller → Service → Reposito
 ├── ⚙️ package.json
 ├── 📄 prisma.config.ts
 └── ⚙️ tsconfig.json
-
+```
 
 ---
 
