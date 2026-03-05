@@ -391,7 +391,6 @@ model GeneratedReport {
   createdAt   DateTime           @default(now())
 
   @@unique([userId, domain, type, periodStart, periodEnd])
-
   @@index([userId, domain, type])
   @@index([userId, periodStart])
 }
