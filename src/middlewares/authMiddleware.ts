@@ -1,31 +1,41 @@
+// This middleware verifies the JWT token from the Authorization header using the JWKs provided by Supabase.
+
 import { Request, Response, NextFunction } from "express";
-import { supabase } from "../lib/supabase.js";
+import { createRemoteJWKSet, jwtVerify } from "jose";
 import { AppError } from "../core/errors/AppError.js";
+import { config } from "../config/env.js";
 
-export async function authMiddleware(
+
+const JWKS = createRemoteJWKSet(
+    new URL(`${config.SUPABASE_URL} / auth / v1 /.well - known / jwks.json`),
+);
+
+export const authenticate = async (
     req: Request,
-    res: Response,
-    next: NextFunction
-) {
-    const authHeader = req.headers.authorization
+    _res: Response,
+    next: NextFunction,
+) => {
+    try {
+        const authHeader = req.headers.authorization;
 
-    if (!authHeader) {
-        return next(new AppError("UNAUTHORIZED", "Token not provided", 401))
+        if (!authHeader) {
+            throw new AppError("UNAUTHORIZED", "Missing Authorization header", 401);
+        }
+
+        const token = authHeader.replace("Bearer ", "");
+
+        const { payload } = await jwtVerify(token, JWKS, {
+            issuer: `${config.SUPABASE_URL} / auth / v1`,
+            audience: "authenticated",
+        });
+
+        req.user = {
+            id: payload.sub as string,
+            email: payload.email as string,
+        };
+
+        return next();
+    } catch (error) {
+        return next(new AppError("UNAUTHORIZED", "Invalid or expired token", 401));
     }
-
-    const [type, token] = authHeader.split(" ")
-
-    if (type !== "Bearer" || !token) {
-        return next(new AppError("UNAUTHORIZED", "Invalid token format", 401))
-    }
-
-    const { data, error } = await supabase.auth.getUser(token)
-
-    if (error || !data.user) {
-        return next(new AppError("UNAUTHORIZED", "Invalid token", 401))
-    }
-
-    req.userId = data.user.id
-
-    next()
-}
+};
