@@ -1,17 +1,14 @@
 import dotenv from "dotenv";
+import { z } from "zod";
 
 dotenv.config();
 
-interface EnvConfig {
-  PORT: number;
-  DATABASE_URL: string;
-  NODE_ENV?: string;
-}
+const envSchema = z.object({
+  DATABASE_URL: z.url(),
+  PORT: z.coerce.number().default(3000),
+  NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
+  SUPABASE_URL: z.url(),
+  SUPABASE_KEY: z.string()
+})
 
-const config: EnvConfig = {
-  PORT: Number(process.env.PORT) || 3000,
-  DATABASE_URL: process.env.DATABASE_URL || "",
-  NODE_ENV: process.env.NODE_ENV || "development",
-};
-
-export default config;
+export const config = envSchema.parse(process.env)
