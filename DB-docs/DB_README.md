@@ -269,23 +269,22 @@ Ingredientes cadastrados pelo usuário, reutilizáveis em receitas.
 ---
 
 #### `Recipe`
-Receitas do usuário, que podem ser criadas manualmente ou via IA.
+Receitas do usuário, que podem ser criadas manualmente ou via IA. Os ingredientes não são armazenados diretamente nesta tabela — eles são representados pelo relacionamento N:N com `Ingredient`, intermediado por `RecipeIngredient`, que carrega a quantidade em gramas de cada ingrediente na receita.
 
-| Campo           | Tipo               | Descrição                          |
-|-----------------|--------------------|------------------------------------|
-| `id`            | String             | PK (UUID)                          |
-| `userId`        | String             |                                    |
-| `name`          | String             | Nome da receita                    |
-| `preparation`   | String             | Modo de preparo                    |
-| `notes`         | String?            | Observações adicionais             |
-| `source`        | Enum `RecipeSource`| Origem (`AI` ou `USER`)            |
-| `editedByUser`  | Boolean            | Se foi editada manualmente         |
-| `createdAt`     | DateTime           |                                    |
-| `updatedAt`     | DateTime           |                                    |
-| recipeIngredients RecipeIngredient[] | Ingredientes relacionados          |
+| Campo                  | Tipo               | Descrição                                        |
+|------------------------|--------------------|--------------------------------------------------|
+| `id`                   | String             | PK (UUID)                                        |
+| `userId`               | String             |                                                  |
+| `name`                 | String             | Nome da receita                                  |
+| `preparation`          | String             | Modo de preparo                                  |
+| `notes`                | String?            | Observações adicionais                           |
+| `source`               | Enum `RecipeSource`| Origem (`AI` ou `USER`)                          |
+| `editedByUser`         | Boolean            | Se foi editada manualmente                       |
+| `createdAt`            | DateTime           |                                                  |
+| `updatedAt`            | DateTime           |                                                  |
+| `recipeIngredients`    | `RecipeIngredient[]` | Ingredientes vinculados via tabela pivô        |
 
-
-> **Relacionamento:** Uma receita pode ter vários `RecipeIngredient` (ingredientes estruturados).  
+> **Relacionamento:** Uma receita pode ter vários `RecipeIngredient` (ingredientes estruturados). Os ingredientes e suas quantidades são acessados exclusivamente por meio dessa relação.  
 > **Índices:** `userId`.
 
 ---
@@ -509,8 +508,6 @@ Alguns modelos foram mantidos simples no MVP (ex.: `Diet` com JSON) para agiliza
 A arquitetura reflete os domínios do banco:
 
 # File Tree: (apenas os arquivos relevantes para o banco de dados estão listados)
-
-
 ```
 ├── 📁 DB-docs
 │   ├── 📄 erd.png
