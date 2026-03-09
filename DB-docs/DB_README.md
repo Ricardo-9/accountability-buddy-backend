@@ -276,13 +276,14 @@ Receitas do usuário, que podem ser criadas manualmente ou via IA.
 | `id`            | String             | PK (UUID)                          |
 | `userId`        | String             |                                    |
 | `name`          | String             | Nome da receita                    |
-| `ingredients`   | String             | Descrição textual dos ingredientes |
 | `preparation`   | String             | Modo de preparo                    |
 | `notes`         | String?            | Observações adicionais             |
 | `source`        | Enum `RecipeSource`| Origem (`AI` ou `USER`)            |
 | `editedByUser`  | Boolean            | Se foi editada manualmente         |
 | `createdAt`     | DateTime           |                                    |
 | `updatedAt`     | DateTime           |                                    |
+| recipeIngredients RecipeIngredient[] | Ingredientes relacionados          |
+
 
 > **Relacionamento:** Uma receita pode ter vários `RecipeIngredient` (ingredientes estruturados).  
 > **Índices:** `userId`.
