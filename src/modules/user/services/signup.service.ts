@@ -10,7 +10,10 @@ export async function signupService(
         password
     })
 
-    if (error) throw new AppError("AUTH_ERROR", error.message)
+    if (error) {
+        console.log(error)
+        throw new AppError("AUTH_ERROR", error.message)
+    }
 
     if (!data.user) throw new AppError("AUTH_ERROR", "User creation failed")
         
