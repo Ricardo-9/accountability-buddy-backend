@@ -69,16 +69,37 @@ enum Domain {
 // BASE MODELS
 
 model UserProfile {
-  id        String   @id @db.Uuid
+  id        String    @id @db.Uuid
   fullName  String?
   birthDate DateTime? @db.Date
   phone     String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now()) @updatedAt
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @default(now()) @updatedAt
+
+  //Relations
+  userArea              UserArea[]
+  fitnessProfile        FitnessProfile?
+  nutritionProfile      NutritionProfile?
+  diet                  Diet[]
+  ingredient            Ingredient[]
+  recipe                Recipe[]
+  waterLog              WaterLog[]
+  financeAccount        FinanceAccount?
+  income                Income[]
+  financialGoal         FinancialGoal[]
+  fixedExpense          FixedExpense[]
+  variableExpense       VariableExpense[]
+  financeBalanceHistory FinanceBalanceHistory[]
+  financialCategory     FinancialCategory[]
+  task                  Task[]
+  workoutPlan           WorkoutPlan[]
+  weightLog             WeightLog[]
+  generatedReport       GeneratedReport[]
 }
 
 model UserArea {
   id        String             @id @default(uuid()) @db.Uuid
+  user      UserProfile        @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId    String             @db.Uuid
   area      AccountabilityArea
   createdAt DateTime           @default(now())
@@ -92,6 +113,7 @@ model UserArea {
 
 model FitnessProfile {
   id        String        @id @default(uuid()) @db.Uuid
+  user      UserProfile   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId    String        @unique @db.Uuid
   goal      String?
   heightCm  Int?
@@ -105,31 +127,34 @@ model FitnessProfile {
 // NUTRITION MODELS
 
 model NutritionProfile {
-  id              String   @id @default(uuid()) @db.Uuid
-  userId          String   @unique @db.Uuid
+  id              String      @id @default(uuid()) @db.Uuid
+  user            UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId          String      @unique @db.Uuid
   goal            String?
   heightCm        Int?
-  weightKg        Decimal? @db.Decimal(5, 2)
+  weightKg        Decimal?    @db.Decimal(5, 2)
   preference      String?
   allergies       String?
-  waterGoalLiters Decimal? @db.Decimal(4, 2)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  waterGoalLiters Decimal?    @db.Decimal(4, 2)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
 }
 
 model Diet {
-  id        String   @id @default(uuid()) @db.Uuid
-  userId    String   @db.Uuid
+  id        String      @id @default(uuid()) @db.Uuid
+  user      UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String      @db.Uuid
   name      String
-  structure Json     @db.JsonB
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  structure Json        @db.JsonB
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
 
   @@index([userId])
 }
 
 model Ingredient {
   id        String             @id @default(uuid()) @db.Uuid
+  user      UserProfile        @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId    String             @db.Uuid
   name      String
   recipes   RecipeIngredient[]
@@ -142,6 +167,7 @@ model Ingredient {
 
 model Recipe {
   id           String             @id @default(uuid()) @db.Uuid
+  user         UserProfile        @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId       String             @db.Uuid
   name         String
   preparation  String
@@ -169,10 +195,11 @@ model RecipeIngredient {
 }
 
 model WaterLog {
-  id       String   @id @default(uuid()) @db.Uuid
-  userId   String   @db.Uuid
+  id       String      @id @default(uuid()) @db.Uuid
+  user     UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId   String      @db.Uuid
   amountMl Int
-  loggedAt DateTime @default(now())
+  loggedAt DateTime    @default(now())
 
   @@index([userId, loggedAt])
 }
@@ -180,24 +207,27 @@ model WaterLog {
 // FINANCIAL MODELS
 
 model FinanceAccount {
-  id        String   @id @default(uuid()) @db.Uuid
-  userId    String   @unique @db.Uuid
-  balance   Decimal  @db.Decimal(14, 2)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id        String      @id @default(uuid()) @db.Uuid
+  user      UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String      @unique @db.Uuid
+  balance   Decimal     @db.Decimal(14, 2)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
 }
 
 model Income {
-  id        String   @id @default(uuid()) @db.Uuid
-  userId    String   @db.Uuid
-  amount    Decimal  @db.Decimal(14, 2)
+  id        String      @id @default(uuid()) @db.Uuid
+  user      UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String      @db.Uuid
+  amount    Decimal     @db.Decimal(14, 2)
   source    String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
 }
 
 model FinancialGoal {
   id            String                 @id @default(uuid()) @db.Uuid
+  user          UserProfile            @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId        String                 @db.Uuid
   category      FinancialCategory?     @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   categoryId    String?                @db.Uuid
@@ -218,6 +248,7 @@ model FinancialGoal {
 
 model FixedExpense {
   id            String             @id @default(uuid()) @db.Uuid
+  user          UserProfile        @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId        String             @db.Uuid
   category      FinancialCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   categoryId    String?            @db.Uuid
@@ -232,6 +263,7 @@ model FixedExpense {
 
 model VariableExpense {
   id          String             @id @default(uuid()) @db.Uuid
+  user        UserProfile        @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId      String             @db.Uuid
   category    FinancialCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   categoryId  String?            @db.Uuid
@@ -258,7 +290,7 @@ model GoalDeposit {
 
 model GoalProgressSnapshot {
   id             String        @id @default(uuid()) @db.Uuid
-  goal           FinancialGoal @relation(fields: [goalId], references: [id], onDelete: Cascade) 
+  goal           FinancialGoal @relation(fields: [goalId], references: [id], onDelete: Cascade)
   goalId         String        @db.Uuid
   totalDeposited Decimal       @db.Decimal(14, 2)
   createdAt      DateTime      @default(now())
@@ -267,16 +299,18 @@ model GoalProgressSnapshot {
 }
 
 model FinanceBalanceHistory {
-  id        String   @id @default(uuid()) @db.Uuid
-  userId    String   @db.Uuid
-  balance   Decimal  @db.Decimal(14, 2)
-  createdAt DateTime @default(now())
+  id        String      @id @default(uuid()) @db.Uuid
+  user      UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String      @db.Uuid
+  balance   Decimal     @db.Decimal(14, 2)
+  createdAt DateTime    @default(now())
 
   @@index([userId, createdAt])
 }
 
 model FinancialCategory {
   id               String            @id @default(uuid()) @db.Uuid
+  user             UserProfile       @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId           String            @db.Uuid
   name             String
   createdAt        DateTime          @default(now())
@@ -292,14 +326,15 @@ model FinancialCategory {
 // PRODUCTIVITY MODEL
 
 model Task {
-  id            String     @id @default(uuid()) @db.Uuid
-  userId        String     @db.Uuid
+  id            String      @id @default(uuid()) @db.Uuid
+  user          UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId        String      @db.Uuid
   title         String
   domain        Domain
-  scheduledDate DateTime   @db.Date
+  scheduledDate DateTime    @db.Date
   status        TaskStatus
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
 
   @@index([userId, scheduledDate])
 }
@@ -308,6 +343,7 @@ model Task {
 
 model WorkoutPlan {
   id             String           @id @default(uuid()) @db.Uuid
+  user           UserProfile      @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId         String           @db.Uuid
   workoutPlanDay WorkoutPlanDay[]
   name           String
@@ -368,10 +404,11 @@ model WorkoutTrackingExercise {
 }
 
 model WeightLog {
-  id       String   @id @default(uuid()) @db.Uuid
-  userId   String   @db.Uuid
-  weightKg Decimal  @db.Decimal(5, 2)
-  loggedAt DateTime @default(now())
+  id       String      @id @default(uuid()) @db.Uuid
+  user     UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId   String      @db.Uuid
+  weightKg Decimal     @db.Decimal(5, 2)
+  loggedAt DateTime    @default(now())
 
   @@index([userId, loggedAt])
 }
@@ -380,6 +417,7 @@ model WeightLog {
 
 model GeneratedReport {
   id          String             @id @default(uuid()) @db.Uuid
+  user        UserProfile        @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId      String             @db.Uuid
   domain      AccountabilityArea
   type        ReportType
