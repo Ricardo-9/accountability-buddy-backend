@@ -70,11 +70,11 @@ enum Domain {
 
 model UserProfile {
   id        String   @id @db.Uuid
-  fullName  String
-  birthDate DateTime @db.Date
+  fullName  String?
+  birthDate DateTime? @db.Date
   phone     String?
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  updatedAt DateTime @default(now()) @updatedAt
 }
 
 model UserArea {

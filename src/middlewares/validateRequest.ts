@@ -21,7 +21,6 @@ export function validateRequest(schema: z.ZodType) {
 
         req.body = data.body
         req.params = data.params
-        req.query = data.query
 
         next()
     }
