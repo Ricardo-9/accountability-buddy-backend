@@ -1,7 +1,7 @@
 import express from 'express';
 import { healthRouter } from './core/http/health.routes.js';
 import { errorHandler } from './middlewares/errorHandler.js';
-import { userRoutes } from './modules/user/auth/routes.js';
+import { userRoutes } from './modules/user/routes.js';
 import { rateLimiter } from './middlewares/generalRateLimit.js';
 
 const app = express();

@@ -7,7 +7,7 @@ import { config } from "../config/env.js";
 
 
 const JWKS = createRemoteJWKSet(
-    new URL(`${config.SUPABASE_URL} / auth / v1 /.well - known / jwks.json`),
+    new URL(`${config.SUPABASE_URL}/auth/v1/.well-known/jwks.json`),
 );
 
 export const authenticate = async (
@@ -25,7 +25,7 @@ export const authenticate = async (
         const token = authHeader.replace("Bearer ", "");
 
         const { payload } = await jwtVerify(token, JWKS, {
-            issuer: `${config.SUPABASE_URL} / auth / v1`,
+            issuer: `${config.SUPABASE_URL}/auth/v1`,
             audience: "authenticated",
         });
 
