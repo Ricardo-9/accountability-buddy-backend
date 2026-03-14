@@ -5,6 +5,6 @@ export const updateAreasSchema = z.object({
     body: z.object({
         areas: z.enum(AccountabilityArea, {
             error: "Invalid accountability area"
-        }).array()
+        }).array().min(1, {error: "At least one area must be selected"})
     })
 })
