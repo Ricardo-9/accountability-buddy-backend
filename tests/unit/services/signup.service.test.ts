@@ -13,7 +13,7 @@ vi.mock("../../../src/lib/supabase", () => ({
 
 const mockSignUp = vi.mocked(supabase.auth.signUp)
 
-describe("Signup service test", () => {
+describe("Signup service tests", () => {
     beforeEach(() => vi.clearAllMocks())
 
     it("should return the created user", async () => {
