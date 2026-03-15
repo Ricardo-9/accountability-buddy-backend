@@ -11,4 +11,4 @@ const router = Router();
 router.post("/signup", validateRequest(signupSchema),authLimiter, signupController);
 router.post("/signin", validateRequest(signinSchema),authLimiter, signinController);
 
-export { router as userRoutes };
+export { router as authRoutes };
