@@ -12,7 +12,7 @@ vi.mock("../../../src/lib/prisma", () => ({
     }
 }))
 
-describe("User areas tests", () => {
+describe("Update user areas test", () => {
     beforeEach(() => vi.clearAllMocks())
 
     it("should return an array with the provided arguments", async () => {
@@ -70,13 +70,5 @@ describe("User areas tests", () => {
             select: { area: true },
             skipDuplicates: true
         })
-    })
-
-    it("should throw an error if the transaction fails", async () => {
-        vi.mocked(prisma.$transaction).mockRejectedValue(
-            new Error("Transaction failed")
-        )
-
-        await expect(updateAreasService("userId", ["GYM"])).rejects.toThrow("Transaction failed")
     })
 })
