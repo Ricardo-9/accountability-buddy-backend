@@ -8,7 +8,6 @@ export async function signupService(email: string, password: string) {
   });
 
   if (error) {
-    console.log(error);
     throw new AppError("AUTH_ERROR", error.message);
   }
 
