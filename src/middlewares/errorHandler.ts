@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../core/errors/AppError.js";
 import { errorResponse } from "../shared/utils/apiResponse.js";
-import { z, ZodError } from "zod";
+import { ZodError } from "zod";
 
 export function errorHandler(
     err: unknown,
@@ -24,7 +24,10 @@ export function errorHandler(
             error: {
                 code: "VALIDATION_CODE",
                 message: "Invalid data",
-                details: z.treeifyError(err)
+                details: err.issues.map(issue => ({
+                    field: issue.path.join("."),
+                    message: issue.message
+                }))
             }
         })
     }
