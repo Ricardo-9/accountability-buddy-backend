@@ -15,7 +15,7 @@ export async function signupController(
     return successResponse(res, {
       id: user.id,
       email: user.email,
-    });
+    }, undefined, 201);
   } catch (err) {
     next(err);
   }
