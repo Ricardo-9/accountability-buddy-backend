@@ -8,6 +8,15 @@ const options = {
       version: '1.0.0',
       description: 'API Documentation with Swagger',
     },
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+        },
+      },
+    },
     servers: [
       { url: 'http://localhost:3000', description: 'Development' }
     ],
