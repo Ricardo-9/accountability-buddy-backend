@@ -13,8 +13,8 @@ import { getAreasController } from "./areas/controllers/getareas.controller.js";
 const router = Router();
 
 //AUTH
-router.post("/signup", validateRequest(signupSchema),authLimiter, signupController);
-router.post("/signin", validateRequest(signinSchema),authLimiter, signinController);
+router.post("/signup", validateRequest(signupSchema), authLimiter, signupController);
+router.post("/signin", validateRequest(signinSchema), authLimiter, signinController);
 
 
 //AREAS
