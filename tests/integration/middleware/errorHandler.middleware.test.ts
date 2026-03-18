@@ -37,5 +37,6 @@ describe("error handler middleware", () => {
 
     expect(response.statusCode).toBe(200);
     expect(response.body.message).toBe("ONLY_FOR_TESTS");
+    expect(response.body.error).toBeUndefined();
   });
 });

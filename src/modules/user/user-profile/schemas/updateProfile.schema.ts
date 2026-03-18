@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const updateProfileSchema = z
+const updateProfileBodySchema = z
   .object({
     fullName: z
       .string()
@@ -9,16 +9,22 @@ export const updateProfileSchema = z
       .optional(),
     birthDate: z.coerce.date().optional(),
     phone: z.e164().optional(),
-  }).refine(
+  })
+  .refine(
     (data) =>
       data.fullName !== undefined ||
       data.birthDate !== undefined ||
       data.phone !== undefined,
     { message: "At least one field must be provided" },
-  ).transform((data) => {
+  )
+  .transform((data) => {
     return Object.fromEntries(
-      Object.entries(data).filter(([, v]) => v !== undefined)
+      Object.entries(data).filter(([, v]) => v !== undefined),
     ) as { fullName?: string; birthDate?: Date; phone?: string };
   });
 
-export type UpdateProfile = z.infer<typeof updateProfileSchema>;
+export const updateProfileSchema = z.object({
+  body: updateProfileBodySchema,
+});
+
+export type UpdateProfile = z.infer<typeof updateProfileBodySchema>;

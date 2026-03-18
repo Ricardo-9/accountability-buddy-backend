@@ -15,9 +15,8 @@ app.use(testRoutes);
 // Routes (app.use("/route", routes))
 app.use("/auth", authRoutes);
 
-
 // User profile routes
-app.use(userRoutes)
+app.use("/users",userRoutes)
 
 app.use(healthRouter);
 
