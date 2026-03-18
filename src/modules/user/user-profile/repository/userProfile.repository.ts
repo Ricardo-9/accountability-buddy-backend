@@ -17,7 +17,7 @@ export const userProfileRepository = {
 
   async delete(userId: string) {
     return prisma.userProfile.update({
-      where: { id: userId , deletedAt: null},
+      where: { id: userId, deletedAt: null },
       data: { deletedAt: new Date(), status: "deleted" },
     });
   },

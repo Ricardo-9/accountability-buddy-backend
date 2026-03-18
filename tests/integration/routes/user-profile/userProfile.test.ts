@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import request from "supertest";
-import app from "../../../src/app.js";
-import { userProfileServices } from "../../../src/modules/user/user-profile/services/userProfile.service.js";
+import app from "../../../../src/app.js";
+import { userProfileServices } from "../../../../src/modules/user/user-profile/services/userProfile.service.js";
 import { ProfileStatus } from "@prisma/client";
-import { AppError } from "../../../src/core/errors/AppError.js";
+import { AppError } from "../../../../src/core/errors/AppError.js";
 
 const fakeProfile = {
   id: "user-123",

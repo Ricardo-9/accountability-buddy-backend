@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { userProfileServices } from "../../../src/modules/user/user-profile/services/userProfile.service";
-import { userProfileRepository } from "../../../src/modules/user/user-profile/repository/userProfile.repository";
+import { userProfileServices } from "../../../../../src/modules/user/user-profile/services/userProfile.service";
+import { userProfileRepository } from "../../../../../src/modules/user/user-profile/repository/userProfile.repository";
 import { ProfileStatus } from "@prisma/client";
 
 vi.mock(

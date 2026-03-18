@@ -5,6 +5,8 @@ import { authRoutes } from "./modules/user/auth/routes.js";
 import { rateLimiter } from "./middlewares/generalRateLimit.js";
 import { testRoutes } from "./core/tests/routes.js";
 import { userRoutes } from "./modules/user/user-profile/routes.js";
+import swaggerUi from "swagger-ui-express";
+import swaggerSpec from "./swagger.js";
 
 const app = express();
 
@@ -16,9 +18,11 @@ app.use(testRoutes);
 app.use("/auth", authRoutes);
 
 // User profile routes
-app.use("/users",userRoutes)
+app.use("/users", userRoutes);
 
 app.use(healthRouter);
+
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.use(rateLimiter);
 

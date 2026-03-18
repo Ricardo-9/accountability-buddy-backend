@@ -27,7 +27,7 @@ describe("Rate limiter", () => {
     expect(response.body.error.code).toBe("TOO_MANY_REQUESTS");
   });
 
-  it("should not return an erro 429 when the requests respect the limit", async () => {
+  it("should not return an error (429) when the requests respect the limit", async () => {
     const response = await request(app)
       .post("/user/signin")
       .send({ email: "example-email@gmail.com", password: "example-password" });
