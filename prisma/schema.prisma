@@ -66,6 +66,17 @@ enum Domain {
   LEISURE
 }
 
+enum RecurrenceUnit {
+  DAY
+  WEEK
+  MONTH
+}
+
+enum TransactionType {
+  INCOME
+  EXPENSE
+}
+
 // BASE MODELS
 
 model UserProfile {
@@ -85,16 +96,15 @@ model UserProfile {
   recipe                Recipe[]
   waterLog              WaterLog[]
   financeAccount        FinanceAccount?
-  income                Income[]
   financialGoal         FinancialGoal[]
-  fixedExpense          FixedExpense[]
-  variableExpense       VariableExpense[]
   financeBalanceHistory FinanceBalanceHistory[]
   financialCategory     FinancialCategory[]
   task                  Task[]
   workoutPlan           WorkoutPlan[]
   weightLog             WeightLog[]
   generatedReport       GeneratedReport[]
+  recurringTransactions RecurringTransaction[]
+  variableExpenses      VariableExpense[]
 }
 
 model UserArea {
@@ -215,16 +225,6 @@ model FinanceAccount {
   updatedAt DateTime    @updatedAt
 }
 
-model Income {
-  id        String      @id @default(uuid()) @db.Uuid
-  user      UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId    String      @db.Uuid
-  amount    Decimal     @db.Decimal(14, 2)
-  source    String
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
-}
-
 model FinancialGoal {
   id            String                 @id @default(uuid()) @db.Uuid
   user          UserProfile            @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -246,19 +246,38 @@ model FinancialGoal {
   @@index([categoryId])
 }
 
-model FixedExpense {
-  id            String             @id @default(uuid()) @db.Uuid
-  user          UserProfile        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId        String             @db.Uuid
-  category      FinancialCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
-  categoryId    String?            @db.Uuid
-  name          String
-  monthlyAmount Decimal            @db.Decimal(14, 2)
-  createdAt     DateTime           @default(now())
-  updatedAt     DateTime           @updatedAt
+model RecurringTransaction {
+  id              String                          @id @default(uuid()) @db.Uuid
+  user            UserProfile                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId          String                          @db.Uuid
+  type            TransactionType
+  category        FinancialCategory?              @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  categoryId      String?                         @db.Uuid
+  name            String
+  amount          Decimal                         @db.Decimal(14, 2)
+  recurrenceValue Int
+  recurrenceUnit  RecurrenceUnit
+  dayOfMonth      Int?
+  nextOccurrence  DateTime                        @db.Date
+  lastExecutedAt  DateTime?
+  createdAt       DateTime                        @default(now())
+  updatedAt       DateTime                        @updatedAt
+  executions      RecurringTransactionExecution[]
 
   @@index([userId])
-  @@index([categoryId])
+  @@index([nextOccurrence])
+}
+
+model RecurringTransactionExecution {
+  id            String               @id @default(uuid()) @db.Uuid
+  transaction   RecurringTransaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  transactionId String               @db.Uuid
+  amount        Decimal              @db.Decimal(14, 2)
+  executedAt    DateTime             @default(now())
+  balanceBefore Decimal              @db.Decimal(14, 2)
+  balanceAfter  Decimal              @db.Decimal(14, 2)
+
+  @@index([transactionId, executedAt])
 }
 
 model VariableExpense {
@@ -309,15 +328,15 @@ model FinanceBalanceHistory {
 }
 
 model FinancialCategory {
-  id               String            @id @default(uuid()) @db.Uuid
-  user             UserProfile       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId           String            @db.Uuid
-  name             String
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
-  fixedExpenses    FixedExpense[]
-  variableExpenses VariableExpense[]
-  financialGoals   FinancialGoal[]
+  id                    String                 @id @default(uuid()) @db.Uuid
+  user                  UserProfile            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId                String                 @db.Uuid
+  name                  String
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+  financialGoals        FinancialGoal[]
+  recurringTransactions RecurringTransaction[]
+  variableExpenses      VariableExpense[]
 
   @@unique([userId, name])
   @@index([userId])
