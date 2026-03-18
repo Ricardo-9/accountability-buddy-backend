@@ -8,8 +8,7 @@ export async function signupService(email: string, password: string) {
   });
 
   if (error) {
-    console.log(error);
-    throw new AppError("AUTH_ERROR", error.message);
+    throw new AppError("AUTH_ERROR", error.message, error.status);
   }
 
   if (!data.user) throw new AppError("AUTH_ERROR", "User creation failed");
