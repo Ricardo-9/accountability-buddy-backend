@@ -7,6 +7,7 @@ import { userProfileRoutes } from "./modules/user/user-profile/routes.js";
 import swaggerUi from "swagger-ui-express";
 import swaggerSpec from "./swagger.js";
 import { userRoutes } from "./modules/user/routes.js";
+import { financialRoutes } from "./modules/finance/routes.js";
 
 const app = express();
 
@@ -19,6 +20,8 @@ app.use(testRoutes);
 app.use("/user", userProfileRoutes);
 
 app.use("/user",userRoutes)
+
+app.use("/finance", financialRoutes)
 
 app.use(healthRouter);
 
