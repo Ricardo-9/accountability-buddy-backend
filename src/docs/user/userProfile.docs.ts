@@ -171,3 +171,40 @@
  *          500:
  *              description: Internal server error
  */
+
+
+/**
+ * @swagger
+ * /user/me:
+ *  delete:
+ *      summary: Delete user profile
+ *      tags: [Profiles]
+ *      security:
+ *          - bearerAuth: []
+ *      responses:
+ *          200:
+ *              description: Profile successfully deleted
+ *              content:
+ *                  application/json:
+ *                      schema:
+ *                          type: object
+ *                          properties:
+ *                              success:
+ *                                  type: boolean
+ *                                  example: true
+ *                              message:
+ *                                  type: string
+ *                                  example: Profile deleted
+ *                              data:
+ *                                  type: object
+ *                                  nullable: true
+ *                                  example: null
+ *          401:
+ *              description: Missing or invalid token
+ *          404:
+ *              description: Profile not found
+ *          429:
+ *              description: Too many requests
+ *          500:
+ *              description: Internal server error
+ */
