@@ -27,7 +27,7 @@ describe("error handler middleware", () => {
       .send({ text: "ZodError" });
 
     expect(response.statusCode).toBe(400);
-    expect(response.body.error.code).toBe("VALIDATION_CODE");
+    expect(response.body.error.code).toBe("VALIDATION_ERROR");
   });
 
   it("should not return any error when the request is valid", async () => {

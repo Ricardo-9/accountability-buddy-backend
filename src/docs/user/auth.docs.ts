@@ -59,6 +59,8 @@
  *              description: Invalid data
  *          422:
  *              description: Email already in use
+ *          429:
+ *              description: Too many requests
  *          500:
  *              description: Internal server error
  */
@@ -115,6 +117,8 @@
  *              description: Invalid data
  *          401:
  *              description: Invalid credentials
+ *          429:
+ *              description: Too many requests
  *          500:
  *              description: Internal server error
  */

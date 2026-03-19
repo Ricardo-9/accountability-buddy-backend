@@ -16,7 +16,7 @@ vi.mock("jose", async (importOriginal) => {
   };
 });
 
-vi.mock("../../../src/lib/prisma", () => ({
+vi.mock("../../../../../src/lib/prisma.js", () => ({
   prisma: {
     userArea: {
       findMany: vi.fn(),

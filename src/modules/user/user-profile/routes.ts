@@ -17,4 +17,4 @@ router.patch(
 
 router.delete("/me", authenticate, userProfileControllers.deleteProfile);
 
-export { router as userRoutes };
+export { router as userProfileRoutes };

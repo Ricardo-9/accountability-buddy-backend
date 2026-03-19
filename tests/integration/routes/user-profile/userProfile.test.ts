@@ -27,7 +27,7 @@ const fakeUpdatedProfile = {
   status: "ACTIVE" as ProfileStatus,
 };
 
-vi.mock("../../../src/middlewares/authMiddleware.js", () => ({
+vi.mock("../../../../src/middlewares/authMiddleware.ts", () => ({
   authenticate: vi.fn((req, _res, next) => {
     req.user = { id: "user-123" };
     next();
@@ -35,7 +35,7 @@ vi.mock("../../../src/middlewares/authMiddleware.js", () => ({
 }));
 
 vi.mock(
-  "../../../src/modules/user/user-profile/services/userProfile.service",
+  "../../../../src/modules/user/user-profile/services/userProfile.service.js",
   () => ({
     userProfileServices: {
       getProfile: vi.fn(),
@@ -54,7 +54,7 @@ describe("user profiles", () => {
     it("should return 200 and profile when user exists", async () => {
       vi.mocked(userProfileServices.getProfile).mockResolvedValue(fakeProfile);
 
-      const response = await request(app).get("/users/me");
+      const response = await request(app).get("/user/me");
 
       expect(response.statusCode).toBe(200);
       expect(response.body.data.id).toBe("user-123");
@@ -66,7 +66,7 @@ describe("user profiles", () => {
         new AppError("NOT_FOUND", "Profile not found", 404),
       );
 
-      const response = await request(app).get("/users/me");
+      const response = await request(app).get("/user/me");
 
       expect(response.statusCode).toBe(404);
       expect(response.body.error.code).toBe("NOT_FOUND");
@@ -79,7 +79,7 @@ describe("user profiles", () => {
       vi.mocked(userProfileServices.updateProfile).mockResolvedValue(updated);
 
       const response = await request(app)
-        .patch("/users/me")
+        .patch("/user/me")
         .send({ fullName: "New Name" });
 
       expect(response.statusCode).toBe(200);
@@ -89,11 +89,11 @@ describe("user profiles", () => {
 
     it("should return 400 when body fails validation", async () => {
       const response = await request(app)
-        .patch("/users/me")
+        .patch("/user/me")
         .send({ fullName: 123 });
 
       expect(response.statusCode).toBe(400);
-      expect(response.body.error.code).toBe("VALIDATION_CODE");
+      expect(response.body.error.code).toBe("VALIDATION_ERROR");
     });
 
     it("should return 404 when profile is not found", async () => {
@@ -101,7 +101,7 @@ describe("user profiles", () => {
         new AppError("NOT_FOUND", "Profile not found", 404),
       );
       const response = await request(app)
-        .patch("/users/me")
+        .patch("/user/me")
         .send({ fullName: "New Name" });
 
       expect(response.statusCode).toBe(404);
@@ -118,7 +118,7 @@ describe("user profiles", () => {
       };
       vi.mocked(userProfileServices.deleteProfile).mockResolvedValue(deleted);
 
-      const response = await request(app).delete("/users/me");
+      const response = await request(app).delete("/user/me");
 
       expect(response.statusCode).toBe(200);
       expect(response.body.message).toBe("Profile deleted");
@@ -129,7 +129,7 @@ describe("user profiles", () => {
       vi.mocked(userProfileServices.deleteProfile).mockRejectedValue(
         new AppError("NOT_FOUND", "Profile not found", 404),
       );
-      const response = await request(app).delete("/users/me");
+      const response = await request(app).delete("/user/me");
 
       expect(response.statusCode).toBe(404);
       expect(response.body.error.code).toBe("NOT_FOUND");
