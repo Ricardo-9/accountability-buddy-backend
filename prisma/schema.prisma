@@ -77,15 +77,22 @@ enum TransactionType {
   EXPENSE
 }
 
+enum ProfileStatus {
+  ACTIVE
+  DELETED
+}
+
 // BASE MODELS
 
 model UserProfile {
-  id        String    @id @db.Uuid
+  id        String        @id @db.Uuid
   fullName  String?
-  birthDate DateTime? @db.Date
+  birthDate DateTime?     @db.Date
   phone     String?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @default(now()) @updatedAt
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @default(now()) @updatedAt
+  deletedAt DateTime?     @db.Date
+  status    ProfileStatus @default(ACTIVE)
 
   //Relations
   userArea              UserArea[]
