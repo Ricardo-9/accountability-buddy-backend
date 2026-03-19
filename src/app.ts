@@ -1,26 +1,31 @@
-import express from 'express';
-import { healthRouter } from './core/http/health.routes.js';
-import { errorHandler } from './middlewares/errorHandler.js';
-import { userRoutes } from './modules/user/routes.js';
-import { rateLimiter } from './middlewares/generalRateLimit.js';
-
-import swaggerUi from 'swagger-ui-express';
-import swaggerSpec from './swagger.js';
-
+import express from "express";
+import { healthRouter } from "./core/http/health.routes.js";
+import { errorHandler } from "./middlewares/errorHandler.js";
+import { rateLimiter } from "./middlewares/generalRateLimit.js";
+import { testRoutes } from "./core/tests/routes.js";
+import { userProfileRoutes } from "./modules/user/user-profile/routes.js";
+import swaggerUi from "swagger-ui-express";
+import swaggerSpec from "./swagger.js";
+import { userRoutes } from "./modules/user/routes.js";
 
 const app = express();
 
 app.use(express.json());
 
-// Routes (app.use("/route", routes))
-app.use("/user", userRoutes)
+app.use(testRoutes);
 
-app.use(healthRouter)
 
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec))
+// User profile routes
+app.use("/user", userProfileRoutes);
 
-app.use(rateLimiter)
+app.use("/user",userRoutes)
 
-app.use(errorHandler)
+app.use(healthRouter);
+
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+app.use(rateLimiter);
+
+app.use(errorHandler);
 
 export default app;

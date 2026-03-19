@@ -1,10 +1,10 @@
 import { describe, beforeEach, vi, expect, it } from "vitest"
 import request from "supertest"
-import app from "../../../src/app"
-import { supabase } from "../../../src/lib/supabase"
+import app from "../../../../../src/app"
+import { supabase } from "../../../../../src/lib/supabase.js"
 import { AuthError, Session, User } from "@supabase/supabase-js"
 
-vi.mock("../../../src/lib/supabase", () => ({
+vi.mock("../../../../../src/lib/supabase.js", () => ({
     supabase: {
         auth: {
             signInWithPassword: vi.fn()

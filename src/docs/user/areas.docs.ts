@@ -31,6 +31,8 @@
  *                                  example: ["GYM", "FINANCES"]
  *          401:
  *              description: Missing or invalid token
+ *          429:
+ *              description: Too many requests
  *          500:
  *              description: Internal server error
  */
@@ -77,6 +79,8 @@
  *              description: Invalid data
  *          401:
  *              description: Missing or invalid token
+ *          429:
+ *              description: Too many requests
  *          500:
  *              description: Internal server error
  */

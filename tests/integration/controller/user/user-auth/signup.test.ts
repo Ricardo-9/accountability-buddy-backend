@@ -1,10 +1,10 @@
 import { describe, beforeEach, vi, expect, it } from "vitest"
 import request from "supertest"
-import app from "../../../src/app"
-import { supabase } from "../../../src/lib/supabase"
+import app from "../../../../../src/app"
+import { supabase } from "../../../../../src/lib/supabase"
 import { AuthError, User } from "@supabase/supabase-js"
 
-vi.mock("../../../src/lib/supabase", () => ({
+vi.mock("../../../../../src/lib/supabase", () => ({
     supabase: {
         auth: {
             signUp: vi.fn()
@@ -29,7 +29,7 @@ describe("POST /signup", () => {
             })
 
             const response = await request(app)
-                .post("/user/signup")
+                .post("/user/signin")
                 .send({
                     email: "test@example.com",
                     password: "12345678",
@@ -58,7 +58,7 @@ describe("POST /signup", () => {
                 error: null
             })
             const response = await request(app)
-                .post("/user/signup")
+                .post("/user/signin")
                 .send({
                     email: "TEST@EXAMPLE.COM",
                     password: "12345678",
@@ -86,7 +86,7 @@ describe("POST /signup", () => {
             })
 
             const response = await request(app)
-                .post("/user/signup")
+                .post("/user/signin")
                 .send({
                     email: "test@example.com",
                     password: "12345678",
@@ -113,7 +113,7 @@ describe("POST /signup", () => {
             })
 
             const response = await request(app)
-                .post("/user/signup")
+                .post("/user/signin")
                 .send({
                     email: "test@example.com",
                     password: "12345678",
@@ -134,7 +134,7 @@ describe("POST /signup", () => {
     describe("Validation errors", () => {
         it("should return 400 if the email is missing", async () => {
             const response = await request(app)
-                .post("/user/signup")
+                .post("/user/signin")
                 .send({
                     password: "12345678",
                     confirmPassword: "12345678"
@@ -158,7 +158,7 @@ describe("POST /signup", () => {
 
         it("should return 400 if the password is missing", async () => {
             const response = await request(app)
-                .post("/user/signup")
+                .post("/user/signin")
                 .send({
                     email: "test@example.com",
                     confirmPassword: "12345678"
@@ -182,7 +182,7 @@ describe("POST /signup", () => {
 
         it("should return 400 if the confirm password is missing", async () => {
             const response = await request(app)
-                .post("/user/signup")
+                .post("/user/signin")
                 .send({
                     email: "test@example.com",
                     password: "12345678"
@@ -206,7 +206,7 @@ describe("POST /signup", () => {
 
         it("should return 400 if the email is invalid", async () => {
             const response = await request(app)
-                .post("/user/signup")
+                .post("/user/signin")
                 .send({
                     email: "invalidemail.com",
                     password: "12345678",
@@ -231,7 +231,7 @@ describe("POST /signup", () => {
 
         it("should return 400 if the password is too short", async () => {
             const response = await request(app)
-                .post("/user/signup")
+                .post("/user/signin")
                 .send({
                     email: "test@example.com",
                     password: "123",
@@ -256,7 +256,7 @@ describe("POST /signup", () => {
 
         it("should return 400 if the passwords do not match", async () => {
             const response = await request(app)
-                .post("/user/signup")
+                .post("/user/signin")
                 .send({
                     email: "test@example.com",
                     password: "12345678",
