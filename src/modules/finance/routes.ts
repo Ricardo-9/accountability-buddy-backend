@@ -5,10 +5,28 @@ import { createFinancialAccountSchema } from "./schemas/createfinancialaccount.s
 import { createFinancialAccountController } from "./controllers/createfinancialaccount.controller.js";
 import { adjustBalanceController } from "./controllers/adjustbalance.controller.js";
 import { adjustBalanceSchema } from "./schemas/adjustbalance.schema.js";
+import { requireArea } from "../../middlewares/requireArea.js";
+import { AccountabilityArea } from "@prisma/client";
+import rateLimit from "express-rate-limit";
 
 const router = Router()
 
-router.post("/accounts", authenticate, validateRequest(createFinancialAccountSchema), createFinancialAccountController)
-router.patch("/accounts/balance", authenticate, validateRequest(adjustBalanceSchema), adjustBalanceController)
+router.post(
+    "/accounts", 
+    authenticate, 
+    requireArea(AccountabilityArea.FINANCES), 
+    validateRequest(createFinancialAccountSchema), 
+    rateLimit, 
+    createFinancialAccountController
+)
+
+router.patch(
+    "/accounts/balance", 
+    authenticate, 
+    requireArea(AccountabilityArea.FINANCES), 
+    validateRequest(adjustBalanceSchema), 
+    rateLimit, 
+    adjustBalanceController
+)
 
 export { router as financialRoutes }
