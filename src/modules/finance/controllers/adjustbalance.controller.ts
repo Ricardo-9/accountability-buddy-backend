@@ -8,10 +8,10 @@ export async function adjustBalanceController(
     next: NextFunction
 ) {
     const userId = req.user!.id
-    const { amount, type } = req.body
+    const { amount, type, reason } = req.body
 
     try {
-        const updated = await adjustBalanceService(userId, amount, type)
+        const updated = await adjustBalanceService(userId, amount, type, reason)
 
         return successResponse(
             res,
