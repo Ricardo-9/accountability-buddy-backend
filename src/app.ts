@@ -13,8 +13,9 @@ const app = express();
 
 app.use(express.json());
 
-app.use(testRoutes);
+app.use(rateLimiter);
 
+app.use(testRoutes);
 
 // User profile routes
 app.use("/user", userProfileRoutes);
@@ -26,8 +27,6 @@ app.use("/finance", financialRoutes)
 app.use(healthRouter);
 
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-
-app.use(rateLimiter);
 
 app.use(errorHandler);
 

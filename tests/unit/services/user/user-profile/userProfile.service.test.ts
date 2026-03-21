@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { userProfileServices } from "../../../../../src/modules/user/user-profile/services/userProfile.service";
-import { userProfileRepository } from "../../../../../src/modules/user/user-profile/repository/userProfile.repository";
+import { userProfileRepository } from "../../../../../src/modules/user/user-profile/repositories/userProfile.repository";
 import { ProfileStatus } from "@prisma/client";
 
 vi.mock(
-  "../../../src/modules/user/user-profile/repository/userProfile.repository",
+  "../../../../../src/modules/user/user-profile/repositories/userProfile.repository",
 );
 
 const fakeProfile = {
@@ -16,17 +16,6 @@ const fakeProfile = {
   updatedAt: new Date(),
   deletedAt: null,
   status: "ACTIVE" as ProfileStatus,
-};
-
-const fakeDeletedProfile = {
-  id: "user-123",
-  fullName: "name",
-  birthDate: new Date("2000-01-01"),
-  phone: null,
-  createdAt: new Date(),
-  updatedAt: new Date(),
-  deletedAt: new Date(),
-  status: "DELETED" as ProfileStatus,
 };
 
 describe("profileServices", () => {
@@ -71,7 +60,9 @@ describe("profileServices", () => {
         fullName: "New name",
       });
 
-      expect(userProfileRepository.update).toHaveBeenCalledWith("user-123", { fullName: "New name" });
+      expect(userProfileRepository.update).toHaveBeenCalledWith("user-123", {
+        fullName: "New name",
+      });
       expect(result.fullName).toEqual("New name");
     });
 
@@ -93,14 +84,11 @@ describe("profileServices", () => {
       vi.spyOn(userProfileRepository, "findById").mockResolvedValue(
         fakeProfile,
       );
-      vi.spyOn(userProfileRepository, "delete").mockResolvedValue(
-        fakeDeletedProfile,
-      );
+      vi.spyOn(userProfileRepository, "delete").mockResolvedValue();
 
       const profile = await userProfileServices.deleteProfile("user-123");
 
       expect(userProfileRepository.delete).toHaveBeenCalledWith("user-123");
-      expect(profile).toEqual(fakeDeletedProfile);
     });
 
     it("should throw NOT_FOUND when profile does not exist ", async () => {

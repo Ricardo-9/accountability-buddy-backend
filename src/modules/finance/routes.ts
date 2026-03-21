@@ -16,7 +16,6 @@ router.post(
     authenticate, 
     requireArea(AccountabilityArea.FINANCES), 
     validateRequest(createFinancialAccountSchema), 
-    rateLimit, 
     createFinancialAccountController
 )
 
@@ -25,7 +24,6 @@ router.patch(
     authenticate, 
     requireArea(AccountabilityArea.FINANCES), 
     validateRequest(adjustBalanceSchema), 
-    rateLimit, 
     adjustBalanceController
 )
 

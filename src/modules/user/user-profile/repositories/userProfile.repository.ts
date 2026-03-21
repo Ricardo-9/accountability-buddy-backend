@@ -4,21 +4,21 @@ import { UpdateProfile } from "../schemas/updateProfile.schema.js";
 export const userProfileRepository = {
   async findById(userId: string) {
     return prisma.userProfile.findUnique({
-      where: { id: userId, deletedAt: null },
+      where: { id: userId},
     });
   },
 
   async update(userId: string, data: UpdateProfile) {
     return prisma.userProfile.update({
-      where: { id: userId, deletedAt: null },
-      data: data,
+      where: { id: userId},
+      data
     });
   },
 
   async delete(userId: string) {
-    return prisma.userProfile.update({
-      where: { id: userId, deletedAt: null },
-      data: { deletedAt: new Date(), status: "deleted" },
+    await prisma.userProfile.update({
+      where: { id: userId},
+      data: { deletedAt: new Date(), status: "DELETED" },
     });
   },
 };
