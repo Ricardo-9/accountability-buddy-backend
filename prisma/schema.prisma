@@ -82,6 +82,12 @@ enum ProfileStatus {
   DELETED
 }
 
+enum BalanceChangeType {
+  INITIAL_BALANCE
+  INCOME
+  EXPENSE
+}
+
 // BASE MODELS
 
 model UserProfile {
@@ -325,11 +331,13 @@ model GoalProgressSnapshot {
 }
 
 model FinanceBalanceHistory {
-  id        String      @id @default(uuid()) @db.Uuid
-  user      UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId    String      @db.Uuid
-  balance   Decimal     @db.Decimal(14, 2)
-  createdAt DateTime    @default(now())
+  id        String            @id @default(uuid()) @db.Uuid
+  user      UserProfile       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String            @db.Uuid
+  balance   Decimal           @db.Decimal(14, 2)
+  change    Decimal           @db.Decimal(14, 2)
+  type      BalanceChangeType
+  createdAt DateTime          @default(now())
 
   @@index([userId, createdAt])
 }

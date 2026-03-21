@@ -23,7 +23,9 @@ export async function createFinancialAccountService(
             prisma.financeBalanceHistory.create({
                 data: {
                     userId,
-                    balance
+                    balance,
+                    change: balance,
+                    type: "INITIAL_BALANCE"
                 }
             })
         ])

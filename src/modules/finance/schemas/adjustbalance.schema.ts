@@ -15,6 +15,13 @@ export const adjustBalanceSchema = z.object({
                 if (iss.input === undefined) return "Type of transaction is required"
                 return "Invalid type"
             }
+        }),
+        reason: z.enum(["INCOME", "EXPENSE"], {
+            error: (iss) => {
+                if (iss.code === "invalid_value") return "Unknown transaction reason"
+                if (iss.input === undefined) return "Reason of transaction is required"
+                return "Invalid reason"
+            }
         })
     })
 })

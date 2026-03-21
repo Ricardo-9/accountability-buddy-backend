@@ -21,6 +21,10 @@ export function validateRequest(schema: z.ZodType) {
 
         req.body = data.body
         req.params = data.params
+        Object.defineProperty(req, "query", {
+            value: data.query,
+            writable: true
+        })
 
         next()
     }

@@ -7,7 +7,8 @@ import { adjustBalanceController } from "./controllers/adjustbalance.controller.
 import { adjustBalanceSchema } from "./schemas/adjustbalance.schema.js";
 import { requireArea } from "../../middlewares/requireArea.js";
 import { AccountabilityArea } from "@prisma/client";
-import rateLimit from "express-rate-limit";
+import { getStatementController } from "./controllers/getStatement.controller.js";
+import { getStatementSchema } from "./schemas/getStatement.schema.js";
 
 const router = Router()
 
@@ -25,6 +26,14 @@ router.patch(
     requireArea(AccountabilityArea.FINANCES), 
     validateRequest(adjustBalanceSchema), 
     adjustBalanceController
+)
+
+router.get(
+    "/accounts/statement",
+    authenticate,
+    requireArea(AccountabilityArea.FINANCES),
+    validateRequest(getStatementSchema), 
+    getStatementController
 )
 
 export { router as financialRoutes }
