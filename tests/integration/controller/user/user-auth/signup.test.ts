@@ -16,7 +16,7 @@ describe("POST /signup", () => {
     beforeEach(() => vi.clearAllMocks())
 
     describe("Happy path", () => {
-        it("should return 200, the user id and email", async () => {
+        it("should return 201, the user id and email", async () => {
             vi.mocked(supabase.auth.signUp).mockResolvedValue({
                 data: {
                     user: {
