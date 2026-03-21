@@ -8,7 +8,6 @@ import { adjustBalanceSchema } from "./schemas/adjustbalance.schema.js";
 import { requireArea } from "../../middlewares/requireArea.js";
 import { AccountabilityArea } from "@prisma/client";
 import { getStatementController } from "./controllers/getStatement.controller.js";
-import { rateLimiter } from "../../middlewares/generalRateLimit.js";
 import { getStatementSchema } from "./schemas/getStatement.schema.js";
 
 const router = Router()
@@ -17,8 +16,7 @@ router.post(
     "/accounts", 
     authenticate, 
     requireArea(AccountabilityArea.FINANCES), 
-    validateRequest(createFinancialAccountSchema),
-    rateLimiter, 
+    validateRequest(createFinancialAccountSchema), 
     createFinancialAccountController
 )
 
@@ -27,7 +25,6 @@ router.patch(
     authenticate, 
     requireArea(AccountabilityArea.FINANCES), 
     validateRequest(adjustBalanceSchema), 
-    rateLimiter, 
     adjustBalanceController
 )
 
@@ -36,7 +33,6 @@ router.get(
     authenticate,
     requireArea(AccountabilityArea.FINANCES),
     validateRequest(getStatementSchema), 
-    rateLimiter, 
     getStatementController
 )
 

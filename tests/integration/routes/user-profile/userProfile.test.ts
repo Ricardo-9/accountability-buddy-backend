@@ -116,7 +116,7 @@ describe("user profiles", () => {
         deletedAt: new Date(),
         status: "DELETED" as ProfileStatus,
       };
-      vi.mocked(userProfileServices.deleteProfile).mockResolvedValue(deleted);
+      vi.mocked(userProfileServices.deleteProfile).mockResolvedValue();
 
       const response = await request(app).delete("/user/me");
 
