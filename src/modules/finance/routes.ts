@@ -9,14 +9,17 @@ import { requireArea } from "../../middlewares/requireArea.js";
 import { AccountabilityArea } from "@prisma/client";
 import { getStatementController } from "./controllers/getStatement.controller.js";
 import { getStatementSchema } from "./schemas/getStatement.schema.js";
-
+import { financialCategoriesControllers } from "./controllers/financialCategories.controller.js";
+import { createFinancialCategorySchema } from "./schemas/createCategory.schema.js";
+import { updateFinancialCategorySchema } from "./schemas/updateCategory.schema.js";
+import { deleteFinancialCategorySchema } from "./schemas/deleteCategory.schema.js";
 const router = Router()
 
 router.post(
     "/accounts", 
     authenticate, 
     requireArea(AccountabilityArea.FINANCES), 
-    validateRequest(createFinancialAccountSchema), 
+    validateRequest(createFinancialAccountSchema),
     createFinancialAccountController
 )
 
@@ -34,6 +37,43 @@ router.get(
     requireArea(AccountabilityArea.FINANCES),
     validateRequest(getStatementSchema), 
     getStatementController
+)
+
+//financialCategories
+router.get(
+    "/accounts/categories",
+    authenticate,
+    requireArea(AccountabilityArea.FINANCES),
+    financialCategoriesControllers.getCategories
+    
+
+)
+
+router.post(
+    "/accounts/categories",
+    authenticate,
+    requireArea(AccountabilityArea.FINANCES),
+    validateRequest(createFinancialCategorySchema),
+    financialCategoriesControllers.createCategory
+
+)
+
+router.patch(
+    "/accounts/categories/:id",
+    authenticate,
+    requireArea(AccountabilityArea.FINANCES),
+    validateRequest(updateFinancialCategorySchema),
+    financialCategoriesControllers.updateCategory
+
+)
+
+router.delete(
+    "/accounts/categories/:id",
+    authenticate,
+    requireArea(AccountabilityArea.FINANCES),
+    validateRequest(deleteFinancialCategorySchema),
+    financialCategoriesControllers.deleteCategory
+
 )
 
 export { router as financialRoutes }
