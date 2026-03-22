@@ -69,7 +69,7 @@ describe("profileServices", () => {
     it("should throw NOT_FOUND when profile does not exist", async () => {
       vi.spyOn(userProfileRepository, "findById").mockResolvedValue(null);
 
-      await expect(
+      await expect( 
         userProfileServices.updateProfile("user-123", { fullName: "New " }),
       ).rejects.toMatchObject({
         code: "NOT_FOUND",
@@ -80,7 +80,7 @@ describe("profileServices", () => {
   });
 
   describe("deleteProfile", () => {
-    it("should delete the profile when profile exists", async () => {
+    it("should delete the profile when profile exist", async () => {
       vi.spyOn(userProfileRepository, "findById").mockResolvedValue(
         fakeProfile,
       );

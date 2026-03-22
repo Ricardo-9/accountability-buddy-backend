@@ -2,7 +2,7 @@ import { FinancialCategory } from "@prisma/client";
 import { AppError } from "../../../core/errors/AppError.js";
 import { financialCategoriesRepository } from "../repository/financialCategories.repository.js";
 import { Prisma } from "@prisma/client";
-async function fetchCategory(
+export async function fetchCategory(
   userId: string,
   categoryId: string,
 ): Promise<FinancialCategory> {
