@@ -1,0 +1,11 @@
+export const DEFAULT_FINANCIAL_CATEGORIES = [
+  "HOUSING",
+  "FOOD",
+  "TRANSPORTATION",
+  "UTILITIES",
+  "HEALTH",
+  "EDUCATION",
+  "DEBTS",
+  "SAVINGS",
+  "OTHER",
+] as const;
