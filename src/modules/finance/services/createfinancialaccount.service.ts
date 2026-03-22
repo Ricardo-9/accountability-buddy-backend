@@ -35,6 +35,7 @@ export async function createFinancialAccountService(
           name,
           isDefault: true,
         })),
+        skipDuplicates: true,
       }),
     ]);
 
