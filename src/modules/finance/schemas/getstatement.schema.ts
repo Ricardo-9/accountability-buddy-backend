@@ -13,5 +13,10 @@ export const getStatementSchema = z.object({
             .max(100, { error: "Limit must be at most 100" })
             .default(20),
         cursor: z.uuid({ error: "Invalid cursor" }).optional()
-    })
+    }).refine((data) => {
+        if (data.startDate && data.endDate) {
+            return data.startDate <= data.endDate
+        }
+        return true
+    }, { error: "Start date must be before end date", path: ["startdate"]})
 })

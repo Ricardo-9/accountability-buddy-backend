@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { getStatementService } from "../services/getStatement.service.js";
+import { getStatementService } from "../services/getstatement.service.js";
 import { successResponse } from "../../../shared/utils/apiResponse.js";
 
 export async function getStatementController(

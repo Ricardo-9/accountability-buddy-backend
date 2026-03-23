@@ -8,13 +8,7 @@ export async function getStatementService(
     limit = 20,
     cursor?: string
 ) {
-    if (startDate && endDate && startDate > endDate)
-        throw new AppError(
-            "INVALID_DATE_RANGE",
-            "Start date must be before end date"
-        )
-
-    return await prisma.financeBalanceHistory.findMany({
+    const statement = await prisma.financeBalanceHistory.findMany({
         where: {
             userId,
             ...(startDate || endDate ? {
@@ -40,4 +34,8 @@ export async function getStatementService(
             cursor: { id: cursor }
         })
     })
+
+    if (statement.length === 0) throw new AppError("NONEXISTENT_ACCOUNT", "User does not have an account", 404)
+
+    return statement
 }
