@@ -8,7 +8,7 @@ export const adjustBalanceSchema = z.object({
                 if (iss.input === undefined) return "Amount is required"
                 return "Invalid amount"
             }
-        }).gt(0, {error: "The amount value must be greater than $0"}),
+        }).gt(0, { error: "The amount value must be greater than $0" }),
         type: z.enum(["INCREMENT", "DECREMENT"], {
             error: (iss) => {
                 if (iss.code === "invalid_value") return "Unknown transaction type"
@@ -23,5 +23,10 @@ export const adjustBalanceSchema = z.object({
                 return "Invalid reason"
             }
         })
-    })
+    }).refine((data) => {
+        if (data.type === "DECREMENT") return data.reason === "EXPENSE"
+        if (data.type === "INCREMENT") return data.reason === "INCOME"
+        return false
+    }, { error: "Type and reason for the transaction are not compatible" }
+    )
 })
