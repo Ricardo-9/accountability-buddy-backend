@@ -9,6 +9,7 @@ import { requireArea } from "../../middlewares/requireArea.js";
 import { AccountabilityArea } from "@prisma/client";
 import { getStatementController } from "./controllers/getStatement.controller.js";
 import { getStatementSchema } from "./schemas/getStatement.schema.js";
+import { getAccountController } from "./controllers/getaccount.controller.js";
 
 const router = Router()
 
@@ -18,6 +19,13 @@ router.post(
     requireArea(AccountabilityArea.FINANCES), 
     validateRequest(createFinancialAccountSchema), 
     createFinancialAccountController
+)
+
+router.get(
+    "/accounts",
+    authenticate,
+    requireArea(AccountabilityArea.FINANCES),
+    getAccountController
 )
 
 router.patch(
