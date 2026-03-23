@@ -27,6 +27,6 @@ export const adjustBalanceSchema = z.object({
         if (data.type === "DECREMENT") return data.reason === "EXPENSE"
         if (data.type === "INCREMENT") return data.reason === "INCOME"
         return false
-    }, { error: "Type and reason for the transaction are not compatible" }
+    }, { error: "Type and reason for the transaction are not compatible", path: ["type"] }
     )
 })
