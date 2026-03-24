@@ -33,7 +33,7 @@ export async function createFinancialAccountService(
         return account
     } catch (err) {
         if (err instanceof PrismaClientKnownRequestError && err.code === "P2002")
-            throw new AppError("DUPLICATE_REGISTER", "The user already has an account", 409)
+            throw new AppError("DUPLICATE_REGISTER", "User already has an account", 409)
 
         throw err
     }
