@@ -34,6 +34,7 @@ vi.mock("../../../../../src/lib/prisma", () => ({
 }))
 
 const validToken = "valid-token"
+
 const createdAt = new Date()
 const mockAccount = {
     id: "acc-id",
