@@ -3,7 +3,6 @@ import request from "supertest";
 import app from "../../../../src/app.js";
 import { financialCategoriesServices } from "../../../../src/modules/finance/services/financialCategories.service";
 import { AppError } from "../../../../src/core/errors/AppError.js";
-import { requireArea } from "../../../../src/middlewares/requireArea.js";
 import { authenticate } from "../../../../src/middlewares/authMiddleware.js";
 
 const mockCategory = {
@@ -15,7 +14,19 @@ const mockCategory = {
   updatedAt: new Date().toISOString(),
 };
 
-vi.mock("../../../../src/modules/finance/services/financialCategories.service");
+let requireAreaShouldFail = false;
+
+vi.mock(
+  "../../../../src/modules/finance/services/financialCategories.service",
+  () => ({
+    financialCategoriesServices: {
+      getCategories: vi.fn(),
+      createCategory: vi.fn(),
+      updateCategory: vi.fn(),
+      deleteCategory: vi.fn(),
+    },
+  }),
+);
 
 vi.mock("../../../../src/middlewares/authMiddleware.ts", () => ({
   authenticate: vi.fn((req: any, _res, next) => {
@@ -26,83 +37,64 @@ vi.mock("../../../../src/middlewares/authMiddleware.ts", () => ({
 
 vi.mock("../../../../src/middlewares/requireArea.js", () => ({
   requireArea: vi.fn(() => (_req: any, _res: any, next: any) => {
+    if (requireAreaShouldFail) {
+      next(
+        new AppError(
+          "FORBIDDEN",
+          "User need to be registered in FINANCES to access this feature",
+          403,
+        ),
+      );
+    }
     next();
   }),
 }));
 
 describe("financial categories", () => {
-  
   beforeEach(() => {
     vi.clearAllMocks();
-
-    vi.mocked(authenticate).mockImplementation(async (req: any, _res, next) => {
-      req.user = { id: "user-123" };
-      next();
-    });
-
-    vi.mocked(requireArea).mockImplementation(
-      () => async (_req: any, _res: any, next: any) => {
-        next();
-      },
-    );
   });
 
   describe("get categories", () => {
-    describe("with area permission", () => {
-      it("should return 200 and categories", async () => {
-        vi.mocked(financialCategoriesServices.getCategories).mockResolvedValue(
-          [mockCategory as any],
-        );
+    it("should return 200 and categories", async () => {
+      vi.mocked(financialCategoriesServices.getCategories).mockResolvedValue([
+        mockCategory as any,
+      ]);
 
-        const response = await request(app).get("/finance/categories");
+      const response = await request(app).get("/finance/categories");
 
-        expect(response.status).toBe(200);
-        expect(response.body.data).toEqual([mockCategory]);
-        expect(response.body.error).toBeUndefined();
-      });
-
-      it("should return 500 when database fails", async () => {
-        vi.mocked(financialCategoriesServices.getCategories).mockRejectedValue(
-          new Error("DB error"),
-        );
-
-        const response = await request(app).get("/finance/categories");
-
-        expect(response.status).toBe(500);
-      });
-
-      it("should return 401 when user is not authenticated", async () => {
-        vi.mocked(authenticate).mockImplementationOnce(
-          async (_req, _res, next) => {
-            next(new AppError("UNAUTHORIZED", "Invalid or expired token", 401));
-          },
-        );
-
-        const response = await request(app).get("/finance/categories");
-
-        expect(response.status).toBe(401);
-      });
+      expect(response.status).toBe(200);
+      expect(response.body.data).toEqual([mockCategory]);
+      expect(response.body.error).toBeUndefined();
     });
 
-    describe("without area permission", () => {
+    it("should return 500 when database fails", async () => {
+      vi.mocked(financialCategoriesServices.getCategories).mockRejectedValue(
+        new Error("DB error"),
+      );
 
+      const response = await request(app).get("/finance/categories");
 
-      it("should return 403 when user does not have area permission", async () => {
-        vi.mocked(requireArea).mockImplementation(
-          () => async (_req: any, _res: any, next: any) => {
-            next(
-              new AppError(
-                "FORBIDDEN",
-                "User need to be registered in finance to access this feature",
-                403,
-              ),
-            );
-          },
-        );
-        const response = await request(app).get("/finance/categories");
+      expect(response.status).toBe(500);
+    });
 
-        expect(response.status).toBe(403);
-      });
+    it("should return 401 when user is not authenticated", async () => {
+      vi.mocked(authenticate).mockImplementationOnce(
+        async (_req, _res, next) => {
+          next(new AppError("UNAUTHORIZED", "Invalid or expired token", 401));
+        },
+      );
+
+      const response = await request(app).get("/finance/categories");
+
+      expect(response.status).toBe(401);
+    });
+    it("should return 403 when user does not have area permission", async () => {
+      requireAreaShouldFail = true;
+
+      const response = await request(app).get("/finance/categories");
+
+      expect(response.status).toBe(403);
     });
   });
 });
