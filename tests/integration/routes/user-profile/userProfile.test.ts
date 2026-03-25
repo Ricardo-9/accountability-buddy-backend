@@ -4,6 +4,7 @@ import app from "../../../../src/app.js";
 import { userProfileServices } from "../../../../src/modules/user/user-profile/services/userProfile.service.js";
 import { ProfileStatus } from "@prisma/client";
 import { AppError } from "../../../../src/core/errors/AppError.js";
+import { authenticate } from "../../../../src/middlewares/authMiddleware.js";
 
 const fakeProfile = {
   id: "user-123",
@@ -61,6 +62,18 @@ describe("user profiles", () => {
       expect(response.body.error).toBeUndefined();
     });
 
+    it("should return 401 when user is not authenticated", async () => {
+      vi.mocked(authenticate).mockImplementationOnce(
+        async (req: any, _res: any, next) => {
+          next(new AppError("UNAUTHORIZED", "Invalid or expired token", 401));
+        },
+      );
+
+      const response = await request(app).get("/finance/categories");
+
+      expect(response.status).toBe(401);
+    });
+
     it("should return 404 when profile is not found", async () => {
       vi.mocked(userProfileServices.getProfile).mockRejectedValue(
         new AppError("NOT_FOUND", "Profile not found", 404),
@@ -70,6 +83,16 @@ describe("user profiles", () => {
 
       expect(response.statusCode).toBe(404);
       expect(response.body.error.code).toBe("NOT_FOUND");
+    });
+
+    it("should return 500 when database fails", async () => {
+      vi.mocked(userProfileServices.getProfile).mockRejectedValue(
+        new Error("DB error"),
+      );
+
+      const response = await request(app).get("/user/me");
+
+      expect(response.status).toBe(500);
     });
   });
 
@@ -96,6 +119,20 @@ describe("user profiles", () => {
       expect(response.body.error.code).toBe("VALIDATION_ERROR");
     });
 
+    it("should return 401 when user is not authenticated", async () => {
+      vi.mocked(authenticate).mockImplementationOnce(
+        async (req: any, _res: any, next) => {
+          next(new AppError("UNAUTHORIZED", "Invalid or expired token", 401));
+        },
+      );
+
+      const response = await request(app)
+        .patch("/user/me")
+        .send({ fullName: "New Name" });
+
+      expect(response.status).toBe(401);
+    });
+
     it("should return 404 when profile is not found", async () => {
       vi.mocked(userProfileServices.updateProfile).mockRejectedValue(
         new AppError("NOT_FOUND", "Profile not found", 404),
@@ -106,6 +143,18 @@ describe("user profiles", () => {
 
       expect(response.statusCode).toBe(404);
       expect(response.body.error.code).toBe("NOT_FOUND");
+    });
+
+    it("should return 500 when database fails", async () => {
+      vi.mocked(userProfileServices.updateProfile).mockRejectedValue(
+        new Error("DB error"),
+      );
+
+      const response = await request(app)
+        .patch("/user/me")
+        .send({ fullName: "New Name" });
+
+      expect(response.status).toBe(500);
     });
   });
 
@@ -125,6 +174,18 @@ describe("user profiles", () => {
       expect(response.body.error).toBeUndefined();
     });
 
+    it("should return 401 when user is not authenticated", async () => {
+      vi.mocked(authenticate).mockImplementationOnce(
+        async (req: any, _res: any, next) => {
+          next(new AppError("UNAUTHORIZED", "Invalid or expired token", 401));
+        },
+      );
+
+      const response = await request(app).delete("/user/me");
+
+      expect(response.status).toBe(401);
+    });
+
     it("should return 404 when profile is not found", async () => {
       vi.mocked(userProfileServices.deleteProfile).mockRejectedValue(
         new AppError("NOT_FOUND", "Profile not found", 404),
@@ -133,6 +194,16 @@ describe("user profiles", () => {
 
       expect(response.statusCode).toBe(404);
       expect(response.body.error.code).toBe("NOT_FOUND");
+    });
+
+    it("should return 500 when database fails", async () => {
+      vi.mocked(userProfileServices.deleteProfile).mockRejectedValue(
+        new Error("DB error"),
+      );
+
+      const response = await request(app).delete("/user/me");
+
+      expect(response.status).toBe(500);
     });
   });
 });
