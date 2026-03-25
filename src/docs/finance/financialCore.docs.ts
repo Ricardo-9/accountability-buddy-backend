@@ -122,3 +122,72 @@
  *          500:
  *              description: Internal server error
 */
+
+/**
+ * @swagger
+ * /finance/accounts/balance:
+ *  patch:
+ *      summary: Adjust balance in existent account
+ *      tags: [Finance]
+ *      security:
+ *          - bearerAuth: []
+ *      requestBody:
+ *          required: true
+ *          content:
+ *              application/json:
+ *                  schema:
+ *                      type: object
+ *                      required:
+ *                          - amount
+ *                          - type
+ *                          - reason
+ *                      properties:
+ *                          amount:
+ *                              type: number
+ *                              example: 100
+ *                          type:
+ *                              type: string
+ *                              example: INCREMENT
+ *                          reason:
+ *                              type: string
+ *                              example: INCOME
+ *      responses:
+ *          200:
+ *              description: Account successfully updated
+ *              content:
+ *                  application/json:
+ *                      schema:
+ *                          type: object
+ *                          properties:
+ *                              success:
+ *                                  type: boolean
+ *                                  example: true
+ *                              data:
+ *                                  type: object
+ *                                      accountId:
+ *                                          type: string
+ *                                          format: uuid
+ *                                          example: 7d1effd5-3185-432b-bb39-8b6aa1ef2791
+ *                                      ownerId:
+ *                                          type: string
+ *                                          format: uuid
+ *                                          example: 9bbdaeba-c0e8-4b76-b887-20112e487bdd
+ *                                      balance:
+ *                                          type: string
+ *                                          description: Decimal value serialized as string
+ *                                          example: 1000
+ *                                      updatedAt:
+ *                                          type: string
+ *                                          format: date-time
+ *                                          example: 2026-03-25T12:38:35.127Z
+ *          401:
+ *              description: Missing or invalid token
+ *          403:
+ *              description: User does not have access to the FINANCES area
+ *          404:
+ *              description: User does not have an account
+ *          429:
+ *              description: Too many requests
+ *          500:
+ *              description: Internal server error 
+ */
