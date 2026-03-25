@@ -1,17 +1,17 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { jwtVerify } from "jose";
 import { prisma } from "../../../../../src/lib/prisma";
 import request from "supertest";
 import { Prisma } from "@prisma/client";
 import app from "../../../../../src/app";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/client";
+import { authMiddlewareTests } from "../../../shared/authMiddlewareTests";
 
 vi.mock("jose", async (importOriginal) => {
     const original = await importOriginal<typeof import("jose")>()
 
     return {
         ...original,
-        createRemoteJWTSet: vi.fn(),
+        createRemoteJWKSet: vi.fn(),
         jwtVerify: vi.fn().mockResolvedValue({
             payload: { sub: "userId", email: "user@test.com" }
         })
@@ -94,32 +94,7 @@ describe("POST /accounts test", async () => {
         })
     })
 
-    it("should throw error 401 (UNAUTHORIZED) if token is missing", async () => {
-        const response = await request(app).post("/finance/accounts")
-
-        expect(response.status).toBe(401)
-    })
-
-    it("should throw error 401 (UNAUTHORIZED) if token is invalid", async () => {
-        vi.mocked(jwtVerify).mockRejectedValueOnce(new Error("Invalid token"))
-
-        const response = await request(app)
-            .post("/finance/accounts")
-            .set("Authorization", "Bearer invalid-token")
-
-        expect(response.status).toBe(401)
-    })
-
-    it("should throw error 403 (FORBIDDEN) if user is not registered in FINANCES", async () => {
-        vi.mocked(prisma.userArea.findFirst).mockResolvedValue(null)
-
-        const response = await request(app)
-            .post("/finance/accounts")
-            .set("Authorization", `Bearer ${validToken}`)
-            .send({ balance: 1000 })
-
-        expect(response.status).toBe(403)
-    })
+    authMiddlewareTests("post", "/finance/accounts", "FINANCES")
 
     it("should throw error 400 (VALIDATION_ERROR) if balance is missing", async () => {
         vi.mocked(prisma.userArea.findFirst).mockResolvedValue({ userId: "userId" } as any)

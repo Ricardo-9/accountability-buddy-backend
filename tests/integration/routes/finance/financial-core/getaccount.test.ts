@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { jwtVerify } from "jose";
+import { authMiddlewareTests } from "../../../shared/authMiddlewareTests";
 import { prisma } from "../../../../../src/lib/prisma";
 import request from "supertest"
 import { Prisma } from "@prisma/client";
@@ -64,31 +64,7 @@ describe("GET /accounts test", () => {
         })
     })
 
-    it("should throw error 401 (UNAUTHORIZED) if token is missing", async () => {
-        const response = await request(app).get("/finance/accounts")
-
-        expect(response.status).toBe(401)
-    })
-
-    it("should throw error 401 (UNAUTHORIZED) if token is invalid", async () => {
-        vi.mocked(jwtVerify).mockRejectedValueOnce(new Error("Invalid token"))
-
-        const response = await request(app)
-            .get("/finance/accounts")
-            .set("Authorization", "Bearer invalid-token")
-
-        expect(response.status).toBe(401)
-    })
-
-    it("should throw error 403 (FORBIDDEN) if user is not registered in FINANCES", async () => {
-        vi.mocked(prisma.userArea.findFirst).mockResolvedValue(null)
-
-        const response = await request(app)
-            .get("/finance/accounts")
-            .set("Authorization", `Bearer ${validToken}`)
-
-        expect(response.status).toBe(403)
-    })
+    authMiddlewareTests("post", "/finance/accounts", "FINANCES")
 
     it("should throw error 404 (NOT_FOUND) if user does not have an account", async () => {
         vi.mocked(prisma.financeAccount.findUnique).mockResolvedValue(null)

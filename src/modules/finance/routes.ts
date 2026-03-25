@@ -17,6 +17,7 @@ import { getAccountController } from "./controllers/getaccount.controller.js";
 
 const router = Router()
 
+//financialCore
 router.post(
     "/accounts", 
     authenticate, 
@@ -54,8 +55,6 @@ router.get(
     authenticate,
     requireArea(AccountabilityArea.FINANCES),
     financialCategoriesControllers.getCategories
-    
-
 )
 
 router.post(
@@ -64,7 +63,6 @@ router.post(
     requireArea(AccountabilityArea.FINANCES),
     validateRequest(createFinancialCategorySchema),
     financialCategoriesControllers.createCategory
-
 )
 
 router.patch(
@@ -73,7 +71,6 @@ router.patch(
     requireArea(AccountabilityArea.FINANCES),
     validateRequest(updateFinancialCategorySchema),
     financialCategoriesControllers.updateCategory
-
 )
 
 router.delete(
@@ -82,7 +79,6 @@ router.delete(
     requireArea(AccountabilityArea.FINANCES),
     validateRequest(deleteFinancialCategorySchema),
     financialCategoriesControllers.deleteCategory
-
 )
 
 export { router as financialRoutes }
