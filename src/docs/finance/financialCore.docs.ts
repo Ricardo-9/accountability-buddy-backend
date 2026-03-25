@@ -61,9 +61,11 @@
  *          401:
  *              description: Missing or invalid token
  *          403:
- *              description: User is not registered in FINANCES
+ *              description: User does not have access to the FINANCES area
  *          409:
  *              description: User already has an account
+ *          429:
+ *              description: Too many requests
  *          500:
  *              description: Internal server error
  */

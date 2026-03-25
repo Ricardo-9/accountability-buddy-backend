@@ -7,7 +7,8 @@ vi.mock("../../../../../src/lib/prisma", () => ({
     prisma: {
         $transaction: vi.fn(),
         financeAccount: { create: vi.fn() },
-        financeBalanceHistory: { create: vi.fn() }
+        financeBalanceHistory: { create: vi.fn() },
+        financialCategory: { createMany: vi.fn() }
     }
 }))
 
@@ -47,7 +48,7 @@ describe("Create financial account test", () => {
         expect(prisma.$transaction).toHaveBeenCalledOnce()
 
         const args = vi.mocked(prisma.$transaction).mock.calls[0][0];
-        expect(args).toHaveLength(2);
+        expect(args).toHaveLength(3);
     })
 
     it("should create financialBalanceHistory with type = INITIAL_BALANCE and change = balance", async () => {

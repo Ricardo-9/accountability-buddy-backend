@@ -29,6 +29,9 @@ vi.mock("../../../../../src/lib/prisma", () => ({
         },
         financeBalanceHistory: {
             create: vi.fn()
+        },
+        financialCategory: {
+            createMany: vi.fn()
         }
     }
 }))
@@ -48,7 +51,7 @@ describe("POST /accounts test", async () => {
     beforeEach(() => vi.clearAllMocks())
 
     it("should return 201 and account data", async () => {
-        vi.mocked(prisma.$transaction).mockResolvedValue([mockAccount, {}])
+        vi.mocked(prisma.$transaction).mockResolvedValue([mockAccount, {}, []])
         vi.mocked(prisma.userArea.findFirst).mockResolvedValue({ userId: "userId" } as any)
 
         const response = await request(app)
