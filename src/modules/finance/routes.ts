@@ -13,6 +13,8 @@ import { financialCategoriesControllers } from "./controllers/financialCategorie
 import { createFinancialCategorySchema } from "./schemas/createCategory.schema.js";
 import { updateFinancialCategorySchema } from "./schemas/updateCategory.schema.js";
 import { deleteFinancialCategorySchema } from "./schemas/deleteCategory.schema.js";
+import { getAccountController } from "./controllers/getaccount.controller.js";
+
 const router = Router()
 
 router.post(
@@ -21,6 +23,13 @@ router.post(
     requireArea(AccountabilityArea.FINANCES), 
     validateRequest(createFinancialAccountSchema),
     createFinancialAccountController
+)
+
+router.get(
+    "/accounts",
+    authenticate,
+    requireArea(AccountabilityArea.FINANCES),
+    getAccountController
 )
 
 router.patch(
