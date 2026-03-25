@@ -14,75 +14,82 @@ import { createFinancialCategorySchema } from "./schemas/createCategory.schema.j
 import { updateFinancialCategorySchema } from "./schemas/updateCategory.schema.js";
 import { deleteFinancialCategorySchema } from "./schemas/deleteCategory.schema.js";
 import { getAccountController } from "./controllers/getaccount.controller.js";
+import { createVariableExpenseSchema } from "./schemas/createExpense.schema.js";
+import { variableExpenseController } from "./controllers/variableExpense.controller.js";
 
-const router = Router()
+const router = Router();
 
 router.post(
-    "/accounts", 
-    authenticate, 
-    requireArea(AccountabilityArea.FINANCES), 
-    validateRequest(createFinancialAccountSchema),
-    createFinancialAccountController
-)
+  "/accounts",
+  authenticate,
+  requireArea(AccountabilityArea.FINANCES),
+  validateRequest(createFinancialAccountSchema),
+  createFinancialAccountController,
+);
 
 router.get(
-    "/accounts",
-    authenticate,
-    requireArea(AccountabilityArea.FINANCES),
-    getAccountController
-)
+  "/accounts",
+  authenticate,
+  requireArea(AccountabilityArea.FINANCES),
+  getAccountController,
+);
 
 router.patch(
-    "/accounts/balance", 
-    authenticate, 
-    requireArea(AccountabilityArea.FINANCES), 
-    validateRequest(adjustBalanceSchema), 
-    adjustBalanceController
-)
+  "/accounts/balance",
+  authenticate,
+  requireArea(AccountabilityArea.FINANCES),
+  validateRequest(adjustBalanceSchema),
+  adjustBalanceController,
+);
 
 router.get(
-    "/accounts/statement",
-    authenticate,
-    requireArea(AccountabilityArea.FINANCES),
-    validateRequest(getStatementSchema), 
-    getStatementController
-)
+  "/accounts/statement",
+  authenticate,
+  requireArea(AccountabilityArea.FINANCES),
+  validateRequest(getStatementSchema),
+  getStatementController,
+);
 
 //financialCategories
 router.get(
-    "/categories",
-    authenticate,
-    requireArea(AccountabilityArea.FINANCES),
-    financialCategoriesControllers.getCategories
-    
-
-)
+  "/categories",
+  authenticate,
+  requireArea(AccountabilityArea.FINANCES),
+  financialCategoriesControllers.getCategories,
+);
 
 router.post(
-    "/categories",
-    authenticate,
-    requireArea(AccountabilityArea.FINANCES),
-    validateRequest(createFinancialCategorySchema),
-    financialCategoriesControllers.createCategory
-
-)
+  "/categories",
+  authenticate,
+  requireArea(AccountabilityArea.FINANCES),
+  validateRequest(createFinancialCategorySchema),
+  financialCategoriesControllers.createCategory,
+);
 
 router.patch(
-    "/categories/:id",
-    authenticate,
-    requireArea(AccountabilityArea.FINANCES),
-    validateRequest(updateFinancialCategorySchema),
-    financialCategoriesControllers.updateCategory
-
-)
+  "/categories/:id",
+  authenticate,
+  requireArea(AccountabilityArea.FINANCES),
+  validateRequest(updateFinancialCategorySchema),
+  financialCategoriesControllers.updateCategory,
+);
 
 router.delete(
-    "/categories/:id",
-    authenticate,
-    requireArea(AccountabilityArea.FINANCES),
-    validateRequest(deleteFinancialCategorySchema),
-    financialCategoriesControllers.deleteCategory
+  "/categories/:id",
+  authenticate,
+  requireArea(AccountabilityArea.FINANCES),
+  validateRequest(deleteFinancialCategorySchema),
+  financialCategoriesControllers.deleteCategory,
+);
 
-)
+//variableExpenses
 
-export { router as financialRoutes }
+router.post(
+  "variable-expense",
+  authenticate,
+  requireArea(AccountabilityArea.FINANCES),
+  validateRequest(createVariableExpenseSchema),
+  variableExpenseController.createVariableExpense,
+);
+
+export { router as financialRoutes };
