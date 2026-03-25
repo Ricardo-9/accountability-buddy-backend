@@ -164,6 +164,7 @@
  *                                  example: true
  *                              data:
  *                                  type: object
+ *                                  properties:
  *                                      accountId:
  *                                          type: string
  *                                          format: uuid
