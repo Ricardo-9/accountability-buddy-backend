@@ -19,6 +19,7 @@ import { variableExpenseController } from "./controllers/variableExpense.control
 
 const router = Router();
 
+//financialCore
 router.post(
   "/accounts",
   authenticate,
