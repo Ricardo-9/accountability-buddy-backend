@@ -85,6 +85,13 @@ router.delete(
 
 //variableExpenses
 
+router.get(
+  "/variable-expense",
+  authenticate,
+  requireArea(AccountabilityArea.FINANCES),
+  variableExpenseController.getVariableExpenes,
+);
+
 router.post(
   "/variable-expense",
   authenticate,

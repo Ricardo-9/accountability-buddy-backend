@@ -4,11 +4,24 @@ import { variableExpenseRepository } from "../repository/variableExpenses.reposi
 import { Prisma } from "@prisma/client";
 import { AppError } from "../../../core/errors/AppError.js";
 
+export async function fetchExpense(userId: string, expenseId: string): Promise<VariableExpense> {
+  const expense = await variableExpenseRepository.findOneById(expenseId);
+
+  if (!expense || expense.userId !== userId) {
+    throw new AppError("NOT_FOUND", "variable expense not found", 404);
+  }
+
+  return expense;
+}
+
 export const variableExpenseService = {
-  async getVariableExpenses(userId:string): Promise<VariableExpense[]> {
-    return await variableExpenseRepository.findManyById(userId)
+  async getVariableExpense(userId: string, expenseId: string) {
+    return await fetchExpense(userId,expenseId)
   },
 
+  async getVariableExpenses(userId: string): Promise<VariableExpense[]> {
+    return await variableExpenseRepository.findManyById(userId);
+  },
 
   async createVariableExpense(
     userId: string,

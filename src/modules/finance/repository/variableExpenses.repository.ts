@@ -4,6 +4,19 @@ import { adjustBalanceWithTx } from "../helpers/adjustBalanceWithTx.helper.js";
 import { Prisma } from "@prisma/client";
 
 export const variableExpenseRepository = {
+
+  async findOneById(expenseId:string){
+    return prisma.variableExpense.findUnique({
+      where: {id: expenseId}
+    })
+  },
+
+  async findManyById(userId:string){
+    return prisma.variableExpense.findMany({
+      where: {userId},
+    })
+  },
+
   async create(userId: string, data: CreateVariableExpenseType) {
     return await prisma.$transaction(async (tx) => {
       const expense = await tx.variableExpense.create({
@@ -28,11 +41,9 @@ export const variableExpenseRepository = {
     });
   },
 
-  async findManyById(userId:string){
-    return prisma.variableExpense.findMany({
-      where: {userId}
-    })
-  }
+
+
+  
 
   
 };
