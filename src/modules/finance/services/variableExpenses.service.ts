@@ -5,6 +5,11 @@ import { Prisma } from "@prisma/client";
 import { AppError } from "../../../core/errors/AppError.js";
 
 export const variableExpenseService = {
+  async getVariableExpenses(userId:string): Promise<VariableExpense[]> {
+    return await variableExpenseRepository.findManyById(userId)
+  },
+
+
   async createVariableExpense(
     userId: string,
     data: CreateVariableExpenseType,
