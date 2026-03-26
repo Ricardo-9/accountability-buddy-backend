@@ -1,8 +1,7 @@
-import { Decimal } from '@prisma/client/runtime/client';
-import {z} from 'zod';
+import { z } from "zod";
 
 export const updateVariableExpenseSchema = z.object({
-    body: z.object({
+  body: z.object({
     categoryId: z
       .string({
         error: "categoryID for variable expense must be a string(uuid)",
@@ -28,11 +27,15 @@ export const updateVariableExpenseSchema = z.object({
       .optional(),
 
     expenseDate: z.coerce.date().optional(),
-}),
-params: z.object({
-        id: z.string().uuid()
-    })
-})
+  }),
+  params: z.object({
+    id: z.string().uuid(),
+  }),
+});
 
-export type updateVariableExpenseType = z.infer<typeof updateVariableExpenseSchema>["body"]
-export type updateVariableExpenseIdType = z.infer<typeof updateVariableExpenseSchema>["params"]
+export type updateVariableExpenseType = z.infer<
+  typeof updateVariableExpenseSchema
+>["body"];
+export type updateVariableExpenseIdType = z.infer<
+  typeof updateVariableExpenseSchema
+>["params"];

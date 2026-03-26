@@ -4,6 +4,7 @@ import { adjustBalanceWithTx } from "../helpers/adjustBalanceWithTx.helper.js";
 import { Prisma } from "@prisma/client";
 import { updateVariableExpenseType } from "../schemas/updateVariableExpense.schema.js";
 
+
 export const variableExpenseRepository = {
   async findOneById(userId: string, expenseId: string) {
     return prisma.variableExpense.findUnique({
@@ -51,7 +52,7 @@ export const variableExpenseRepository = {
   ) {
     return await prisma.$transaction(async (tx) => {
       const updated = await tx.variableExpense.update({
-        where: { id: expenseId,userId},
+        where: { id: expenseId, userId },
         data: Object.assign(
           {},
           data.name !== undefined && { name: data.name },
@@ -78,4 +79,25 @@ export const variableExpenseRepository = {
       return updated;
     });
   },
+
+  async delete(userId: string, expenseId: string, amount: number ) {
+    return await prisma.$transaction(async (tx) => {
+      const deleted = await tx.variableExpense.delete({
+        where: { id: expenseId, userId },
+      });
+
+      await adjustBalanceWithTx({
+        tx,
+        userId,
+        amount: amount,
+        type: "INCREMENT",
+        reason: "INCOME",
+      });
+
+      return deleted;
+    });
+
+  },
+
+  
 };

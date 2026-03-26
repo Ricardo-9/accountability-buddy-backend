@@ -116,4 +116,11 @@ router.patch(
   variableExpenseController.updateVariableExpense,
 );
 
+router.delete(
+  "/variable-expense/:id",
+  authenticate,
+  requireArea(AccountabilityArea.FINANCES),
+  variableExpenseController.deleteVariableExpense,
+);
+
 export { router as financialRoutes };

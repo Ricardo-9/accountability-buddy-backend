@@ -94,4 +94,10 @@ export const variableExpenseService = {
       throw err;
     }
   },
+
+  async deleteExpense(userId:string, expenseId:string){
+    const {amount} = await fetchExpense(userId,expenseId)
+
+    return await variableExpenseRepository.delete(userId,expenseId,amount.toNumber())
+  }
 };

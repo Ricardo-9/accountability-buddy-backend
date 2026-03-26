@@ -77,4 +77,20 @@ export const variableExpenseController = {
       next(err);
     }
   },
+
+  async deleteVariableExpense(
+    req: Request<getVariableExpenseType>,
+    res: Response,
+    next: NextFunction,
+  ) {
+    const userId = req.user!.id;
+    const { id } = req.params;
+    try {
+      await variableExpenseService.deleteExpense(userId, id);
+
+      return successResponse(res, null, "sucessfuly deleted");
+    } catch (err) {
+      next(err);
+    }
+  },
 };
