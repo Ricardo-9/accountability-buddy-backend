@@ -2,9 +2,9 @@ import { prisma } from "../../../../src/lib/prisma.js";
 
 export const financialCategoriesRepository = {
 
-  async findOneById(categoryId: string) {
+  async findOneById(userId:string,categoryId: string) {
     return prisma.financialCategory.findUnique({
-      where: { id: categoryId},
+      where: { id: categoryId,userId},
     });
   },
   async findManyById(userId: string) {
@@ -22,16 +22,16 @@ export const financialCategoriesRepository = {
     });
   },
 
-  async update( categoryId: string, name: string) {
+  async update(userId:string, categoryId: string, name: string) {
     return prisma.financialCategory.update({
-      where: { id: categoryId },
+      where: { id: categoryId ,userId},
       data: { name },
     });
   },
 
-  async delete( categoryId: string) {
+  async delete(userId:string, categoryId: string) {
     return prisma.financialCategory.delete({
-      where: { id: categoryId },
+      where: { id: categoryId,userId },
     });
   },
 };

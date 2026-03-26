@@ -2,19 +2,19 @@ import { prisma } from "../../../../src/lib/prisma.js";
 import { CreateVariableExpenseType } from "../schemas/createExpense.schema.js";
 import { adjustBalanceWithTx } from "../helpers/adjustBalanceWithTx.helper.js";
 import { Prisma } from "@prisma/client";
+import { updateVariableExpenseType } from "../schemas/updateVariableExpense.schema.js";
 
 export const variableExpenseRepository = {
-
-  async findOneById(expenseId:string){
+  async findOneById(userId: string, expenseId: string) {
     return prisma.variableExpense.findUnique({
-      where: {id: expenseId}
-    })
+      where: { id: expenseId, userId },
+    });
   },
 
-  async findManyById(userId:string){
+  async findManyById(userId: string) {
     return prisma.variableExpense.findMany({
-      where: {userId},
-    })
+      where: { userId },
+    });
   },
 
   async create(userId: string, data: CreateVariableExpenseType) {
@@ -41,9 +41,41 @@ export const variableExpenseRepository = {
     });
   },
 
+  async update(
+    userId: string,
+    expenseId: string,
+    data: updateVariableExpenseType,
+    amountToAdjust: number | undefined,
+    typeOfTransaction: "DECREMENT" | "INCREMENT",
+    reasonOftransation: "INCOME" | "EXPENSE",
+  ) {
+    return await prisma.$transaction(async (tx) => {
+      const updated = await tx.variableExpense.update({
+        where: { id: expenseId,userId},
+        data: Object.assign(
+          {},
+          data.name !== undefined && { name: data.name },
+          data.amount !== undefined && {
+            amount: new Prisma.Decimal(data.amount),
+          },
+          data.expenseDate !== undefined && { expenseDate: data.expenseDate },
+          "categoryId" in data && {
+            categoryId: data.categoryId ?? null,
+          },
+        ),
+      });
 
+      if (amountToAdjust !== undefined) {
+        await adjustBalanceWithTx({
+          tx,
+          userId,
+          amount: amountToAdjust,
+          type: typeOfTransaction,
+          reason: reasonOftransation,
+        });
+      }
 
-  
-
-  
+      return updated;
+    });
+  },
 };

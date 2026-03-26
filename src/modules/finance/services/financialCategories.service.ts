@@ -6,9 +6,9 @@ export async function fetchCategory(
   userId: string,
   categoryId: string,
 ): Promise<FinancialCategory> {
-  const category = await financialCategoriesRepository.findOneById(categoryId);
+  const category = await financialCategoriesRepository.findOneById(userId,categoryId);
 
-  if (!category || category.userId !== userId) {
+  if (!category) {
     throw new AppError("NOT_FOUND", "category not found", 404);
   }
 
@@ -55,13 +55,13 @@ export const financialCategoriesServices = {
     name: string,
   ): Promise<FinancialCategory> {
       await fetchCategory(userId, categoryId);
-      return await financialCategoriesRepository.update(categoryId, name);
+      return await financialCategoriesRepository.update(userId,categoryId, name);
     
   },
 
   async deleteCategory(userId: string, categoryId: string): Promise<void> {
       await fetchCategory(userId, categoryId);
-      await financialCategoriesRepository.delete(categoryId);
+      await financialCategoriesRepository.delete(userId,categoryId);
     
   },
 };
