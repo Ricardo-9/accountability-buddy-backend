@@ -80,6 +80,42 @@ describe("Adjust balance test", () => {
         expect(result.balance.toString()).toBe("150")
     })
 
+    it("should call update with 'increment' and create history with positive balance change when amount is float", async () => {
+        const tx = mockTx({
+            updatedAccount: {
+                id: "account-id",
+                userId: "random-id",
+                balance: new Prisma.Decimal(150.5),
+                updatedAt: new Date()
+            }
+        })
+
+        vi.mocked(prisma.$transaction).mockImplementation(async (fn: any) => fn(tx))
+
+        const result = await adjustBalanceService("random-id", 50.5, "INCREMENT", "INCOME")
+
+        expect(tx.financeAccount.update).toHaveBeenCalledWith(
+            expect.objectContaining({
+                data: {
+                    balance: {
+                        increment: 50.5
+                    }
+                }
+            })
+        )
+
+        expect(tx.financeBalanceHistory.create).toHaveBeenCalledWith(
+            expect.objectContaining({
+                data: expect.objectContaining({
+                    change: new Prisma.Decimal(50.5),
+                    type: "INCOME"
+                })
+            })
+        )
+
+        expect(result.balance.toString()).toBe("150.5")
+    })
+
     it("should call update with 'decrement' and create history with negative change", async () => {
         const tx = mockTx({
             updatedAccount: {
@@ -116,8 +152,44 @@ describe("Adjust balance test", () => {
         expect(result.balance.toString()).toBe("50")
     })
 
+    it("should call update with 'decrement' and create history with negative change when amount is float", async () => {
+        const tx = mockTx({
+            updatedAccount: {
+                id: "account-id",
+                userId: "random-id",
+                balance: new Prisma.Decimal(49.5),
+                updatedAt: new Date()
+            }
+        })
+
+        vi.mocked(prisma.$transaction).mockImplementation(async (fn: any) => fn(tx))
+
+        const result = await adjustBalanceService("random-id", 50.5, "DECREMENT", "EXPENSE")
+
+        expect(tx.financeAccount.update).toHaveBeenCalledWith(
+            expect.objectContaining({
+                data: {
+                    balance: {
+                        decrement: 50.5
+                    }
+                }
+            })
+        )
+
+        expect(tx.financeBalanceHistory.create).toHaveBeenCalledWith(
+            expect.objectContaining({
+                data: expect.objectContaining({
+                    change: new Prisma.Decimal(-50.5),
+                    type: "EXPENSE"
+                })
+            })
+        )
+
+        expect(result.balance.toString()).toBe("49.5")
+    })
+
     it("should throw an AppError (404 - NOT_FOUND) if the account does not exist", async () => {
-        const tx = mockTx({account: null})
+        const tx = mockTx({ account: null })
 
         vi.mocked(prisma.$transaction).mockImplementation(async (fn: any) => fn(tx))
 
@@ -147,10 +219,10 @@ describe("Adjust balance test", () => {
     })
 
     it("should propagate error if financeBalanceHistory.create fails", async () => {
-        const tx = mockTx({createShouldFail: true})
+        const tx = mockTx({ createShouldFail: true })
 
         vi.mocked(prisma.$transaction).mockImplementation(async (fn: any) => fn(tx))
 
         await expect(adjustBalanceService("random-id", 100, "DECREMENT", "EXPENSE")).rejects.toThrow("DB Error")
-    }) 
+    })
 })

@@ -3,6 +3,7 @@ import request from "supertest"
 import app from "../../../../../src/app"
 import { supabase } from "../../../../../src/lib/supabase"
 import { AuthError, User } from "@supabase/supabase-js"
+import { NextFunction } from "express"
 
 vi.mock("../../../../../src/lib/supabase", () => ({
     supabase: {
@@ -10,6 +11,10 @@ vi.mock("../../../../../src/lib/supabase", () => ({
             signUp: vi.fn()
         }
     }
+}))
+
+vi.mock("../../../../../src/modules/user/auth/middlewares/authRateLimit", () => ({
+    authLimiter: (_req: Request, _res: Response, next: NextFunction) => next()
 }))
 
 describe("POST /signup", () => {
@@ -212,6 +217,7 @@ describe("POST /signup", () => {
                     password: "12345678",
                     confirmPassword: "12345678"
                 })
+
 
             expect(response.status).toBe(400)
             expect(response.body).toEqual({

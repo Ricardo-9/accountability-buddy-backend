@@ -12,7 +12,16 @@ export async function getAccountController(
     try {
         const account = await getAccountService(userId)
 
-        return successResponse(res, account)
+        return successResponse(
+            res,
+            {
+                accountId: account.id,
+                ownerId: account.userId,
+                balance: account.balance,
+                createdAt: account.createdAt,
+                updatedAt: account.updatedAt
+            }
+        )
     } catch (err) {
         next(err)
     }
