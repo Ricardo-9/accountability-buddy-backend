@@ -25,9 +25,7 @@ describe("profileServices", () => {
 
   describe("GetProfile", () => {
     it("should return profile when it exists", async () => {
-      vi.spyOn(userProfileRepository, "findById").mockResolvedValue(
-        fakeProfile,
-      );
+      vi.mocked(userProfileRepository.findById).mockResolvedValue(fakeProfile);
 
       const result = await userProfileServices.getProfile("user-123");
 
@@ -35,7 +33,7 @@ describe("profileServices", () => {
     });
 
     it("should throw NOT_FOUND when profile does not exist", async () => {
-      vi.spyOn(userProfileRepository, "findById").mockResolvedValue(null);
+      vi.mocked(userProfileRepository.findById).mockResolvedValue(null);
 
       await expect(
         userProfileServices.getProfile("user-123"),
@@ -51,10 +49,8 @@ describe("profileServices", () => {
     it("should update profile when it exists", async () => {
       const updated = { ...fakeProfile, fullName: "New name" };
 
-      vi.spyOn(userProfileRepository, "findById").mockResolvedValue(
-        fakeProfile,
-      );
-      vi.spyOn(userProfileRepository, "update").mockResolvedValue(updated);
+      vi.mocked(userProfileRepository.findById).mockResolvedValue(fakeProfile);
+      vi.mocked(userProfileRepository.update).mockResolvedValue(updated);
 
       const result = await userProfileServices.updateProfile("user-123", {
         fullName: "New name",
@@ -67,9 +63,9 @@ describe("profileServices", () => {
     });
 
     it("should throw NOT_FOUND when profile does not exist", async () => {
-      vi.spyOn(userProfileRepository, "findById").mockResolvedValue(null);
+      vi.mocked(userProfileRepository.findById).mockResolvedValue(null);
 
-      await expect( 
+      await expect(
         userProfileServices.updateProfile("user-123", { fullName: "New " }),
       ).rejects.toMatchObject({
         code: "NOT_FOUND",
@@ -81,18 +77,16 @@ describe("profileServices", () => {
 
   describe("deleteProfile", () => {
     it("should delete the profile when profile exist", async () => {
-      vi.spyOn(userProfileRepository, "findById").mockResolvedValue(
-        fakeProfile,
-      );
-      vi.spyOn(userProfileRepository, "delete").mockResolvedValue();
+      vi.mocked(userProfileRepository.findById).mockResolvedValue(fakeProfile);
+      vi.mocked(userProfileRepository.delete).mockResolvedValue();
 
       const profile = await userProfileServices.deleteProfile("user-123");
 
       expect(userProfileRepository.delete).toHaveBeenCalledWith("user-123");
     });
 
-    it("should throw NOT_FOUND when profile does not exist ", async () => {
-      vi.spyOn(userProfileRepository, "findById").mockResolvedValue(null);
+    it("should throw NOT_FOUND when profile does not exist", async () => {
+      vi.mocked(userProfileRepository.findById).mockResolvedValue(null);
 
       await expect(
         userProfileServices.deleteProfile("user-123"),

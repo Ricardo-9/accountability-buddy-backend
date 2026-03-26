@@ -1,7 +1,6 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { financialCategoriesRepository } from "../../../../../src/modules/finance/repository/financialCategories.repository";
 import { financialCategoriesServices } from "../../../../../src/modules/finance/services/financialCategories.service";
-import { AppError } from "../../../../../src/core/errors/AppError";
 import { Prisma } from "@prisma/client";
 
 const mockCategory = {
@@ -24,7 +23,7 @@ describe("financialCategoriesServices", () => {
 
   describe("getCategories", () => {
     it("should return categories for the user", async () => {
-      vi.spyOn(financialCategoriesRepository, "findManyById").mockResolvedValue(
+      vi.mocked(financialCategoriesRepository.findManyById).mockResolvedValue(
         [mockCategory],
       );
 
@@ -32,14 +31,13 @@ describe("financialCategoriesServices", () => {
         await financialCategoriesServices.getCategories("user-123");
 
       expect(result).toEqual([mockCategory]);
-
       expect(financialCategoriesRepository.findManyById).toHaveBeenCalledWith(
         "user-123",
       );
     });
 
     it("should return empty array when user has no categories", async () => {
-      vi.spyOn(financialCategoriesRepository, "findManyById").mockResolvedValue(
+      vi.mocked(financialCategoriesRepository.findManyById).mockResolvedValue(
         [],
       );
 
@@ -52,7 +50,7 @@ describe("financialCategoriesServices", () => {
 
   describe("createCategory", () => {
     it("should create and return the new category", async () => {
-      vi.spyOn(financialCategoriesRepository, "create").mockResolvedValue(
+      vi.mocked(financialCategoriesRepository.create).mockResolvedValue(
         mockCategory,
       );
 
@@ -74,7 +72,7 @@ describe("financialCategoriesServices", () => {
         { code: "P2002", clientVersion: "5.0.0" },
       );
 
-      vi.spyOn(financialCategoriesRepository, "create").mockRejectedValue(
+      vi.mocked(financialCategoriesRepository.create).mockRejectedValue(
         prismaError,
       );
 
@@ -93,7 +91,7 @@ describe("financialCategoriesServices", () => {
     it("should rethrow unknown errors", async () => {
       const unknownError = new Error("Database connection lost");
 
-      vi.spyOn(financialCategoriesRepository, "create").mockRejectedValue(
+      vi.mocked(financialCategoriesRepository.create).mockRejectedValue(
         unknownError,
       );
 
@@ -108,10 +106,10 @@ describe("financialCategoriesServices", () => {
 
   describe("updateCategory", () => {
     it("should update and return category with new name", async () => {
-      vi.spyOn(financialCategoriesRepository, "findOneById").mockResolvedValue(
+      vi.mocked(financialCategoriesRepository.findOneById).mockResolvedValue(
         mockCategory,
       );
-      vi.spyOn(financialCategoriesRepository, "update").mockResolvedValue({
+      vi.mocked(financialCategoriesRepository.update).mockResolvedValue({
         ...mockCategory,
         name: "NEW_NAME",
       });
@@ -124,13 +122,14 @@ describe("financialCategoriesServices", () => {
 
       expect(result.name).toBe("NEW_NAME");
       expect(financialCategoriesRepository.update).toHaveBeenCalledWith(
+        "user-123", 
         "category-123",
         "NEW_NAME",
       );
     });
 
     it("should throw NOT_FOUND when category does not exist", async () => {
-      vi.spyOn(financialCategoriesRepository, "findOneById").mockResolvedValue(
+      vi.mocked(financialCategoriesRepository.findOneById).mockResolvedValue(
         null,
       );
 
@@ -148,10 +147,9 @@ describe("financialCategoriesServices", () => {
     });
 
     it("should throw NOT_FOUND when category belongs to another user", async () => {
-      vi.spyOn(financialCategoriesRepository, "findOneById").mockResolvedValue({
-        ...mockCategory,
-        userId: "outro-user",
-      });
+      vi.mocked(financialCategoriesRepository.findOneById).mockResolvedValue(
+        null,
+      );
 
       await expect(
         financialCategoriesServices.updateCategory(
@@ -166,7 +164,7 @@ describe("financialCategoriesServices", () => {
     });
 
     it("should throw FORBIDDEN when trying to update a default category", async () => {
-      vi.spyOn(financialCategoriesRepository, "findOneById").mockResolvedValue({
+      vi.mocked(financialCategoriesRepository.findOneById).mockResolvedValue({
         ...mockCategory,
         isDefault: true,
       });
@@ -187,10 +185,10 @@ describe("financialCategoriesServices", () => {
 
   describe("deleteCategory", () => {
     it("should delete the category when it exists and belongs to user", async () => {
-      vi.spyOn(financialCategoriesRepository, "findOneById").mockResolvedValue(
+      vi.mocked(financialCategoriesRepository.findOneById).mockResolvedValue(
         mockCategory,
       );
-      vi.spyOn(financialCategoriesRepository, "delete").mockResolvedValue(
+      vi.mocked(financialCategoriesRepository.delete).mockResolvedValue(
         mockCategory,
       );
 
@@ -200,12 +198,13 @@ describe("financialCategoriesServices", () => {
       );
 
       expect(financialCategoriesRepository.delete).toHaveBeenCalledWith(
+        "user-123",  
         "category-123",
       );
     });
 
     it("should throw NOT_FOUND when category does not exist", async () => {
-      vi.spyOn(financialCategoriesRepository, "findOneById").mockResolvedValue(
+      vi.mocked(financialCategoriesRepository.findOneById).mockResolvedValue(
         null,
       );
 
@@ -218,7 +217,7 @@ describe("financialCategoriesServices", () => {
     });
 
     it("should throw FORBIDDEN when trying to delete a default category", async () => {
-      vi.spyOn(financialCategoriesRepository, "findOneById").mockResolvedValue({
+      vi.mocked(financialCategoriesRepository.findOneById).mockResolvedValue({
         ...mockCategory,
         isDefault: true,
       });
