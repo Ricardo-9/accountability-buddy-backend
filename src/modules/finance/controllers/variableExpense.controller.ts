@@ -1,16 +1,17 @@
 import { Request, Response, NextFunction } from "express";
 import { variableExpenseService } from "../services/variableExpenses.service.js";
 import { successResponse } from "../../../shared/utils/apiResponse.js";
+import { getVariableExpenseType } from "../schemas/getVariableExpenseById.schema.js";
 
 export const variableExpenseController = {
-  async getVariableExpense(req: Request, res: Response, next: NextFunction) {
+  async getVariableExpense(req: Request<getVariableExpenseType,any,any>, res: Response, next: NextFunction) {
     const userId = req.user!.id;
-    const expenseId = req.body;
+    const {id} = req.params;
 
     try {
       const variableExpense = await variableExpenseService.getVariableExpense(
         userId,
-        expenseId,
+        id,
       );
 
       return successResponse(res, variableExpense);
@@ -19,7 +20,7 @@ export const variableExpenseController = {
     }
   },
 
-  async getVariableExpenes(req: Request, res: Response, next: NextFunction) {
+  async getVariableExpenses(req: Request, res: Response, next: NextFunction) {
     const userId = req.user!.id;
 
     try {
