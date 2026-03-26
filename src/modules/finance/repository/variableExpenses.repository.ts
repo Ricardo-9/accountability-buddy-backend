@@ -27,4 +27,12 @@ export const variableExpenseRepository = {
       return expense;
     });
   },
+
+  async findManyById(userId:string){
+    return prisma.variableExpense.findMany({
+      where: {userId}
+    })
+  }
+
+  
 };

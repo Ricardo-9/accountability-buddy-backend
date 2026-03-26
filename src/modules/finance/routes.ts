@@ -19,6 +19,7 @@ import { variableExpenseController } from "./controllers/variableExpense.control
 
 const router = Router();
 
+//financialCore
 router.post(
   "/accounts",
   authenticate,
@@ -52,40 +53,40 @@ router.get(
 
 //financialCategories
 router.get(
-  "/categories",
-  authenticate,
-  requireArea(AccountabilityArea.FINANCES),
-  financialCategoriesControllers.getCategories,
-);
+    "/categories",
+    authenticate,
+    requireArea(AccountabilityArea.FINANCES),
+    financialCategoriesControllers.getCategories
+)
 
 router.post(
-  "/categories",
-  authenticate,
-  requireArea(AccountabilityArea.FINANCES),
-  validateRequest(createFinancialCategorySchema),
-  financialCategoriesControllers.createCategory,
-);
+    "/categories",
+    authenticate,
+    requireArea(AccountabilityArea.FINANCES),
+    validateRequest(createFinancialCategorySchema),
+    financialCategoriesControllers.createCategory
+)
 
 router.patch(
-  "/categories/:id",
-  authenticate,
-  requireArea(AccountabilityArea.FINANCES),
-  validateRequest(updateFinancialCategorySchema),
-  financialCategoriesControllers.updateCategory,
-);
+    "/categories/:id",
+    authenticate,
+    requireArea(AccountabilityArea.FINANCES),
+    validateRequest(updateFinancialCategorySchema),
+    financialCategoriesControllers.updateCategory
+)
 
 router.delete(
-  "/categories/:id",
-  authenticate,
-  requireArea(AccountabilityArea.FINANCES),
-  validateRequest(deleteFinancialCategorySchema),
-  financialCategoriesControllers.deleteCategory,
-);
+    "/categories/:id",
+    authenticate,
+    requireArea(AccountabilityArea.FINANCES),
+    validateRequest(deleteFinancialCategorySchema),
+    financialCategoriesControllers.deleteCategory
+)
 
 //variableExpenses
 
 router.post(
-  "variable-expense",
+  "/variable-expense",
   authenticate,
   requireArea(AccountabilityArea.FINANCES),
   validateRequest(createVariableExpenseSchema),

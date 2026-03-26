@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import request from "supertest";
-import app from "../../../../src/app.js";
-import { financialCategoriesServices } from "../../../../src/modules/finance/services/financialCategories.service";
-import { AppError } from "../../../../src/core/errors/AppError.js";
-import { authenticate } from "../../../../src/middlewares/authMiddleware.js";
+import app from "../../../../../src/app.js";
+import { financialCategoriesServices } from "../../../../../src/modules/finance/services/financialCategories.service.js";
+import { AppError } from "../../../../../src/core/errors/AppError.js";
+import { authenticate } from "../../../../../src/middlewares/authMiddleware.js";
 
 const mockCategoryDb = {
   id: "3fd12663-f4df-4fcf-a67a-83e3035338ca",
@@ -23,7 +23,7 @@ const mockCategoryResponse = {
 let requireAreaShouldFail = false;
 
 vi.mock(
-  "../../../../src/modules/finance/services/financialCategories.service",
+  "../../../../../src/modules/finance/services/financialCategories.service",
   () => ({
     financialCategoriesServices: {
       getCategories: vi.fn(),
@@ -34,14 +34,14 @@ vi.mock(
   }),
 );
 
-vi.mock("../../../../src/middlewares/authMiddleware.ts", () => ({
+vi.mock("../../../../../src/middlewares/authMiddleware.ts", () => ({
   authenticate: vi.fn((req: any, _res, next) => {
     req.user = { id: "user-123" };
     next();
   }),
 }));
 
-vi.mock("../../../../src/middlewares/requireArea.js", () => ({
+vi.mock("../../../../../src/middlewares/requireArea.js", () => ({
   requireArea: vi.fn(() => (_req: any, _res: any, next: any) => {
     if (requireAreaShouldFail) {
       return next(

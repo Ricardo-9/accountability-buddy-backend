@@ -42,7 +42,7 @@ describe("Get statement service test", () => {
             await expect(getStatementService("random-id")).rejects.toThrow(AppError)
             await expect(getStatementService("random-id")).rejects.toMatchObject({
                 code: "NONEXISTENT_ACCOUNT",
-                statusCode: 400
+                statusCode: 404
             })
         })
     })
