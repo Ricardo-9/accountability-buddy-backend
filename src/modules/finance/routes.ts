@@ -17,6 +17,7 @@ import { getAccountController } from "./controllers/getaccount.controller.js";
 import { createVariableExpenseSchema } from "./schemas/createExpense.schema.js";
 import { variableExpenseController } from "./controllers/variableExpense.controller.js";
 import { updateVariableExpenseSchema } from "./schemas/updateVariableExpense.schema.js";
+import { getVariableExpensesSchema } from "./schemas/getVariableExpenses.schema.js";
 
 const router = Router();
 
@@ -97,6 +98,7 @@ router.get(
   "/variable-expense",
   authenticate,
   requireArea(AccountabilityArea.FINANCES),
+  validateRequest(getVariableExpensesSchema),
   variableExpenseController.getVariableExpenses,
 );
 

@@ -3,6 +3,7 @@ import { variableExpenseService } from "../services/variableExpenses.service.js"
 import { successResponse } from "../../../shared/utils/apiResponse.js";
 import { getVariableExpenseType } from "../schemas/getVariableExpenseById.schema.js";
 import { updateVariableExpenseIdType } from "../schemas/updateVariableExpense.schema.js";
+import { GetVariableExpensesQueryType } from "../schemas/getVariableExpenses.schema.js";
 
 export const variableExpenseController = {
   async getVariableExpense(
@@ -27,10 +28,11 @@ export const variableExpenseController = {
 
   async getVariableExpenses(req: Request, res: Response, next: NextFunction) {
     const userId = req.user!.id;
+    const filters = req.query as GetVariableExpensesQueryType;
 
     try {
       const variableExpenses =
-        await variableExpenseService.getVariableExpenses(userId);
+        await variableExpenseService.getVariableExpenses(userId,filters);
 
       return successResponse(res, variableExpenses);
     } catch (err) {

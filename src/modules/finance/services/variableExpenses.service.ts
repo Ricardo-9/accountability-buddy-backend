@@ -4,6 +4,7 @@ import { variableExpenseRepository } from "../repository/variableExpenses.reposi
 import { Prisma } from "@prisma/client";
 import { AppError } from "../../../core/errors/AppError.js";
 import { updateVariableExpenseType } from "../schemas/updateVariableExpense.schema.js";
+import { GetVariableExpensesQueryType } from "../schemas/getVariableExpenses.schema.js";
 
 export async function fetchExpense(
   userId: string,
@@ -26,8 +27,8 @@ export const variableExpenseService = {
     return await fetchExpense(userId, expenseId);
   },
 
-  async getVariableExpenses(userId: string): Promise<VariableExpense[]> {
-    return await variableExpenseRepository.findManyById(userId);
+  async getVariableExpenses(userId: string,filters: GetVariableExpensesQueryType): Promise<VariableExpense[]> {
+    return await variableExpenseRepository.findManyById(userId,filters);
   },
 
   async createVariableExpense(

@@ -3,7 +3,7 @@ import { CreateVariableExpenseType } from "../schemas/createExpense.schema.js";
 import { adjustBalanceWithTx } from "../helpers/adjustBalanceWithTx.helper.js";
 import { Prisma } from "@prisma/client";
 import { updateVariableExpenseType } from "../schemas/updateVariableExpense.schema.js";
-
+import { GetVariableExpensesQueryType } from "../schemas/getVariableExpenses.schema.js";
 
 export const variableExpenseRepository = {
   async findOneById(userId: string, expenseId: string) {
@@ -12,9 +12,25 @@ export const variableExpenseRepository = {
     });
   },
 
-  async findManyById(userId: string) {
+  async findManyById(userId: string, filters: GetVariableExpensesQueryType) {
     return prisma.variableExpense.findMany({
-      where: { userId },
+      where: {
+        userId,
+        ...(filters.startDate || filters.endDate) && {
+          expenseDate: {
+            ...(filters.startDate && {gte: filters.startDate}),
+            ...(filters.endDate && {gte: filters.endDate}),
+          }
+        },
+        ...(filters.categoryId && { categoryId: filters.categoryId }),
+      },
+      orderBy: { expenseDate: "desc" },
+    });
+  },
+
+  async findByCategorie(userId: string, categoryId: string) {
+    return prisma.variableExpense.findMany({
+      where: { userId, categoryId },
     });
   },
 
@@ -80,7 +96,7 @@ export const variableExpenseRepository = {
     });
   },
 
-  async delete(userId: string, expenseId: string, amount: number ) {
+  async delete(userId: string, expenseId: string, amount: number) {
     return await prisma.$transaction(async (tx) => {
       const deleted = await tx.variableExpense.delete({
         where: { id: expenseId, userId },
@@ -96,8 +112,5 @@ export const variableExpenseRepository = {
 
       return deleted;
     });
-
   },
-
-  
 };
