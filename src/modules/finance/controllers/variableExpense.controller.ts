@@ -3,6 +3,19 @@ import { variableExpenseService } from "../services/variableExpenses.service.js"
 import { successResponse } from "../../../shared/utils/apiResponse.js";
 
 export const variableExpenseController = {
+  async getVariableExpenes(req: Request, res: Response, next: NextFunction) {
+    const userId = req.user!.id;
+
+    try {
+      const variableExpenses =
+        await variableExpenseService.getVariableExpenses(userId);
+
+      return successResponse(res, variableExpenses);
+    } catch (err) {
+      next(err);
+    }
+  },
+
   async createVariableExpense(req: Request, res: Response, next: NextFunction) {
     const userId = req.user!.id;
     const data = req.body;
