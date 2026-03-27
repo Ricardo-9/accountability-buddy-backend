@@ -18,6 +18,8 @@ import { createVariableExpenseSchema } from "./schemas/createExpense.schema.js";
 import { variableExpenseController } from "./controllers/variableExpense.controller.js";
 import { createGoalController } from "./controllers/creategoal.controller.js";
 import { createGoalSchema } from "./schemas/creategoal.schema.js";
+import { getGoalsSchema } from "./schemas/getgoals.schema.js";
+import { getGoalsController } from "./controllers/getgoals.controller.js";
 
 const router = Router();
 
@@ -101,6 +103,14 @@ router.post(
   requireArea(AccountabilityArea.FINANCES),
   validateRequest(createGoalSchema),
   createGoalController
+)
+
+router.get(
+  "/goals",
+  authenticate,
+  requireArea(AccountabilityArea.FINANCES),
+  validateRequest(getGoalsSchema),
+  getGoalsController
 )
 
 export { router as financialRoutes };
