@@ -1,7 +1,7 @@
 /**
  * @swagger
  * tags:
- *  - name: Finance
+ *  - name: Financial Core
  *    description: Financial Account Management
  */
 
@@ -10,7 +10,7 @@
  * /finance/accounts:
  *  post:
  *      summary: Create financial account
- *      tags: [Finance]
+ *      tags: [Financial Core]
  *      security:
  *          - bearerAuth: []
  *      requestBody:
@@ -74,7 +74,7 @@
  * /finance/accounts:
  *  get:
  *      summary: Get user account
- *      tags: [Finance]
+ *      tags: [Financial Core]
  *      security:
  *          - bearerAuth: []
  *      responses:
@@ -128,7 +128,7 @@
  * /finance/accounts/balance:
  *  patch:
  *      summary: Adjust balance in existent account
- *      tags: [Finance]
+ *      tags: [Financial Core]
  *      security:
  *          - bearerAuth: []
  *      requestBody:
@@ -147,9 +147,11 @@
  *                              example: 100
  *                          type:
  *                              type: string
+ *                              enum: [INCREMENT, DECREMENT]
  *                              example: INCREMENT
  *                          reason:
  *                              type: string
+ *                              enum: [INCOME, EXPENSE, GOAL]
  *                              example: INCOME
  *      responses:
  *          200:
@@ -187,6 +189,8 @@
  *              description: User does not have access to the FINANCES area
  *          404:
  *              description: User does not have an account
+ *          422:
+ *              description: Insufficient balance
  *          429:
  *              description: Too many requests
  *          500:
@@ -198,7 +202,7 @@
  * /finance/accounts/statement:
  *  get:
  *      summary: Get account statement
- *      tags: [Finance]
+ *      tags: [Financial Core]
  *      security:
  *          - bearerAuth: []
  *      parameters:
