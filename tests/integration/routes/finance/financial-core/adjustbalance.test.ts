@@ -212,14 +212,14 @@ describe("PATCH /accounts/balance", () => {
     })
 
     it("should throw 400 if amount is greater than current balance", async () => {
-        vi.mocked(prisma.$transaction).mockRejectedValueOnce(new AppError("INSUFFICIENT_FUNDS", "Insufficient balance"))
+        vi.mocked(prisma.$transaction).mockRejectedValueOnce(new AppError("INSUFFICIENT_FUNDS", "Insufficient balance", 422))
 
         const response = await request(app)
             .patch("/finance/accounts/balance")
             .set("Authorization", `Bearer ${validToken}`)
             .send({ amount: 10000, type: "DECREMENT", reason: "EXPENSE" })
 
-        expect(response.status).toBe(400)
+        expect(response.status).toBe(422)
     })
 
 })

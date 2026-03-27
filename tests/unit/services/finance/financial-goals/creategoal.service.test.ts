@@ -48,7 +48,6 @@ describe("Create financial goal service test", () => {
         txMock.financeAccount.findUnique.mockResolvedValue({ userId: "userId" })
         txMock.financialCategory.findFirst.mockResolvedValue({ id: "categoryId" })
         txMock.financialGoal.create.mockResolvedValue(mockGoal)
-
         adjustBalanceWithTxMock.mockResolvedValue({ balance: new Prisma.Decimal(100) } as unknown as FinanceAccount)
 
         const result = await createGoalService("userId", "goalName", 1000, 100, 12, "MONTHS", "LOW", "categoryId")
