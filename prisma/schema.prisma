@@ -86,6 +86,7 @@ enum BalanceChangeType {
   INITIAL_BALANCE
   INCOME
   EXPENSE
+  GOAL
 }
 
 // BASE MODELS

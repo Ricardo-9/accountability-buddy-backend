@@ -16,6 +16,8 @@ import { deleteFinancialCategorySchema } from "./schemas/deleteCategory.schema.j
 import { getAccountController } from "./controllers/getaccount.controller.js";
 import { createVariableExpenseSchema } from "./schemas/createExpense.schema.js";
 import { variableExpenseController } from "./controllers/variableExpense.controller.js";
+import { createGoalController } from "./controllers/creategoal.controller.js";
+import { createGoalSchema } from "./schemas/creategoal.schema.js";
 
 const router = Router();
 
@@ -84,13 +86,21 @@ router.delete(
 );
 
 //variableExpenses
-
 router.post(
-  "variable-expense",
+  "/variable-expense",
   authenticate,
   requireArea(AccountabilityArea.FINANCES),
   validateRequest(createVariableExpenseSchema),
   variableExpenseController.createVariableExpense,
 );
+
+//financialgoals
+router.post(
+  "/goals",
+  authenticate,
+  requireArea(AccountabilityArea.FINANCES),
+  validateRequest(createGoalSchema),
+  createGoalController
+)
 
 export { router as financialRoutes };

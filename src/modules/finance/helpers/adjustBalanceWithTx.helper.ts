@@ -1,4 +1,4 @@
-import { Prisma } from "@prisma/client";
+import { Prisma, BalanceChangeType } from "@prisma/client";
 import { AppError } from "../../../core/errors/AppError.js";
 
 type AdjustBalanceWithTxParams = {
@@ -6,7 +6,7 @@ type AdjustBalanceWithTxParams = {
   userId: string;
   amount: number;
   type: "INCREMENT" | "DECREMENT";
-  reason: "INCOME" | "EXPENSE";
+  reason: BalanceChangeType;
 };
 
 export async function adjustBalanceWithTx({
