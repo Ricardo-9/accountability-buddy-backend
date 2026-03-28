@@ -1,4 +1,3 @@
-import { AppError } from "../../../core/errors/AppError.js";
 import { prisma } from "../../../lib/prisma.js";
 
 export async function getStatementService(
@@ -25,10 +24,11 @@ export async function getStatementService(
             type: true,
             createdAt: true
         },
-        orderBy: {
-            createdAt: "desc"
-        },
-        take: limit,
+        orderBy: [
+            { createdAt: "desc" },
+            { id: "desc" }
+        ],
+        take: limit + 1,
         ...(cursor && {
             skip: 1,
             cursor: { id: cursor }

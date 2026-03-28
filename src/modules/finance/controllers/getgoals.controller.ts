@@ -22,12 +22,15 @@ export async function getGoalsController(
             cursor
         )
 
-        const nextCursor = goals.length > 0 ? goals[goals.length - 1]!.id : null
+        const hasNextPage = goals.length > limit
+        const data = hasNextPage ? goals.slice(0, -1) : goals
+
+        const nextCursor = hasNextPage ? data.at(-1)?.id : null
 
         return successResponse(
             res,
             {
-                data: goals,
+                goals: data,
                 nextCursor
             }
         )
