@@ -8,13 +8,6 @@ export async function getGoalsService(
     cursor?: string
 ) {
     return await prisma.$transaction(async (tx) => {
-        const account = await tx.financeAccount.findUnique({
-            where: { userId },
-            select: { userId: true }
-        })
-
-        if (!account) throw new AppError("NONEXISTENT_ACCOUNT", "User does not have an account", 404)
-
         if (categoryId) {
             const category = await tx.financialCategory.findFirst({
                 where: { id: categoryId, userId },

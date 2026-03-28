@@ -35,7 +35,5 @@ export async function getStatementService(
         })
     })
 
-    if (statement.length === 0) throw new AppError("NONEXISTENT_ACCOUNT", "User does not have an account", 404)
-
     return statement
 }

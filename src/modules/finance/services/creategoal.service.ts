@@ -17,12 +17,6 @@ export async function createGoalService(
         const decimalTarget = new Prisma.Decimal(target)
         const decimalAmount = new Prisma.Decimal(initialAmount)
 
-        const account = await tx.financeAccount.findUnique({
-            where: { userId }
-        })
-
-        if (!account) throw new AppError("NOT_FOUND", "Finance account not found", 404)
-
         if (categoryId) {
             const category = await tx.financialCategory.findFirst({
                 where: { id: categoryId, userId }
