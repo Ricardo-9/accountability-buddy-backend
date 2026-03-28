@@ -31,7 +31,7 @@ describe("Get statement service test", () => {
             expect(prisma.financeBalanceHistory.findMany).toHaveBeenCalledWith(
                 expect.objectContaining({
                     where: { userId: "random-id" },
-                    take: 20
+                    take: 20 + 1
                 })
             )
         })
@@ -102,7 +102,7 @@ describe("Get statement service test", () => {
             expect(prisma.financeBalanceHistory.findMany).toHaveBeenCalledWith(
                 expect.objectContaining({
                     where: { userId: "random-id" },
-                    take: 20
+                    take: 20 + 1
                 })
             )
         })
@@ -115,7 +115,7 @@ describe("Get statement service test", () => {
             await getStatementService("random-id")
 
             expect(prisma.financeBalanceHistory.findMany).toHaveBeenCalledWith(
-                expect.objectContaining({ take: 20 })
+                expect.objectContaining({ take: 20 + 1 })
             )
         })
 
@@ -126,7 +126,7 @@ describe("Get statement service test", () => {
             await getStatementService("random-id", undefined, undefined, limit)
 
             expect(prisma.financeBalanceHistory.findMany).toHaveBeenCalledWith(
-                expect.objectContaining({ take: 10 })
+                expect.objectContaining({ take: 10 + 1 })
             )
         })
 
@@ -156,16 +156,17 @@ describe("Get statement service test", () => {
     })
 
     describe("Sorting and selection", () => {
-        it("should sorting by createdAt desc", async () => {
+        it("should sorting by createdAt desc and id desc", async () => {
             vi.mocked(prisma.financeBalanceHistory.findMany).mockResolvedValue(mockStatement)
 
             await getStatementService("random-id")
 
             expect(prisma.financeBalanceHistory.findMany).toHaveBeenCalledWith(
                 expect.objectContaining({
-                    orderBy: {
-                        createdAt: "desc"
-                    }
+                    orderBy: [
+                        { createdAt: "desc" },
+                        { id: "desc" }
+                    ]
                 })
             )
         })

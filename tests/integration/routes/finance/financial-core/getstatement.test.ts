@@ -73,8 +73,8 @@ describe("GET /accounts/statement", () => {
             .set("Authorization", `Bearer ${validToken}`)
 
         expect(response.status).toBe(200)
-        expect(response.body.data.data).toEqual(mockStatement)
-        expect(response.body.data.nextCursor).toBe(mockStatement[mockStatement.length - 1].id)
+        expect(response.body.data.statement).toEqual(mockStatement)
+        expect(response.body.data.nextCursor).toBe(null)
     })
 
     it("should filter by start date", async () => {
@@ -148,7 +148,7 @@ describe("GET /accounts/statement", () => {
         expect(response.status).toBe(200)
         expect(prisma.financeBalanceHistory.findMany).toHaveBeenCalledWith(
             expect.objectContaining({
-                take: 10
+                take: 10 + 1
             })
         )
     })
