@@ -48,6 +48,7 @@ describe("PATCH /accounts/balance", () => {
     beforeEach(() => {
         vi.clearAllMocks()
         vi.mocked(prisma.userArea.findFirst).mockResolvedValue({ userId: "userId" } as any)
+        vi.mocked(prisma.financeAccount.findUnique).mockResolvedValue({ id: "accId" } as any)
         vi.mocked(prisma.$transaction).mockResolvedValue(mockAccount)
     })
 
@@ -201,7 +202,7 @@ describe("PATCH /accounts/balance", () => {
     })
 
     it("should throw 404 if account is not found", async () => {
-        vi.mocked(prisma.$transaction).mockRejectedValueOnce(new AppError("NOT_FOUND", "Finance account not found", 404))
+        vi.mocked(prisma.financeAccount.findUnique).mockResolvedValue(null)
 
         const response = await request(app)
             .patch("/finance/accounts/balance")

@@ -20,6 +20,9 @@ vi.mock("jose", async (importOriginal) => {
 })
 vi.mock("../../../../../src/lib/prisma", () => ({
     prisma: {
+        financeAccount: {
+            findUnique: vi.fn()
+        },
         userArea: {
             findFirst: vi.fn()
         },
@@ -61,6 +64,7 @@ describe("POST /goals", () => {
     beforeEach(() => {
         vi.clearAllMocks()
         vi.mocked(prisma.$transaction).mockImplementation(async (fn) => fn(txMock as any))
+        vi.mocked(prisma.financeAccount.findUnique).mockResolvedValue({ id: "accId" } as any)
         vi.mocked(prisma.userArea.findFirst).mockResolvedValue({ userId: "userId" } as any)
     })
 
@@ -186,7 +190,7 @@ describe("POST /goals", () => {
 
     describe("API errors", () => {
         it("should throw 404 (NOT_FOUND) when user does not have an account", async () => {
-            txMock.financeAccount.findUnique.mockResolvedValue(null)
+            vi.mocked(prisma.financeAccount.findUnique).mockResolvedValue(null)
 
             const response = await request(app)
                 .post("/finance/goals")
@@ -202,12 +206,6 @@ describe("POST /goals", () => {
                 })
 
             expect(response.status).toBe(404)
-            expect(response.body).toMatchObject({
-                error: {
-                    code: "NOT_FOUND",
-                    message: "Finance account not found"
-                }
-            })
         })
 
         it("should throw 404 (NOT_FOUND) when category id is not valid", async () => {

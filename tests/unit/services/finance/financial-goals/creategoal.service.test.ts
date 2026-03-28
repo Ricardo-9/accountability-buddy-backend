@@ -72,18 +72,6 @@ describe("Create financial goal service test", () => {
         })
     })
 
-    it("should throw an AppError (404) when account is not found", async () => {
-        txMock.financeAccount.findUnique.mockResolvedValue(null)
-
-        await expect(
-            createGoalService("userId", "goalName", 1000, 100, 12, "MONTHS", "LOW", "categoryId")
-        ).rejects.toMatchObject({
-            code: "NOT_FOUND",
-            statusCode: 404,
-            message: "Finance account not found"
-        })
-    })
-
     it("should throw an AppError when the provided category is not valid", async () => {
         txMock.financeAccount.findUnique.mockResolvedValue({ userId: "userId" })
         txMock.financialCategory.findFirst.mockResolvedValue(null)

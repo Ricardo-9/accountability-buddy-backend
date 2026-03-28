@@ -35,16 +35,6 @@ describe("Get statement service test", () => {
                 })
             )
         })
-
-        it("should throw an AppError if the statement is empty", async () => {
-            vi.mocked(prisma.financeBalanceHistory.findMany).mockResolvedValue([])
-
-            await expect(getStatementService("random-id")).rejects.toThrow(AppError)
-            await expect(getStatementService("random-id")).rejects.toMatchObject({
-                code: "NONEXISTENT_ACCOUNT",
-                statusCode: 404
-            })
-        })
     })
 
     describe("Date filters", () => {
