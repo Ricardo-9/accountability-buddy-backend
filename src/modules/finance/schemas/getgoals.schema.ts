@@ -6,7 +6,7 @@ export const getGoalsSchema = z.object({
             .nullable()
             .optional()
             .transform(val => val ?? null),
-        limit: z.coerce.number()
+        limit: z.coerce.number({ error: "Limit must be a number" })
             .int({ error: "Limit must be an integer" })
             .min(1, { error: "Limit must be at least 1" })
             .max(100, { error: "Limit must be at most 100" })
