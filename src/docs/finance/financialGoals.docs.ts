@@ -130,3 +130,115 @@
  *              description: Internal server error
  */
 
+/**
+ * @swagger
+ * /finance/goals:
+ *  get:
+ *      summary: Get user goals
+ *      tags: [Financial Goals]
+ *      security:
+ *          - bearerAuth: []
+ *      parameters:
+ *          - in: query
+ *            name: categoryId
+ *            required: false
+ *            schema:
+ *              type: string
+ *              format: uuid
+ *              example: 7d1effd5-3185-432b-bb39-8b6aa1ef2791 
+ *          - in: query
+ *            name: limit
+ *            required: false
+ *            schema:
+ *              type: number
+ *              example: 21
+ *              description: Number of records to return
+ *          - in: query
+ *            name: cursor
+ *            required: false
+ *            schema:
+ *              type: string
+ *              format: uuid
+ *              example: 7d1effd5-3185-432b-bb39-8b6aa1ef2896
+ *              description: Pagination cursor
+ *      responses:
+ *          200:
+ *              description: Goals retrieved successfully
+ *              content:
+ *                  application/json:
+ *                      schema:
+ *                          type: object
+ *                          properties:
+ *                              success:
+ *                                  type: boolean
+ *                                  example: true
+ *                              data:
+ *                                  type: object
+ *                                  properties:
+ *                                      goals:
+ *                                          type: array
+ *                                          items:
+ *                                              type: object
+ *                                              properties:
+ *                                                  id:
+ *                                                      type: string
+ *                                                      format: uuid
+ *                                                      example: 0611d847-f9ca-4f0e-9b34-33b9250b42fe
+ *                                                  userId:
+ *                                                      type: string
+ *                                                      format: uuid
+ *                                                      example: 07c7db0b-8c87-4bc6-853b-1327afa6b262
+ *                                                  categoryId:
+ *                                                      type: string
+ *                                                      format: uuid
+ *                                                      nullable: true
+ *                                                      example: 3c53ba94-47b8-49c0-ac2a-0ec936316cd0
+ *                                                  name:
+ *                                                      type: string
+ *                                                      example: checkup
+ *                                                  target:
+ *                                                      type: string
+ *                                                      description: Decimal value serialized as string
+ *                                                      example: 100
+ *                                                  initialAmount:
+ *                                                      type: string
+ *                                                      description: Decimal value serialized as string
+ *                                                      example: 0
+ *                                                  durationValue:
+ *                                                      type: number
+ *                                                      format: integer
+ *                                                      example: 12
+ *                                                  durationUnit:
+ *                                                      type: string
+ *                                                      enum: [WEEKS, MONTHS]
+ *                                                      example: WEEKS
+ *                                                  style:
+ *                                                      type: string
+ *                                                      enum: [LOW, MEDIUM, HIGH]
+ *                                                      example: MEDIUM
+ *                                                  createdAt:
+ *                                                      type: string
+ *                                                      format: date-time
+ *                                                      example: 2026-03-28T16:21:32.613Z
+ *                                                  updatedAt:
+ *                                                      type: string
+ *                                                      format: date-time
+ *                                                      example: 2026-03-28T16:21:32.613Z
+ *                                      nextCursor:
+ *                                          type: string
+ *                                          format: uuid
+ *                                          nullable: true
+ *                                          example: 2ddb9a9e-5b0b-4b58-b762-7a683773a033
+ *          400:
+ *              description: Invalid data
+ *          401:
+ *              description: Missing or invalid token
+ *          403:
+ *              description: User does not have access to the FINANCES area
+ *          404:
+ *              description: Resource not found (account or category)
+ *          429:
+ *              description: Too many requests
+ *          500:
+ *              description: Internal server error           
+ */

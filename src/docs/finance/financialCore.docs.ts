@@ -249,7 +249,7 @@
  *                              data:
  *                                  type: object
  *                                  properties:
- *                                      data: 
+ *                                      statement: 
  *                                          type: array
  *                                          items:
  *                                              type: object
@@ -276,6 +276,7 @@
  *                                      nextCursor:
  *                                          type: string
  *                                          format: uuid
+ *                                          nullable: true
  *                                          example: 8a7455df-2b3a-4405-ab3b-df29b2fec44d
  *          401:
  *              description: Missing or invalid token
