@@ -46,7 +46,7 @@ export async function createGoalService(
             userId,
             amount: initialAmount,
             type: "DECREMENT",
-            reason: "GOAL"
+            reason: "GOAL_CREATE"
         })
 
         return {

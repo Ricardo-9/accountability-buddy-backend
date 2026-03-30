@@ -21,6 +21,9 @@ import { createGoalSchema } from "./schemas/creategoal.schema.js";
 import { getGoalsSchema } from "./schemas/getgoals.schema.js";
 import { getGoalsController } from "./controllers/getgoals.controller.js";
 import { requireFinancialAccount } from "./middlewares/requireFinancialAccount.js";
+import { updateGoalSchema } from "./schemas/updategoal.schema.js";
+import { updateAreasController } from "../user/areas/controllers/updateareas.controller.js";
+import { updateGoalController } from "./controllers/updategoal.controller.js";
 
 const router = Router();
 
@@ -117,6 +120,15 @@ router.get(
   requireFinancialAccount,
   validateRequest(getGoalsSchema),
   getGoalsController
+)
+
+router.patch(
+  "/goals/:id",
+  authenticate,
+  requireArea(AccountabilityArea.FINANCES),
+  requireFinancialAccount,
+  validateRequest(updateGoalSchema),
+  updateGoalController
 )
 
 export { router as financialRoutes };
