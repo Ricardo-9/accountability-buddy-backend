@@ -124,7 +124,7 @@ describe("POST /goals", () => {
                 expect.objectContaining({
                     amount: 100,
                     type: "DECREMENT",
-                    reason: "GOAL"
+                    reason: "GOAL_CREATE"
                 })
             )
         })

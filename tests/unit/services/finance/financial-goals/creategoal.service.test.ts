@@ -116,7 +116,7 @@ describe("Create financial goal service test", () => {
             userId: "userId",
             amount: 100,
             type: "DECREMENT",
-            reason: "GOAL"
+            reason: "GOAL_CREATE"
         })
     })
 
