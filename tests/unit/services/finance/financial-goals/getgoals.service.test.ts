@@ -26,7 +26,8 @@ const mockGoals = [
         durationUnit: DurationUnit.WEEKS,
         style: InvestorStyle.MEDIUM,
         createdAt: new Date("2026-03-28T16:21:32.613Z"),
-        updatedAt: new Date("2026-03-28T16:21:32.613Z")
+        updatedAt: new Date("2026-03-28T16:21:32.613Z"),
+        deletedAt: null
     },
     {
         id: "86e5d547-2523-4b77-a31e-7220d68d62a4",
@@ -39,7 +40,8 @@ const mockGoals = [
         durationUnit: DurationUnit.MONTHS,
         style: InvestorStyle.MEDIUM,
         createdAt: new Date("2026-03-28T16:20:22.878Z"),
-        updatedAt: new Date("2026-03-28T16:20:22.878Z")
+        updatedAt: new Date("2026-03-28T16:20:22.878Z"),
+        deletedAt: null
     },
     {
         id: "8c4ab071-fd20-444a-8bd3-f39e1dbe4a00",
@@ -52,7 +54,8 @@ const mockGoals = [
         durationUnit: DurationUnit.MONTHS,
         style: InvestorStyle.MEDIUM,
         createdAt: new Date("2026-03-27T16:11:22.487Z"),
-        updatedAt: new Date("2026-03-27T16:11:22.487Z")
+        updatedAt: new Date("2026-03-27T16:11:22.487Z"),
+        deletedAt: null
     },
     {
         id: "2ddb9a9e-5b0b-4b58-b762-7a683773a033",
@@ -65,7 +68,8 @@ const mockGoals = [
         durationUnit: DurationUnit.MONTHS,
         style: InvestorStyle.MEDIUM,
         createdAt: new Date("2026-03-26T22:20:36.802Z"),
-        updatedAt: new Date("2026-03-26T22:20:36.802Z")
+        updatedAt: new Date("2026-03-26T22:20:36.802Z"),
+        deletedAt: null
     }
 ]
 
@@ -87,7 +91,7 @@ describe("Get financial goals service test", () => {
 
         expect(prisma.financialGoal.findMany).toHaveBeenCalledWith(
             expect.objectContaining({
-                where: { userId: userId }
+                where: { userId, deletedAt: null }
             })
         )
     })
@@ -99,7 +103,8 @@ describe("Get financial goals service test", () => {
         expect(prisma.financialGoal.findMany).toHaveBeenCalledWith(
             expect.objectContaining({
                 where: {
-                    userId: userId,
+                    userId,
+                    deletedAt: null,
                     categoryId: "c478795a-9215-4c25-9e7b-eefdc242b429"
                 }
             })
@@ -112,7 +117,7 @@ describe("Get financial goals service test", () => {
         expect(prisma.financialCategory.findFirst).not.toHaveBeenCalled()
         expect(prisma.financialGoal.findMany).toHaveBeenCalledWith(
             expect.objectContaining({
-                where: { userId: userId }
+                where: { userId, deletedAt: null }
             })
         )
     })

@@ -46,7 +46,8 @@ const mockGoals = [
         durationUnit: DurationUnit.WEEKS,
         style: InvestorStyle.MEDIUM,
         createdAt: new Date("2026-03-28T16:21:32.613Z"),
-        updatedAt: new Date("2026-03-28T16:21:32.613Z")
+        updatedAt: new Date("2026-03-28T16:21:32.613Z"),
+        deletedAt: null
     },
     {
         id: "86e5d547-2523-4b77-a31e-7220d68d62a4",
@@ -59,7 +60,8 @@ const mockGoals = [
         durationUnit: DurationUnit.MONTHS,
         style: InvestorStyle.MEDIUM,
         createdAt: new Date("2026-03-28T16:20:22.878Z"),
-        updatedAt: new Date("2026-03-28T16:20:22.878Z")
+        updatedAt: new Date("2026-03-28T16:20:22.878Z"),
+        deletedAt: null
     },
     {
         id: "8c4ab071-fd20-444a-8bd3-f39e1dbe4a00",
@@ -72,7 +74,8 @@ const mockGoals = [
         durationUnit: DurationUnit.MONTHS,
         style: InvestorStyle.MEDIUM,
         createdAt: new Date("2026-03-27T16:11:22.487Z"),
-        updatedAt: new Date("2026-03-27T16:11:22.487Z")
+        updatedAt: new Date("2026-03-27T16:11:22.487Z"),
+        deletedAt: null
     },
     {
         id: "2ddb9a9e-5b0b-4b58-b762-7a683773a033",
@@ -85,7 +88,8 @@ const mockGoals = [
         durationUnit: DurationUnit.MONTHS,
         style: InvestorStyle.MEDIUM,
         createdAt: new Date("2026-03-26T22:20:36.802Z"),
-        updatedAt: new Date("2026-03-26T22:20:36.802Z")
+        updatedAt: new Date("2026-03-26T22:20:36.802Z"),
+        deletedAt: null
     }
 ]
 
@@ -228,7 +232,7 @@ describe("GET /goals", () => {
 
             expect(response.status).toBe(200)
             expect(prisma.financialGoal.findMany).toHaveBeenCalledWith(
-                expect.objectContaining({ where: { userId, categoryId } })
+                expect.objectContaining({ where: { userId, categoryId, deletedAt: null } })
             )
         })
     })
