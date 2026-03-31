@@ -457,3 +457,56 @@
  *              description: Internal server error                                               
  *          
  */
+
+/**
+ * @swagger
+ *  /finance/goals/{id}:
+ *  delete:
+ *      summary: Delete goal
+ *      tags: [Financial Goal]
+ *      security:
+ *          - bearerAuth: []
+ *      parameters:
+ *          - in: path
+ *            name: id
+ *            required: true
+ *            description: Financial goal id (uuid)
+ *            schema:
+ *              type: string
+ *              format: uuid
+ *              example: 3c53ba94-47b8-49c0-ac2a-0ec936316cd0
+ *      responses:
+ *          200:
+ *              description: Goal successfully deleted
+ *              content:
+ *                  application/json:
+ *                      schema:
+ *                          type: object
+ *                          properties:
+ *                              success: 
+ *                                  type: boolean
+ *                                  example: true
+ *                              data:
+ *                                  type: object
+ *                                  properties:
+ *                                      refundedAmount:
+ *                                          type: string
+ *                                          example: 1000
+ *                                          description: Decimal value serialized as string
+ *                                      newBalance:
+ *                                          type: string
+ *                                          example: 2000
+ *                                          description: Decimal value serialized as string
+ *          400:
+ *              description: Invalid data
+ *          401:
+ *              description: Missing or invalid token
+ *          403:
+ *              description: User does not have access to the FINANCES area
+ *          404:
+ *              description: Resource not found (account or goal)
+ *          429:
+ *              description: Too many requests
+ *          500:
+ *              description: Internal server error   
+ */
