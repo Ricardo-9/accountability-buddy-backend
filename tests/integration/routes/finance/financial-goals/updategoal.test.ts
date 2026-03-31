@@ -522,7 +522,7 @@ describe("PATCH /goals", () => {
                     })
 
                 expect(response.status).toBe(400)
-                expect(response.body.error.details[0].message).toBe('Unrecognized key: "unexpected"')
+                expect(response.body.error.details[0].message).toBe("Invalid request body")
             })
         })
     })
