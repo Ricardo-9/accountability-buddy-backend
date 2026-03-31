@@ -16,7 +16,7 @@ export async function updateGoalService(
 ) {
     return await prisma.$transaction(async (tx) => {
         const existingGoal = await tx.financialGoal.findUnique({
-            where: { id, userId },
+            where: { id, userId, deletedAt: null },
             select: {
                 target: true,
                 initialAmount: true

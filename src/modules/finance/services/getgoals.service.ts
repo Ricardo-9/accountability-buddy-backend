@@ -19,6 +19,7 @@ export async function getGoalsService(
     const goals = await prisma.financialGoal.findMany({
         where: {
             userId,
+            deletedAt: null,
             ...(categoryId && { categoryId })
         },
         select: {

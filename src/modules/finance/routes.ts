@@ -22,10 +22,11 @@ import { getGoalsSchema } from "./schemas/getgoals.schema.js";
 import { getGoalsController } from "./controllers/getgoals.controller.js";
 import { requireFinancialAccount } from "./middlewares/requireFinancialAccount.js";
 import { updateGoalSchema } from "./schemas/updategoal.schema.js";
-import { updateAreasController } from "../user/areas/controllers/updateareas.controller.js";
 import { updateGoalController } from "./controllers/updategoal.controller.js";
 import { goalDepositSchema } from "./schemas/goaldeposit.schema.js";
 import { goalDepositController } from "./controllers/goaldeposit.controller.js";
+import z from "zod";
+import { deleteGoalController } from "./controllers/deletegoal.controller.js";
 
 const router = Router();
 
@@ -140,6 +141,15 @@ router.post(
   requireFinancialAccount,
   validateRequest(goalDepositSchema),
   goalDepositController
+)
+
+router.delete(
+  "/goals/:id",
+  authenticate,
+  requireArea(AccountabilityArea.FINANCES),
+  requireFinancialAccount,
+  validateRequest(z.object({ params: z.object({ id: z.uuid("Invalid id") }) })),
+  deleteGoalController
 )
 
 export { router as financialRoutes };

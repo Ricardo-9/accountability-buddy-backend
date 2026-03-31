@@ -89,6 +89,7 @@ enum BalanceChangeType {
   GOAL_CREATE
   GOAL_UPDATE
   GOAL_DEPOSIT
+  GOAL_DELETED
 }
 
 // BASE MODELS
@@ -257,6 +258,7 @@ model FinancialGoal {
   initialAmount Decimal                @db.Decimal(14, 2)
   createdAt     DateTime               @default(now())
   updatedAt     DateTime               @updatedAt
+  deletedAt     DateTime?
 
   @@index([userId])
   @@index([categoryId])

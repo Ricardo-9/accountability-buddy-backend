@@ -12,7 +12,7 @@ export async function goalDepositService(
         const decimalAmount = new Prisma.Decimal(amount)
 
         const goal = await tx.financialGoal.findUnique({
-            where: { id, userId },
+            where: { id, userId, deletedAt: null },
             select: { id: true }
         })
 
