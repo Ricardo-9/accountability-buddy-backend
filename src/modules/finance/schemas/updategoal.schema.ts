@@ -3,7 +3,7 @@ import z from "zod";
 
 export const updateGoalSchema = z.object({
     params: z.object({
-        id: z.uuid({ error: "Invalid id" })
+        id: z.uuid("Invalid id")
     }),
     body: z.object({
         name: z.string("Invalid goal name").optional(),
@@ -19,7 +19,7 @@ export const updateGoalSchema = z.object({
             .nullable()
             .optional()
             .transform(val => val ?? null)
-    })
+    }, "Invalid request body")
         .strict()
         .refine((data) => {
             if (

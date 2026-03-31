@@ -88,6 +88,7 @@ enum BalanceChangeType {
   EXPENSE
   GOAL_CREATE
   GOAL_UPDATE
+  GOAL_DEPOSIT
 }
 
 // BASE MODELS
@@ -316,10 +317,9 @@ model GoalDeposit {
   goal        FinancialGoal @relation(fields: [goalId], references: [id], onDelete: Cascade)
   goalId      String        @db.Uuid
   amount      Decimal       @db.Decimal(14, 2)
-  depositDate DateTime      @db.Date
   createdAt   DateTime      @default(now())
 
-  @@index([goalId, depositDate])
+  @@index([goalId])
 }
 
 model GoalProgressSnapshot {

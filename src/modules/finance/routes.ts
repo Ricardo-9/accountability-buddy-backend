@@ -24,6 +24,8 @@ import { requireFinancialAccount } from "./middlewares/requireFinancialAccount.j
 import { updateGoalSchema } from "./schemas/updategoal.schema.js";
 import { updateAreasController } from "../user/areas/controllers/updateareas.controller.js";
 import { updateGoalController } from "./controllers/updategoal.controller.js";
+import { goalDepositSchema } from "./schemas/goaldeposit.schema.js";
+import { goalDepositController } from "./controllers/goaldeposit.controller.js";
 
 const router = Router();
 
@@ -129,6 +131,15 @@ router.patch(
   requireFinancialAccount,
   validateRequest(updateGoalSchema),
   updateGoalController
+)
+
+router.post(
+  "/goals/deposit/:id",
+  authenticate,
+  requireArea(AccountabilityArea.FINANCES),
+  requireFinancialAccount,
+  validateRequest(goalDepositSchema),
+  goalDepositController
 )
 
 export { router as financialRoutes };
