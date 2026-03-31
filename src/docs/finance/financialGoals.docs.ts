@@ -375,3 +375,85 @@
  *          500:
  *              description: Internal server error   
  */
+
+/**
+ * @swagger
+ * /finance/goals/deposit/{id}:
+ *  post:
+ *      summary: Deposit into a specific goal
+ *      tags: [Financial Goal]
+ *      security:
+ *          - bearerAuth: []
+ *      parameters:
+ *          - in: path
+ *            name: id
+ *            required: true
+ *            description: Financial goal id (uuid)
+ *            schema:
+ *              type: string
+ *              format: uuid
+ *              example: 3c53ba94-47b8-49c0-ac2a-0ec936316cd0
+ *      requestBody:
+ *          required: true
+ *          content:
+ *              application/json:
+ *                  schema:
+ *                      type: object
+ *                      required:
+ *                          - amount
+ *                      properties:
+ *                          amount:
+ *                              type: number
+ *                              example: 1000
+ *      responses:
+ *          200:
+ *              description: Deposit successfully created
+ *              content:
+ *                  application/json:
+ *                      schema:
+ *                          type: object
+ *                          properties:
+ *                              success: 
+ *                                  type: boolean
+ *                                  example: true
+ *                              data:
+ *                                  type: object
+ *                                  properties:
+ *                                      deposit:
+ *                                          type: object
+ *                                          properties:
+ *                                              id:
+ *                                                  type: string
+ *                                                  format: uuid
+ *                                                  example: 7d1effd5-3185-432b-bb39-8b6aa1ef2791
+ *                                              goalId:
+ *                                                  type: string
+ *                                                  format: uuid
+ *                                                  example: 3c53ba94-47b8-49c0-ac2a-0ec936316cd0
+ *                                              amount:
+ *                                                  type: number
+ *                                                  example: 1000
+ *                                              createdAt:
+ *                                                  type: string
+ *                                                  format: date-time
+ *                                                  example: 2026-03-24T12:56:03Z
+ *                                      newBalance:
+ *                                          type: number
+ *                                          example: 2000
+ *                                          description: Balance after the deposit
+ *          400:
+ *              description: Invalid data
+ *          401:
+ *              description: Missing or invalid token
+ *          403:
+ *              description: User does not have access to the FINANCES area
+ *          404:
+ *              description: Resource not found (account or goal)
+ *          422:
+ *              description: Insufficient balance to deposit
+ *          429:
+ *              description: Too many requests
+ *          500:
+ *              description: Internal server error                                               
+ *          
+ */
