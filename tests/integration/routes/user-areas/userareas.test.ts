@@ -1,7 +1,7 @@
 import { describe, beforeEach, vi, expect, it } from "vitest";
-import { prisma } from "../../../../../src/lib/prisma.js";
+import { prisma } from "../../../../src/lib/prisma.js";
 import request from "supertest";
-import app from "../../../../../src/app.js";
+import app from "../../../../src/app.js";
 import { jwtVerify } from "jose";
 
 vi.mock("jose", async (importOriginal) => {
@@ -16,7 +16,7 @@ vi.mock("jose", async (importOriginal) => {
   };
 });
 
-vi.mock("../../../../../src/lib/prisma.js", () => ({
+vi.mock("../../../../src/lib/prisma.js", () => ({
   prisma: {
     userArea: {
       findMany: vi.fn(),

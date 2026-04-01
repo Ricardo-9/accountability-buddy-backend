@@ -15,11 +15,11 @@ export async function getAccountController(
         return successResponse(
             res,
             {
-                accountId: account.id,
-                ownerId: account.userId,
-                balance: account.balance,
-                createdAt: account.createdAt,
-                updatedAt: account.updatedAt
+                accountId: account!.id,
+                ownerId: account!.userId,
+                balance: account!.balance,
+                createdAt: account!.createdAt,
+                updatedAt: account!.updatedAt
             }
         )
     } catch (err) {

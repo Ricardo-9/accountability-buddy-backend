@@ -34,14 +34,4 @@ describe("Get account service test", () => {
             })
         )
     })
-
-    it("should throw an AppError when account does not exist", async () => {
-        vi.mocked(prisma.financeAccount.findUnique).mockResolvedValue(null)
-
-        await expect(getAccountService("random-id")).rejects.toThrow(AppError)
-        await expect(getAccountService("random-id")).rejects.toMatchObject({
-            code: "NONEXISTENT_ACCOUNT",
-            statusCode: 404
-        })
-    })
 })

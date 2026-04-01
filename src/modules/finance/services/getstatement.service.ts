@@ -1,4 +1,3 @@
-import { AppError } from "../../../core/errors/AppError.js";
 import { prisma } from "../../../lib/prisma.js";
 
 export async function getStatementService(
@@ -25,17 +24,16 @@ export async function getStatementService(
             type: true,
             createdAt: true
         },
-        orderBy: {
-            createdAt: "desc"
-        },
-        take: limit,
+        orderBy: [
+            { createdAt: "desc" },
+            { id: "desc" }
+        ],
+        take: limit + 1,
         ...(cursor && {
             skip: 1,
             cursor: { id: cursor }
         })
     })
-
-    if (statement.length === 0) throw new AppError("NONEXISTENT_ACCOUNT", "User does not have an account", 404)
 
     return statement
 }

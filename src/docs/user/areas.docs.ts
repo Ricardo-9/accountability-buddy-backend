@@ -28,7 +28,7 @@
  *                                  type: array
  *                                  items:
  *                                      type: string
- *                                  example: ["GYM", "FINANCES"]
+ *                                  example: [GYM, FINANCES]
  *          401:
  *              description: Missing or invalid token
  *          429:
@@ -58,7 +58,8 @@
  *                              type: array
  *                              items:
  *                                  type: string
- *                              example: ["NUTRITION", "GYM", "PRODUCTIVITY"]
+ *                                  enum: [NUTRITION, GYM, PRODUCTIVITY, FINANCES]
+ *                              example: [NUTRITION, GYM, PRODUCTIVITY]
  *      responses:
  *          200:
  *              description: Areas successfully updated
@@ -74,7 +75,7 @@
  *                                  type: array
  *                                  items:
  *                                      type: string
- *                                  example: ["NUTRITION", "GYM", "PRODUCTIVITY"]
+ *                                  example: [NUTRITION, GYM, PRODUCTIVITY]
  *          400:
  *              description: Invalid data
  *          401:

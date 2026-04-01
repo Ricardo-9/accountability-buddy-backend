@@ -199,14 +199,14 @@ describe("Adjust balance test", () => {
         })
     })
 
-    it("should throw an AppError (400 - INSUFFICIENT_FUNDS) if balance < amount in 'DECREMENT'", async () => {
+    it("should throw an AppError (422 - INSUFFICIENT_FUNDS) if balance < amount in 'DECREMENT'", async () => {
         const tx = mockTx({})
 
         vi.mocked(prisma.$transaction).mockImplementation(async (fn: any) => fn(tx))
 
         await expect(adjustBalanceService("random-id", 200, "DECREMENT", "EXPENSE")).rejects.toMatchObject({
             code: "INSUFFICIENT_FUNDS",
-            statusCode: 400
+            statusCode: 422
         })
     })
 

@@ -19,6 +19,9 @@ vi.mock("jose", async (importOriginal) => {
 
 vi.mock("../../../../../src/lib/prisma", () => ({
     prisma: {
+        financeAccount: {
+            findUnique: vi.fn()
+        },
         financeBalanceHistory: {
             findMany: vi.fn()
         },
@@ -58,6 +61,7 @@ describe("GET /accounts/statement", () => {
     beforeEach(() => {
         vi.clearAllMocks()
         vi.mocked(prisma.userArea.findFirst).mockResolvedValue({ userId: "userId" } as any)
+        vi.mocked(prisma.financeAccount.findUnique).mockResolvedValue({ id: "accId" } as any)
         vi.mocked(prisma.financeBalanceHistory.findMany).mockResolvedValue(mockStatement)
     })
 
@@ -69,18 +73,8 @@ describe("GET /accounts/statement", () => {
             .set("Authorization", `Bearer ${validToken}`)
 
         expect(response.status).toBe(200)
-        expect(response.body.data.data).toEqual(mockStatement)
-        expect(response.body.data.nextCursor).toBe(mockStatement[mockStatement.length - 1].id)
-    })
-
-    it("should throw 404 if user has not statement", async () => {
-        vi.mocked(prisma.financeBalanceHistory.findMany).mockResolvedValue([])
-
-        const response = await request(app)
-            .get("/finance/accounts/statement")
-            .set("Authorization", `Bearer ${validToken}`)
-
-        expect(response.status).toBe(404)
+        expect(response.body.data.statement).toEqual(mockStatement)
+        expect(response.body.data.nextCursor).toBe(null)
     })
 
     it("should filter by start date", async () => {
@@ -154,7 +148,7 @@ describe("GET /accounts/statement", () => {
         expect(response.status).toBe(200)
         expect(prisma.financeBalanceHistory.findMany).toHaveBeenCalledWith(
             expect.objectContaining({
-                take: 10
+                take: 10 + 1
             })
         )
     })
@@ -230,7 +224,7 @@ describe("GET /accounts/statement", () => {
         expect(response.body.error.details[0].message).toBe("Limit must be at most 100")
     })
 
-        it("should throw 400 when cursor is not valid", async () => {
+    it("should throw 400 when cursor is not valid", async () => {
         const response = await request(app)
             .get("/finance/accounts/statement")
             .set("Authorization", `Bearer ${validToken}`)
@@ -238,5 +232,15 @@ describe("GET /accounts/statement", () => {
 
         expect(response.status).toBe(400)
         expect(response.body.error.details[0].message).toBe("Invalid cursor")
+    })
+
+    it("should throw 404 when account is not found", async () => {
+        vi.mocked(prisma.financeAccount.findUnique).mockResolvedValue(null)
+
+        const response = await request(app)
+            .get("/finance/accounts/statement")
+            .set("Authorization", `Bearer ${validToken}`)
+
+        expect(response.status).toBe(404)
     })
 })
