@@ -23,13 +23,16 @@ export async function getStatementController(
             limit,
             cursor
         )
+        
+        const hasNextPage = statement.length > limit
+        const data = hasNextPage ? statement.slice(0, -1) : statement
 
-        const nextCursor = statement.length > 0 ? statement[statement.length - 1]!.id : null
+        const nextCursor = hasNextPage ? data.at(-1)?.id: null
 
         return successResponse(
             res,
             {
-                data: statement,
+                statement: data,
                 nextCursor
             }
         )

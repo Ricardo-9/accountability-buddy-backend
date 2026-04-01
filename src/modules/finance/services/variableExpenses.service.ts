@@ -15,7 +15,7 @@ export async function fetchExpense(
     expenseId,
   );
 
-  if (!expense) {
+  if (!expense || expense.deletedAt !== null) {
     throw new AppError("NOT_FOUND", "variable expense not found", 404);
   }
 
@@ -23,7 +23,7 @@ export async function fetchExpense(
 }
 
 export const variableExpenseService = {
-  async getVariableExpense(userId: string, expenseId: string) {
+  async getVariableExpense(userId: string, expenseId: string): Promise<VariableExpense> {
     return await fetchExpense(userId, expenseId);
   },
 
@@ -96,7 +96,7 @@ export const variableExpenseService = {
     }
   },
 
-  async deleteExpense(userId:string, expenseId:string){
+  async deleteExpense(userId:string, expenseId:string):Promise<VariableExpense>{
     const {amount} = await fetchExpense(userId,expenseId)
 
     return await variableExpenseRepository.delete(userId,expenseId,amount.toNumber())

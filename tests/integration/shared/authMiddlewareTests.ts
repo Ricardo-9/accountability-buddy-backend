@@ -29,7 +29,7 @@ export function authMiddlewareTests(method: HttpMethod, route: string, area: Acc
 
             const response = await request(app)
                 [method](route)
-                .set("Authorization", "Bearer invalid-token")
+                .set("Authorization", "Bearer valid-token")
 
             expect(response.status).toBe(403)
         })

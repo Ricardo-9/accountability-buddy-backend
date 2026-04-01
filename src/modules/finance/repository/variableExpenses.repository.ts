@@ -98,8 +98,9 @@ export const variableExpenseRepository = {
 
   async delete(userId: string, expenseId: string, amount: number) {
     return await prisma.$transaction(async (tx) => {
-      const deleted = await tx.variableExpense.delete({
+      const deleted = await tx.variableExpense.update({
         where: { id: expenseId, userId },
+        data: { deletedAt: new Date() }
       });
 
       await adjustBalanceWithTx({

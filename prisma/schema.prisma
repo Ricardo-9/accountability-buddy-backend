@@ -86,6 +86,10 @@ enum BalanceChangeType {
   INITIAL_BALANCE
   INCOME
   EXPENSE
+  GOAL_CREATE
+  GOAL_UPDATE
+  GOAL_DEPOSIT
+  GOAL_DELETED
 }
 
 // BASE MODELS
@@ -254,6 +258,7 @@ model FinancialGoal {
   initialAmount Decimal                @db.Decimal(14, 2)
   createdAt     DateTime               @default(now())
   updatedAt     DateTime               @updatedAt
+  deletedAt     DateTime?
 
   @@index([userId])
   @@index([categoryId])
@@ -304,6 +309,7 @@ model VariableExpense {
   expenseDate DateTime           @db.Date
   createdAt   DateTime           @default(now())
   updatedAt   DateTime           @updatedAt
+  deletedAt     DateTime?
 
   @@index([userId, expenseDate])
   @@index([categoryId])
@@ -314,10 +320,9 @@ model GoalDeposit {
   goal        FinancialGoal @relation(fields: [goalId], references: [id], onDelete: Cascade)
   goalId      String        @db.Uuid
   amount      Decimal       @db.Decimal(14, 2)
-  depositDate DateTime      @db.Date
   createdAt   DateTime      @default(now())
 
-  @@index([goalId, depositDate])
+  @@index([goalId])
 }
 
 model GoalProgressSnapshot {

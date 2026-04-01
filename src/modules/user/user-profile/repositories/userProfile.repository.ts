@@ -1,4 +1,3 @@
-import { object } from "zod";
 import { prisma } from "../../../../lib/prisma.js";
 import { UpdateProfile } from "../schemas/updateProfile.schema.js";
 

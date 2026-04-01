@@ -1,11 +1,11 @@
 import { describe, beforeEach, vi, expect, it } from "vitest"
 import request from "supertest"
-import app from "../../../../../src/app"
-import { supabase } from "../../../../../src/lib/supabase"
+import app from "../../../../src/app"
+import { supabase } from "../../../../src/lib/supabase"
 import { AuthError, User } from "@supabase/supabase-js"
 import { NextFunction } from "express"
 
-vi.mock("../../../../../src/lib/supabase", () => ({
+vi.mock("../../../../src/lib/supabase", () => ({
     supabase: {
         auth: {
             signUp: vi.fn()
@@ -13,7 +13,7 @@ vi.mock("../../../../../src/lib/supabase", () => ({
     }
 }))
 
-vi.mock("../../../../../src/modules/user/auth/middlewares/authRateLimit", () => ({
+vi.mock("../../../../src/modules/user/auth/middlewares/authRateLimit", () => ({
     authLimiter: (_req: Request, _res: Response, next: NextFunction) => next()
 }))
 

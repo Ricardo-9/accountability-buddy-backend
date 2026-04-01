@@ -75,6 +75,6 @@ describe("GET /accounts test", () => {
             .set("Authorization", `Bearer ${validToken}`)
 
         expect(response.status).toBe(404)
-        expect(response.body.error.message).toBe("User does not have an account")
+        expect(response.body.error.message).toBe("User account not found")
     })
 })
