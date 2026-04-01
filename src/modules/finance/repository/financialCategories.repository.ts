@@ -4,12 +4,12 @@ export const financialCategoriesRepository = {
 
   async findOneById(userId:string,categoryId: string) {
     return prisma.financialCategory.findUnique({
-      where: { id: categoryId,userId},
+      where: { id: categoryId,userId,deletedAt:null},
     });
   },
   async findManyById(userId: string) {
     return prisma.financialCategory.findMany({
-      where: { userId },
+      where: { userId ,deletedAt:null},
     });
   },
 
@@ -24,14 +24,15 @@ export const financialCategoriesRepository = {
 
   async update(userId:string, categoryId: string, name: string) {
     return prisma.financialCategory.update({
-      where: { id: categoryId ,userId},
+      where: { id: categoryId ,userId,deletedAt:null},
       data: { name },
     });
   },
 
   async delete(userId:string, categoryId: string) {
-    return prisma.financialCategory.delete({
-      where: { id: categoryId,userId },
+    return prisma.financialCategory.update({
+      where: { id: categoryId,userId,deletedAt:null },
+      data: {deletedAt: new Date()}
     });
   },
 };

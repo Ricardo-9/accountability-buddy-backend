@@ -15,7 +15,7 @@ export async function fetchExpense(
     expenseId,
   );
 
-  if (!expense || expense.deletedAt !== null) {
+  if (!expense) {
     throw new AppError("NOT_FOUND", "variable expense not found", 404);
   }
 

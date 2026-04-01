@@ -8,7 +8,7 @@ import { GetVariableExpensesQueryType } from "../schemas/getVariableExpenses.sch
 export const variableExpenseRepository = {
   async findOneById(userId: string, expenseId: string) {
     return prisma.variableExpense.findUnique({
-      where: { id: expenseId, userId },
+      where: { id: expenseId, userId,deletedAt:null },
     });
   },
 
@@ -22,7 +22,8 @@ export const variableExpenseRepository = {
             ...(filters.endDate && {gte: filters.endDate}),
           }
         },
-        ...(filters.categoryId && { categoryId: filters.categoryId }),
+        ...(filters.categoryId && { categoryId: filters.categoryId })
+        ,deletedAt:null
       },
       orderBy: { expenseDate: "desc" },
     });
@@ -30,7 +31,7 @@ export const variableExpenseRepository = {
 
   async findByCategorie(userId: string, categoryId: string) {
     return prisma.variableExpense.findMany({
-      where: { userId, categoryId },
+      where: { userId, categoryId,deletedAt:null },
     });
   },
 
@@ -68,7 +69,7 @@ export const variableExpenseRepository = {
   ) {
     return await prisma.$transaction(async (tx) => {
       const updated = await tx.variableExpense.update({
-        where: { id: expenseId, userId },
+        where: { id: expenseId, userId,deletedAt:null },
         data: Object.assign(
           {},
           data.name !== undefined && { name: data.name },
@@ -99,7 +100,7 @@ export const variableExpenseRepository = {
   async delete(userId: string, expenseId: string, amount: number) {
     return await prisma.$transaction(async (tx) => {
       const deleted = await tx.variableExpense.update({
-        where: { id: expenseId, userId },
+        where: { id: expenseId, userId,deletedAt:null },
         data: { deletedAt: new Date() }
       });
 
