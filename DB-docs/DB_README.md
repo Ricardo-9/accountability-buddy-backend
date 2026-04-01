@@ -36,7 +36,6 @@ O diagrama completo, utilizado como base para a modelagem no Prisma, está dispo
 
 📁 `DB-docs/erd.png`
 
-> Em ambiente real, a entidade de usuário é mantida apenas no Supabase. O modelo `UserProfile` no schema representa dados adicionais do perfil, não a autenticação em si.
 
 ---
 
@@ -46,7 +45,7 @@ O diagrama completo, utilizado como base para a modelagem no Prisma, está dispo
 
 #### `UserProfile`
 
-Armazena informações complementares do usuário autenticado via Supabase.
+Armazena informações complementares do usuário autenticado via Supabase e centraliza as referências de todas as outras tabelas por meio do `userId`. Ao utilizar o mesmo UUID do Supabase Auth, garantimos integridade e evitamos duplicação de identidade.
 
 | Campo | Tipo | Descrição |
 |---|---|---|
@@ -626,9 +625,9 @@ accountability-backend/
 
 ## Identidade e Autenticação
 
-O banco não possui tabela própria de usuários para autenticação.
+O banco não possui tabela própria de usuários para autenticação. Mas sim, um modelo `UserProfile` que armazena dados complementares do perfil do usuário autenticado via Supabase.
 
-O `userId` presente em todos os modelos corresponde ao UUID do usuário autenticado via Supabase Auth. O modelo `UserProfile` existe apenas para armazenar dados complementares do perfil (nome, data de nascimento, etc.), mantendo a identidade estritamente no Supabase.
+O `userId` presente em todos os modelos corresponde ao id do user profile que é associado ao id do usuário autenticado no Supabase Auth. Ao gerar um registro na tabela users do Supabase, um trigger é acionado para criar automaticamente um `UserProfile` correspondente no banco, utilizando o mesmo UUID. Isso garante que todas as referências de usuário nas tabelas do domínio estejam alinhadas com a autenticação do Supabase, evitando inconsistências e simplificando a gestão de identidade.
 
 ### Vantagens
 
