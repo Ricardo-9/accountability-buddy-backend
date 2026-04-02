@@ -17,12 +17,7 @@ const updateProfileBodySchema = z
       data.phone !== undefined,
     { message: "At least one field must be provided" },
   )
-  .transform((data) => {
-    return Object.fromEntries(
-      Object.entries(data).filter(([, v]) => v !== undefined),
-    ) as { fullName?: string; birthDate?: Date; phone?: string };
-  });
-
+  
 export const updateProfileSchema = z.object({
   body: updateProfileBodySchema,
 });

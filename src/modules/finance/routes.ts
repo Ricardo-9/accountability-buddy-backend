@@ -27,6 +27,10 @@ import { goalDepositSchema } from "./schemas/goaldeposit.schema.js";
 import { goalDepositController } from "./controllers/goaldeposit.controller.js";
 import z from "zod";
 import { deleteGoalController } from "./controllers/deletegoal.controller.js";
+import { getVariableExpenseSchema } from "./schemas/getVariableExpenseById.schema.js";
+import { updateVariableExpenseSchema } from "./schemas/updateVariableExpense.schema.js";
+import { deleteVariableExpenseSchema } from "./schemas/deleteVariableExpense.schema.js";
+import { getVariableExpensesSchema } from "./schemas/getVariableExpenses.schema.js";
 
 const router = Router();
 
@@ -98,12 +102,45 @@ router.delete(
 );
 
 //variableExpenses
+
+router.get(
+  "/variable-expense/:id",
+  authenticate,
+  requireArea(AccountabilityArea.FINANCES),
+  validateRequest(getVariableExpenseSchema),
+  variableExpenseController.getVariableExpense,
+);
+
+router.get(
+  "/variable-expense",
+  authenticate,
+  requireArea(AccountabilityArea.FINANCES),
+  validateRequest(getVariableExpensesSchema),
+  variableExpenseController.getVariableExpenses,
+);
+
 router.post(
   "/variable-expense",
   authenticate,
   requireArea(AccountabilityArea.FINANCES),
   validateRequest(createVariableExpenseSchema),
   variableExpenseController.createVariableExpense,
+);
+
+router.patch(
+  "/variable-expense/:id",
+  authenticate,
+  requireArea(AccountabilityArea.FINANCES),
+  validateRequest(updateVariableExpenseSchema),
+  variableExpenseController.updateVariableExpense,
+);
+
+router.delete(
+  "/variable-expense/:id",
+  authenticate,
+  requireArea(AccountabilityArea.FINANCES),
+  validateRequest(deleteVariableExpenseSchema),
+  variableExpenseController.deleteVariableExpense,
 );
 
 //financialgoals
@@ -113,8 +150,8 @@ router.post(
   requireArea(AccountabilityArea.FINANCES),
   requireFinancialAccount,
   validateRequest(createGoalSchema),
-  createGoalController
-)
+  createGoalController,
+);
 
 router.get(
   "/goals",
@@ -122,8 +159,8 @@ router.get(
   requireArea(AccountabilityArea.FINANCES),
   requireFinancialAccount,
   validateRequest(getGoalsSchema),
-  getGoalsController
-)
+  getGoalsController,
+);
 
 router.patch(
   "/goals/:id",
@@ -131,8 +168,8 @@ router.patch(
   requireArea(AccountabilityArea.FINANCES),
   requireFinancialAccount,
   validateRequest(updateGoalSchema),
-  updateGoalController
-)
+  updateGoalController,
+);
 
 router.post(
   "/goals/deposit/:id",
@@ -140,8 +177,8 @@ router.post(
   requireArea(AccountabilityArea.FINANCES),
   requireFinancialAccount,
   validateRequest(goalDepositSchema),
-  goalDepositController
-)
+  goalDepositController,
+);
 
 router.delete(
   "/goals/:id",
@@ -149,7 +186,7 @@ router.delete(
   requireArea(AccountabilityArea.FINANCES),
   requireFinancialAccount,
   validateRequest(z.object({ params: z.object({ id: z.uuid("Invalid id") }) })),
-  deleteGoalController
-)
+  deleteGoalController,
+);
 
 export { router as financialRoutes };

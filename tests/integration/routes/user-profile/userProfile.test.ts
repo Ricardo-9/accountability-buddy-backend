@@ -36,14 +36,7 @@ vi.mock("../../../../src/middlewares/authMiddleware.ts", () => ({
 }));
 
 vi.mock(
-  "../../../../src/modules/user/user-profile/services/userProfile.service.js",
-  () => ({
-    userProfileServices: {
-      getProfile: vi.fn(),
-      updateProfile: vi.fn(),
-      deleteProfile: vi.fn(),
-    },
-  }),
+  "../../../../src/modules/user/user-profile/services/userProfile.service.js"
 );
 
 describe("user profiles", () => {

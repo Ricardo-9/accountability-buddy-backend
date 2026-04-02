@@ -11,7 +11,11 @@ export const userProfileRepository = {
   async update(userId: string, data: UpdateProfile) {
     return prisma.userProfile.update({
       where: { id: userId},
-      data
+      data: Object.assign(
+        {}, data.fullName !== undefined && {fullName: data.fullName},
+        data.phone !== undefined && {phone: data.phone},
+        data.birthDate !== undefined && {birthDate: data.birthDate}
+      )
     });
   },
 

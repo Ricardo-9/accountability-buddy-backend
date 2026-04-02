@@ -309,6 +309,7 @@ model VariableExpense {
   expenseDate DateTime           @db.Date
   createdAt   DateTime           @default(now())
   updatedAt   DateTime           @updatedAt
+  deletedAt     DateTime?
 
   @@index([userId, expenseDate])
   @@index([categoryId])
@@ -354,11 +355,12 @@ model FinancialCategory {
   isDefault             Boolean                @default(false)
   createdAt             DateTime               @default(now())
   updatedAt             DateTime               @updatedAt
+  deletedAt             DateTime?
   financialGoals        FinancialGoal[]
   recurringTransactions RecurringTransaction[]
   variableExpenses      VariableExpense[]
 
-  @@unique([userId, name])
+  @@unique([userId, name,deletedAt])
   @@index([userId])
 }
 
