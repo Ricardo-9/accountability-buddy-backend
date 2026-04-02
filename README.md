@@ -1,269 +1,167 @@
-#  My Accountability Buddy - Estrutura do Backend
-A arquitetura do backend foi estruturada com foco em *modularização por domínio, **separação explícita de responsabilidades (SRP)* e *escalabilidade horizontal por modules/features*.  
+# My Accountability Buddy — Backend
 
-A organização segue um padrão de camadas (Controller → Service → Repository), mantendo o domínio isolado da infraestrutura sempre que possível.
+> API REST para uma plataforma de accountability cobrindo finanças, fitness, nutrição e produtividade.
 
 ---
 
-##  Estrutura de Diretórios
+## Sobre
 
+**My Accountability Buddy** é uma API backend construída como projeto de trabalho e portfólio, desenvolvida durante estágio na Lua Soft. O objetivo é ajudar usuários a acompanhar e manter accountability em quatro domínios da vida — Finanças, Fitness, Nutrição e Produtividade — por meio de dados estruturados, acompanhamento de metas e relatórios gerados por IA (implementação futura).
 
+---
+
+## Stack
+
+| Camada | Tecnologia |
+|---|---|
+| Runtime | Node.js |
+| Linguagem | TypeScript |
+| Framework | Express |
+| ORM | Prisma |
+| Banco de dados | PostgreSQL (Supabase) |
+| Autenticação | Supabase Auth (JWT via JWKS / `jose`) |
+| Validação | Zod |
+| Documentação | Swagger / OpenAPI (JSDoc) |
+| Testes | Vitest + Supertest |
+
+---
+
+## Arquitetura
+
+O projeto segue uma **arquitetura em camadas** estrita com separação clara de responsabilidades:
 ```
-├── 📁 DB-docs
-|   ├── 📄 erd.png
-|   └── 📝 DB_README.md
-├── 📁 generated
-├── 📁 prisma
-│   └── 📄 schema.prisma
-├── 📁 src
-│   ├── 📁 config
-│   │   └── 📄 env.ts
-│   ├── 📁 core
-│   │   ├── 📁 errors
-│   │   └── 📁 http
-│   ├── 📁 lib
-│   │   └── 📄 prisma.ts
-│   ├── 📁 middlewares
-│   ├── 📁 modules
-│   │   ├── 📁 finance
-│   │   │   ├── 📁 controllers
-│   │   │   ├── 📁 repositories
-│   │   │   ├── 📁 schemas
-│   │   │   ├── 📁 services
-│   │   │   ├── 📄 routes.ts
-│   │   │   └── 📄 types.ts
-│   │   ├── 📁 gym
-│   │   │   ├── 📁 controllers
-│   │   │   ├── 📁 repositories
-│   │   │   ├── 📁 schemas
-│   │   │   ├── 📁 services
-│   │   │   ├── 📄 routes.ts
-│   │   │   └── 📄 types.ts
-│   │   ├── 📁 nutrition
-│   │   │   ├── 📁 controllers
-│   │   │   ├── 📁 repositories
-│   │   │   ├── 📁 schemas
-│   │   │   ├── 📁 services
-│   │   │   ├── 📄 routes.ts
-│   │   │   └── 📄 types.ts
-│   │   └── 📁 productivity
-│   │       ├── 📁 controllers
-│   │       ├── 📁 repositories
-│   │       ├── 📁 schemas
-│   │       ├── 📁 services
-│   │       ├── 📄 routes.ts
-│   │       └── 📄 types.ts
-│   ├── 📁 shared
-│   │   ├── 📁 types
-│   │   └── 📁 utils
-│   ├── 📄 app.ts
-│   └── 📄 server.ts
-├── 📁 tests
-├── ⚙️ .env.example
-├── ⚙️ .gitignore
-├── 📝 README.md
-├── ⚙️ package-lock.json
-├── ⚙️ package.json
-├── 📄 prisma.config.ts
-└── ⚙️ tsconfig.json
+Request → Router → Middleware → Controller → Service → Repository → Database
+```
+
+- **Router** — define os endpoints e aplica as cadeias de middleware
+- **Middleware** — autenticação, controle de acesso por área, validação de requisições, rate limiting e tratamento de erros
+- **Controller** — trata o request/response HTTP e delega a lógica para os services
+- **Service** — lógica de negócio, tratamento de erros e orquestração
+- **Repository** — acesso ao banco via Prisma, com transações atômicas onde necessário
+
+Todos os módulos em `src/modules/` seguem esse padrão.
+
+---
+
+## Estrutura do Projeto
+```
+src/
+├── @types/            # Extensões de tipo do Express (req.user)
+├── config/            # Variáveis de ambiente
+├── core/              # AppError, rota de health check
+├── docs/              # Anotações JSDoc do Swagger por módulo
+├── lib/               # Clientes Prisma e Supabase
+├── middlewares/       # Auth, validateRequest, requireArea, errorHandler, rateLimit
+├── modules/
+│   ├── finance/       # Domínio financeiro (Em implementação)
+│   ├── user/          # Auth, perfil, áreas
+│   ├── gym/           # Apenas scaffold
+│   ├── nutrition/     # Apenas scaffold
+│   └── productivity/  # Apenas scaffold
+├── shared/utils/      # Helper apiResponse
+├── app.ts
+├── server.ts
+└── swagger.ts
 ```
 
 ---
 
----
+## Autenticação e Autorização
 
-#  Princípios Arquiteturais
+- A autenticação é totalmente delegada ao **Supabase Auth**
+- Toda requisição é validada via JWT usando `jose` + endpoint JWKS do Supabase
+- O middleware `authenticate` extrai o ID do usuário do token e o anexa ao `req.user`
+- O middleware `requireArea` verifica se o usuário possui acesso registrado ao domínio relevante (ex.: `FINANCES`) antes de atingir o controller
 
-##  Modularização por Domínio (Feature-based Structure)
+## Detalhes Técnicos Relevantes
 
-Cada domínio de negócio (finance, gym, nutrition, productivity) é isolado dentro de src/modules.
+### Transações Atômicas
 
-Essa abordagem:
+Todas as operações sensíveis ao saldo rodam em uma única `prisma.$transaction`, garantindo que o registro da despesa/meta e a atualização do saldo sejam realizados juntos ou nenhum dos dois. Isso é gerenciado pelo helper `adjustBalanceWithTx`, reutilizado nos fluxos de criação, atualização e exclusão.
 
-- Reduz acoplamento entre features
-- Facilita manutenção e refatoração
-- Permite evolução independente por domínio
-- Escala melhor que estruturas baseadas apenas em camadas globais
+### Lógica de Saldo em Despesas Variáveis
 
-Cada módulo contém *tudo que pertence àquela feature*, evitando dispersão de código pelo projeto.
+Ao atualizar o valor de uma despesa, o service calcula a **diferença** entre o valor antigo e o novo, ajustando o saldo apenas pela diferença — não pelo novo valor completo. Exemplo: despesa era R$50, atualizada para R$80 → saldo é decrementado em R$30.
 
----
+### Zod 
 
-##  Arquitetura em Camadas (Layered Architecture)
+Schemas de atualização parcial utilizam `Object.assign` na camada de repository para montar o payload de update dinamicamente, evitando erros do TypeScript causados por campos `undefined` sendo passados ao Prisma.
 
-Dentro de cada domínio:
+### Soft Delete
 
-### *Controllers*
-Responsáveis por:
-- Receber requisições HTTP
-- Validar entrada (via schemas)
-- Delegar execução para services
-- Retornar respostas padronizadas
+`FinancialGoal`, `FinancialCategory` e `VariableExpense` utilizam soft delete via `deletedAt`. A constraint de unicidade de `FinancialCategory` inclui `deletedAt` — `@@unique([userId, name, deletedAt])` — permitindo que o mesmo nome de categoria seja recriado após exclusão lógica.
 
-> Não contém regra de negócio.
+### Middleware — validateRequest
+
+Um único middleware genérico trata a validação Zod para `body`, `params` e `query`. Utiliza `Object.defineProperty` para reatribuir `req.params` e `req.query`, que são somente leitura no Express, após a validação.
 
 ---
 
-### *Services*
-Camada de aplicação.
-Responsável por:
-- Orquestrar regras de negócio
-- Coordenar múltiplos repositórios
-- Aplicar validações de domínio
-- Garantir consistência transacional
+## Testes
 
-> Aqui vive a lógica do sistema.
+O projeto possui duas camadas de testes:
 
----
+**Testes unitários** (Vitest) cobrem todos os métodos de service com repositories mockados, incluindo happy paths, erros de not found, violações de constraints do Prisma e rethrow de erros desconhecidos.
 
-### *Repositories*
-Camada de acesso a dados.
-Responsável por:
-- Interação com o banco via Prisma
-- Queries, persistência e leitura
-- Abstração da camada de infraestrutura
-
-> Não deve conter regra de negócio.
-
----
-
-### *Schemas*
-- Validação de dados de entrada
-- Normalização de payload
-- Segurança contra dados inválidos
+**Testes de integração** (Vitest + Supertest) testam todos os endpoints de ponta a ponta com services e middlewares mockados, cobrindo status codes, formato das respostas, erros de validação, falhas de autenticação, erros de permissão por área e cenários de falha no banco de dados.
+```
+tests/
+├── unit/services/
+│   ├── finance/
+│   │   ├── financial-categories/
+│   │   ├── financial-core/
+│   │   ├── financial-goals/
+│   │   └── financial-variable-expenses/
+│   └── user/
+└── integration/routes/
+    ├── finance/
+    │   ├── financial-categories/
+    │   ├── financial-core/
+    │   ├── financial-goals/
+    │   └── financial-variable-expenses/
+    └── user/
+```
 
 ---
 
-### *Routes*
-- Mapeamento de endpoints
-- Associação entre rota e controller
-- Definição de prefixos por domínio
+## Variáveis de Ambiente
+```bash
+DATABASE_URL=
+DIRECT_URL=
+SUPABASE_URL=
+SUPABASE_ANON_KEY=
+PORT=
+```
+
+Consulte o `.env.example` como referência.
 
 ---
 
-### *Types*
-- Interfaces e tipos específicos do módulo
-- DTOs
-- Tipagem de contratos internos
+## Rodando Localmente
+```bash
+# Instalar dependências
+npm install
+
+# Executar migrations
+npx prisma migrate dev
+
+# Iniciar servidor de desenvolvimento
+npm run dev
+
+# Executar testes
+npm run test
+```
+
+A documentação da API está disponível em `/api-docs` após iniciar o servidor.
 
 ---
 
-#  Estrutura Global (src)
+## Status
 
-## config/
-Centraliza configurações da aplicação:
-- Variáveis de ambiente
-- Validação de env vars
-- Configurações globais (ex: porta, URLs externas)
+O **domínio de Finanças** é o domínio principal a ser implementado, incluindo gerenciamento de conta, histórico de saldo, categorias financeiras, despesas variáveis e metas financeiras com depósitos. Os demais domínios (Gym, Nutrição, Produtividade) possuem seus modelos de banco de dados e scaffold de rotas estruturados, prontos para implementação das features.
 
 ---
 
-## core/
-Componentes estruturais reutilizáveis:
+## Desenvolvedores
 
-- errors/ → classes de erro customizadas e padronização de exceptions
-- http/ → abstrações ou utilitários HTTP
-
-Representa a base técnica compartilhada da aplicação.
-
----
-
-## lib/
-Integrações com bibliotecas externas.
-
-Exemplo:
-- prisma.ts → instanciação única do Prisma Client (Singleton pattern)
-
-Evita múltiplas conexões e centraliza dependências externas.
-
----
-
-## middlewares/
-Middlewares globais:
-- Autenticação
-- Logging
-- Tratamento de erro
-- Rate limiting
-- Segurança
-
-Separam preocupações transversais.
-
----
-
-## shared/
-Código compartilhado entre domínios:
-
-- types/ → Tipos globais
-- utils/ → Funções utilitárias reutilizáveis
-
-Reduz duplicação e melhora consistência.
-
----
-
-#  Banco de Dados e Prisma
-
-## prisma/
-Contém:
-- schema.prisma
-- Definição do modelo de dados
-- Mapeamento ORM
-
-Responsável por gerar o client utilizado nos repositórios.
-
----
-
-## generated/
-Arquivos gerados automaticamente pelo Prisma.
-Não devem ser editados manualmente.
-
----
-
-## DB-docs/
-Documentação estrutural do banco:
-- erd.png → Diagrama Entidade-Relacionamento
-- Documentação complementar em DB_README.md
-
-Separação clara entre código e documentação de modelagem.
-
----
-
-#  Testes
-
-## tests/
-Conterá toda a suíte de testes da aplicação:
-- Testes unitários
-- Testes de integração
-- Mocks e factories (quando aplicável)
-
-Mantidos fora de src para preservar clareza estrutural.
-
----
-
-#  Bootstrap da Aplicação
-
-## app.ts
-- Configuração do Express
-- Registro de middlewares
-- Registro de rotas
-- Setup global da aplicação
-
----
-
-## server.ts
-- Responsável exclusivamente por iniciar o servidor
-- Executa app.listen
-- Separa configuração da aplicação da inicialização do processo
-
----
-
-#  Objetivo da Estrutura
-
-Essa organização foi projetada para:
-
-- Facilitar manutenção de médio e longo prazo
-- Permitir escalabilidade por domínio
-- Reduzir acoplamento estrutural
-- Tornar o projeto mais próximo de padrões utilizados em ambientes profissionais
-- Melhorar legibilidade e navegabilidade do código
-
----
+**Ricardo Rocha Alves e Kaiky Rodrigues de Oliveira** — Estagiários na Lua Soft | Estudantes de Engenharia de Software na UFCA (Universidade Federal do Cariri) 
