@@ -31,6 +31,8 @@ import { getVariableExpenseSchema } from "./schemas/getVariableExpenseById.schem
 import { updateVariableExpenseSchema } from "./schemas/updateVariableExpense.schema.js";
 import { deleteVariableExpenseSchema } from "./schemas/deleteVariableExpense.schema.js";
 import { getVariableExpensesSchema } from "./schemas/getVariableExpenses.schema.js";
+import { createRecurringTransactionSchema } from "./schemas/createrecurringtransaction.schema.js";
+import { createRecurringTransactionController } from "./controllers/createrecurringtransaction.controller.js";
 
 const router = Router();
 
@@ -188,5 +190,15 @@ router.delete(
   validateRequest(z.object({ params: z.object({ id: z.uuid("Invalid id") }) })),
   deleteGoalController,
 );
+
+//transactions
+router.post(
+  "/transactions",
+  authenticate,
+  requireArea(AccountabilityArea.FINANCES),
+  requireFinancialAccount,
+  validateRequest(createRecurringTransactionSchema),
+  createRecurringTransactionController
+)
 
 export { router as financialRoutes };
