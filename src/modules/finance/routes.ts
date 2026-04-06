@@ -35,6 +35,8 @@ import { createRecurringTransactionSchema } from "./schemas/createrecurringtrans
 import { createRecurringTransactionController } from "./controllers/createrecurringtransaction.controller.js";
 import { getRecurringTransactionSchema } from "./schemas/getrecurringtransaction.schema.js";
 import { getrecurringtransactionController } from "./controllers/getRecurringTransaction.controller.js";
+import { getOneRecurringTransactionSchema } from "./schemas/getonerecurringtransaction.schema.js";
+import { getOneRecurringTransactionController } from "./controllers/getonerecurringtransaction.controller.js";
 
 const router = Router();
 
@@ -194,6 +196,15 @@ router.delete(
 );
 
 //transactions
+
+router.get(
+  "/transactions/:id",
+  authenticate,
+  requireArea(AccountabilityArea.FINANCES),
+  requireFinancialAccount,
+  validateRequest(getOneRecurringTransactionSchema),
+  getOneRecurringTransactionController
+)
 
 router.get(
   "/transactions",
