@@ -1,6 +1,6 @@
 import { VariableExpense } from "@prisma/client";
 import { CreateVariableExpenseType } from "../schemas/createExpense.schema.js";
-import { variableExpenseRepository } from "../repository/variableExpenses.repository.js";
+import { variableExpenseRepository } from "../repositories/variableExpenses.repository.js";
 import { Prisma } from "@prisma/client";
 import { AppError } from "../../../core/errors/AppError.js";
 import { updateVariableExpenseType } from "../schemas/updateVariableExpense.schema.js";
@@ -23,12 +23,18 @@ export async function fetchExpense(
 }
 
 export const variableExpenseService = {
-  async getVariableExpense(userId: string, expenseId: string): Promise<VariableExpense> {
+  async getVariableExpense(
+    userId: string,
+    expenseId: string,
+  ): Promise<VariableExpense> {
     return await fetchExpense(userId, expenseId);
   },
 
-  async getVariableExpenses(userId: string,filters: GetVariableExpensesQueryType): Promise<VariableExpense[]> {
-    return await variableExpenseRepository.findManyById(userId,filters);
+  async getVariableExpenses(
+    userId: string,
+    filters: GetVariableExpensesQueryType,
+  ): Promise<VariableExpense[]> {
+    return await variableExpenseRepository.findManyById(userId, filters);
   },
 
   async createVariableExpense(
@@ -80,8 +86,8 @@ export const variableExpenseService = {
       return await variableExpenseRepository.update(
         userId,
         expenseId,
-       data,
-       amountToAdjust,
+        data,
+        amountToAdjust,
         typeOfTransaction,
         reasonOftransation,
       );
@@ -96,9 +102,16 @@ export const variableExpenseService = {
     }
   },
 
-  async deleteExpense(userId:string, expenseId:string):Promise<VariableExpense>{
-    const {amount} = await fetchExpense(userId,expenseId)
+  async deleteExpense(
+    userId: string,
+    expenseId: string,
+  ): Promise<VariableExpense> {
+    const { amount } = await fetchExpense(userId, expenseId);
 
-    return await variableExpenseRepository.delete(userId,expenseId,amount.toNumber())
-  }
+    return await variableExpenseRepository.delete(
+      userId,
+      expenseId,
+      amount.toNumber(),
+    );
+  },
 };

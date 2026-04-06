@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import { financialCategoriesRepository } from "../../../../../src/modules/finance/repository/financialCategories.repository";
+import { financialCategoriesRepository } from "../../../../../src/modules/finance/repositories/financialCategories.repository";
 import { financialCategoriesServices } from "../../../../../src/modules/finance/services/financialCategories.service";
 import { Prisma } from "@prisma/client";
 
@@ -10,10 +10,11 @@ const mockCategory = {
   isDefault: false,
   createdAt: new Date(),
   updatedAt: new Date(),
+  deletedAt: null
 };
 
 vi.mock(
-  "../../../../../src/modules/finance/repository/financialCategories.repository",
+  "../../../../../src/modules/finance/repositories/financialCategories.repository",
 );
 
 describe("financialCategoriesServices", () => {
