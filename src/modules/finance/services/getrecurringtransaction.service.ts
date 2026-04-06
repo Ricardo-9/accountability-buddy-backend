@@ -7,7 +7,7 @@ export async function getRecurringTransactionService(
 ) {
   const skip = (data.page - 1) * data.limit;
 
-  const recurringTransactions = await prisma.recurringTransaction.findMany({
+  return await prisma.recurringTransaction.findMany({
     where: {
       userId,
       ...(data.type && { type: data.type }),
@@ -24,5 +24,4 @@ export async function getRecurringTransactionService(
     orderBy: { nextOccurrence: data.order ?? "asc" },
   });
 
-  return recurringTransactions;
 }
