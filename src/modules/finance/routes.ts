@@ -34,7 +34,6 @@ import { getVariableExpensesSchema } from "./schemas/getVariableExpenses.schema.
 import { createRecurringTransactionSchema } from "./schemas/createrecurringtransaction.schema.js";
 import { createRecurringTransactionController } from "./controllers/createrecurringtransaction.controller.js";
 import { getRecurringTransactionSchema } from "./schemas/getrecurringtransaction.schema.js";
-import { getRecurringTransactionService } from "./services/getRecurringTransaction.service.js";
 import { getrecurringtransactionController } from "./controllers/getRecurringTransaction.controller.js";
 
 const router = Router();
