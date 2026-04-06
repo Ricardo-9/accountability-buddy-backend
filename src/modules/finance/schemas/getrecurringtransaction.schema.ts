@@ -1,10 +1,9 @@
-import { TransactionType } from "@prisma/client";
 import { z } from "zod";
 
 export const getRecurringTransactionSchema = z.object({
   query: z
     .object({
-      type: z.enum(TransactionType),
+      type: z.enum(["INCOME","EXPENSE"]).optional(),
       categoryId: z.string().uuid().optional(),
       startDate: z.coerce.date().optional(),
       endDate: z.coerce.date().optional(),

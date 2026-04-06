@@ -33,6 +33,9 @@ import { deleteVariableExpenseSchema } from "./schemas/deleteVariableExpense.sch
 import { getVariableExpensesSchema } from "./schemas/getVariableExpenses.schema.js";
 import { createRecurringTransactionSchema } from "./schemas/createrecurringtransaction.schema.js";
 import { createRecurringTransactionController } from "./controllers/createrecurringtransaction.controller.js";
+import { getRecurringTransactionSchema } from "./schemas/getrecurringtransaction.schema.js";
+import { getRecurringTransactionService } from "./services/getRecurringTransaction.service.js";
+import { getrecurringtransactionController } from "./controllers/getRecurringTransaction.controller.js";
 
 const router = Router();
 
@@ -192,6 +195,16 @@ router.delete(
 );
 
 //transactions
+
+router.get(
+  "/transactions",
+  authenticate,
+  requireArea(AccountabilityArea.FINANCES),
+  requireFinancialAccount,
+  validateRequest(getRecurringTransactionSchema),
+  getrecurringtransactionController
+)
+
 router.post(
   "/transactions",
   authenticate,
