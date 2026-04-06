@@ -17,13 +17,13 @@ export const financialCategoriesControllers = {
   },
 
   async updateCategory(
-    req: Request<updatefinancialCategoryId, any, updateFinancialCategoryBody>,
+    req: Request,
     res: Response,
     next: NextFunction,
   ) {
     const userId = req.user!.id;
     const { name } = req.body;
-    const { id } = req.params;
+    const { id } = req.params as unknown as updatefinancialCategoryId;
     try {
       const updatedCategory = await financialCategoriesServices.updateCategory(
         userId,
@@ -53,12 +53,12 @@ export const financialCategoriesControllers = {
   },
 
   async deleteCategory(
-    req: Request<deletefinancialCategoryId, any>,
+    req: Request,
     res: Response,
     next: NextFunction,
   ) {
     const userId = req.user!.id;
-    const { id } = req.params;
+    const { id } = req.params as unknown as deletefinancialCategoryId;
 
     try {
       await financialCategoriesServices.deleteCategory(userId, id);
