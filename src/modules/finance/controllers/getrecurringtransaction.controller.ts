@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { getRecurringTransactionService } from "../services/getRecurringTransaction.service.js";
+import { getRecurringTransactionService } from "../services/getrecurringtransaction.service.js";
 import { successResponse } from "../../../shared/utils/apiResponse.js";
 import { getRecurringTransactionType } from "../schemas/getrecurringtransaction.schema.js";
 

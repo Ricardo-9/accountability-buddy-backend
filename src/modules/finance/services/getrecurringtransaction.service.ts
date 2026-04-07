@@ -23,5 +23,4 @@ export async function getRecurringTransactionService(
     take: data.limit,
     orderBy: { nextOccurrence: data.order ?? "asc" },
   });
-
 }

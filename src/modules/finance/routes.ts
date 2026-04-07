@@ -34,7 +34,7 @@ import { getVariableExpensesSchema } from "./schemas/getVariableExpenses.schema.
 import { createRecurringTransactionSchema } from "./schemas/createrecurringtransaction.schema.js";
 import { createRecurringTransactionController } from "./controllers/createrecurringtransaction.controller.js";
 import { getRecurringTransactionSchema } from "./schemas/getrecurringtransaction.schema.js";
-import { getrecurringtransactionController } from "./controllers/getRecurringTransaction.controller.js";
+import { getrecurringtransactionController } from "./controllers/getrecurringtransaction.controller.js";
 import { getOneRecurringTransactionSchema } from "./schemas/getonerecurringtransaction.schema.js";
 import { getOneRecurringTransactionController } from "./controllers/getonerecurringtransaction.controller.js";
 
