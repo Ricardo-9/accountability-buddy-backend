@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { successResponse } from "../../../shared/utils/apiResponse.js";
 import { financialCategoriesServices } from "../services/financialCategories.service.js";
 import { updateFinancialCategoryBody, updatefinancialCategoryId } from "../schemas/updateCategory.schema.js";
-import { deletefinancialCategoryId } from "../schemas/deleteCategory.schema.js";
+import { DeleteByIdSchema } from "../schemas/deletebyid.schema.js";
 export const financialCategoriesControllers = {
   async getCategories(req: Request, res: Response, next: NextFunction) {
     const userId = req.user!.id;
@@ -53,7 +53,7 @@ export const financialCategoriesControllers = {
   },
 
   async deleteCategory(
-    req: Request<deletefinancialCategoryId, any>,
+    req: Request<DeleteByIdSchema, any>,
     res: Response,
     next: NextFunction,
   ) {
