@@ -22,6 +22,10 @@
     "moduleDetection": "force",
     "skipLibCheck": true
   },
-  "include": ["src/**/*", "src/lib"],
+  "include": [
+    "src/**/*",
+    "src/lib",
+    "src/modules/finance/services/getrecurringtransaction.service.ts"
+  ],
   "exclude": ["node_modules", "dist"]
 }

@@ -1,12 +1,15 @@
 import { FinancialCategory } from "@prisma/client";
 import { AppError } from "../../../core/errors/AppError.js";
-import { financialCategoriesRepository } from "../repository/financialCategories.repository.js";
+import { financialCategoriesRepository } from "../repositories/financialCategories.repository.js";
 import { Prisma } from "@prisma/client";
 export async function fetchCategory(
   userId: string,
   categoryId: string,
 ): Promise<FinancialCategory> {
-  const category = await financialCategoriesRepository.findOneById(userId,categoryId);
+  const category = await financialCategoriesRepository.findOneById(
+    userId,
+    categoryId,
+  );
 
   if (!category) {
     throw new AppError("NOT_FOUND", "category not found", 404);
@@ -25,8 +28,7 @@ export async function fetchCategory(
 
 export const financialCategoriesServices = {
   async getCategories(userId: string): Promise<FinancialCategory[]> {
-      return financialCategoriesRepository.findManyById(userId);
-    
+    return financialCategoriesRepository.findManyById(userId);
   },
 
   async createCategory(
@@ -54,14 +56,12 @@ export const financialCategoriesServices = {
     categoryId: string,
     name: string,
   ): Promise<FinancialCategory> {
-      await fetchCategory(userId, categoryId);
-      return await financialCategoriesRepository.update(userId,categoryId, name);
-    
+    await fetchCategory(userId, categoryId);
+    return await financialCategoriesRepository.update(userId, categoryId, name);
   },
 
   async deleteCategory(userId: string, categoryId: string): Promise<void> {
-      await fetchCategory(userId, categoryId);
-      await financialCategoriesRepository.delete(userId,categoryId);
-    
+    await fetchCategory(userId, categoryId);
+    await financialCategoriesRepository.delete(userId, categoryId);
   },
 };

@@ -2,7 +2,6 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import { prisma } from "../../../../../src/lib/prisma";
 import { Prisma } from "@prisma/client";
 import { getAccountService } from "../../../../../src/modules/finance/services/getaccount.service"
-import { AppError } from "../../../../../src/core/errors/AppError";
 
 vi.mock("../../../../../src/lib/prisma", () => ({
     prisma: {
