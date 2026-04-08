@@ -14,3 +14,5 @@ export const getGoalsSchema = z.object({
         cursor: z.uuid({ error: "Invalid cursor" }).optional()
     })
 })
+
+export type GetGoalsSchema = z.infer<typeof getGoalsSchema>["query"]
