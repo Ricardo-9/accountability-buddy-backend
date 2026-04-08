@@ -12,7 +12,6 @@ import { getStatementSchema } from "./schemas/getstatement.schema.js";
 import { financialCategoriesControllers } from "./controllers/financialCategories.controller.js";
 import { createFinancialCategorySchema } from "./schemas/createCategory.schema.js";
 import { updateFinancialCategorySchema } from "./schemas/updateCategory.schema.js";
-import { deleteFinancialCategorySchema } from "./schemas/deleteCategory.schema.js";
 import { getAccountController } from "./controllers/getaccount.controller.js";
 import { createVariableExpenseSchema } from "./schemas/createExpense.schema.js";
 import { variableExpenseController } from "./controllers/variableExpense.controller.js";
@@ -25,11 +24,9 @@ import { updateGoalSchema } from "./schemas/updategoal.schema.js";
 import { updateGoalController } from "./controllers/updategoal.controller.js";
 import { goalDepositSchema } from "./schemas/goaldeposit.schema.js";
 import { goalDepositController } from "./controllers/goaldeposit.controller.js";
-import z from "zod";
 import { deleteGoalController } from "./controllers/deletegoal.controller.js";
 import { getVariableExpenseSchema } from "./schemas/getVariableExpenseById.schema.js";
 import { updateVariableExpenseSchema } from "./schemas/updateVariableExpense.schema.js";
-import { deleteVariableExpenseSchema } from "./schemas/deleteVariableExpense.schema.js";
 import { getVariableExpensesSchema } from "./schemas/getVariableExpenses.schema.js";
 import { createRecurringTransactionSchema } from "./schemas/createrecurringtransaction.schema.js";
 import { createRecurringTransactionController } from "./controllers/createrecurringtransaction.controller.js";
@@ -37,6 +34,9 @@ import { getRecurringTransactionSchema } from "./schemas/getrecurringtransaction
 import { getrecurringtransactionController } from "./controllers/getrecurringtransaction.controller.js";
 import { getOneRecurringTransactionSchema } from "./schemas/getonerecurringtransaction.schema.js";
 import { getOneRecurringTransactionController } from "./controllers/getonerecurringtransaction.controller.js";
+import { deleteByIdSchema } from "./schemas/deletebyid.schema.js";
+import { deleteRecurringTransactionController } from "./controllers/deleterecurringtransaction.controller.js";
+
 
 const router = Router();
 
@@ -103,7 +103,7 @@ router.delete(
   "/categories/:id",
   authenticate,
   requireArea(AccountabilityArea.FINANCES),
-  validateRequest(deleteFinancialCategorySchema),
+  validateRequest(deleteByIdSchema),
   financialCategoriesControllers.deleteCategory,
 );
 
@@ -145,7 +145,7 @@ router.delete(
   "/variable-expense/:id",
   authenticate,
   requireArea(AccountabilityArea.FINANCES),
-  validateRequest(deleteVariableExpenseSchema),
+  validateRequest(deleteByIdSchema),
   variableExpenseController.deleteVariableExpense,
 );
 
@@ -191,7 +191,7 @@ router.delete(
   authenticate,
   requireArea(AccountabilityArea.FINANCES),
   requireFinancialAccount,
-  validateRequest(z.object({ params: z.object({ id: z.uuid("Invalid id") }) })),
+  validateRequest(deleteByIdSchema),
   deleteGoalController,
 );
 
@@ -222,6 +222,15 @@ router.post(
   requireFinancialAccount,
   validateRequest(createRecurringTransactionSchema),
   createRecurringTransactionController
+)
+
+router.delete(
+  "/transactions/:id",
+  authenticate,
+  requireArea(AccountabilityArea.FINANCES),
+  requireFinancialAccount,
+  validateRequest(deleteByIdSchema),
+  deleteRecurringTransactionController
 )
 
 export { router as financialRoutes };

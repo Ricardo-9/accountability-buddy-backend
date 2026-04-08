@@ -20,3 +20,5 @@ export const getStatementSchema = z.object({
         return true
     }, { error: "Start date must be before end date", path: ["startdate"]})
 })
+
+export type GetStatementSchema = z.infer<typeof getStatementSchema>["query"]
