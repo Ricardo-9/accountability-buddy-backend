@@ -4,12 +4,12 @@ import { createRecurringTransactionService } from "../services/createrecurringtr
 import { successResponse } from "../../../shared/utils/apiResponse.js";
 
 export async function createRecurringTransactionController(
-    req: Request,
+    req: Request<CreateRecurringTransaction>,
     res: Response,
     next: NextFunction
 ) {
     const userId = req.user!.id
-    const data = req.body as CreateRecurringTransaction
+    const data = req.body
 
     try {
         const transaction = await createRecurringTransactionService(userId, data)
