@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { getStatementService } from "../services/getstatement.service.js";
 import { successResponse } from "../../../shared/utils/apiResponse.js";
+import { GetStatementSchema } from "../schemas/getstatement.schema.js";
 
 export async function getStatementController(
     req: Request,
@@ -8,12 +9,7 @@ export async function getStatementController(
     next: NextFunction
 ) {
     const userId = req.user!.id
-    const { startDate, endDate, limit, cursor } = req.query as unknown as {
-        startDate: Date,
-        endDate: Date,
-        limit: number,
-        cursor: string
-    }
+    const { startDate, endDate, limit, cursor } = req.query as unknown as GetStatementSchema
 
     try {
         const statement = await getStatementService(

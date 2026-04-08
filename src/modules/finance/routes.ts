@@ -1,4 +1,4 @@
-import { Router } from "express";
+ import { Router } from "express";
 import { authenticate } from "../../middlewares/authMiddleware.js";
 import { validateRequest } from "../../middlewares/validateRequest.js";
 import { createFinancialAccountSchema } from "./schemas/createfinancialaccount.schema.js";
@@ -30,8 +30,13 @@ import { updateVariableExpenseSchema } from "./schemas/updateVariableExpense.sch
 import { getVariableExpensesSchema } from "./schemas/getVariableExpenses.schema.js";
 import { createRecurringTransactionSchema } from "./schemas/createrecurringtransaction.schema.js";
 import { createRecurringTransactionController } from "./controllers/createrecurringtransaction.controller.js";
+import { getRecurringTransactionSchema } from "./schemas/getrecurringtransaction.schema.js";
+import { getrecurringtransactionController } from "./controllers/getrecurringtransaction.controller.js";
+import { getOneRecurringTransactionSchema } from "./schemas/getonerecurringtransaction.schema.js";
+import { getOneRecurringTransactionController } from "./controllers/getonerecurringtransaction.controller.js";
 import { deleteByIdSchema } from "./schemas/deletebyid.schema.js";
 import { deleteRecurringTransactionController } from "./controllers/deleterecurringtransaction.controller.js";
+
 
 const router = Router();
 
@@ -191,6 +196,25 @@ router.delete(
 );
 
 //transactions
+
+router.get(
+  "/transactions/:id",
+  authenticate,
+  requireArea(AccountabilityArea.FINANCES),
+  requireFinancialAccount,
+  validateRequest(getOneRecurringTransactionSchema),
+  getOneRecurringTransactionController
+)
+
+router.get(
+  "/transactions",
+  authenticate,
+  requireArea(AccountabilityArea.FINANCES),
+  requireFinancialAccount,
+  validateRequest(getRecurringTransactionSchema),
+  getrecurringtransactionController
+)
+
 router.post(
   "/transactions",
   authenticate,

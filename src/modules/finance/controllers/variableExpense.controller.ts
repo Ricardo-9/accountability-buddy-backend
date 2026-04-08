@@ -7,12 +7,12 @@ import { GetVariableExpensesQueryType } from "../schemas/getVariableExpenses.sch
 
 export const variableExpenseController = {
   async getVariableExpense(
-    req: Request<getVariableExpenseType, any, any>,
+    req: Request,
     res: Response,
     next: NextFunction,
   ) {
     const userId = req.user!.id;
-    const { id } = req.params;
+    const { id } = req.params as unknown as getVariableExpenseType;
 
     try {
       const variableExpense = await variableExpenseService.getVariableExpense(
@@ -59,13 +59,13 @@ export const variableExpenseController = {
   },
 
   async updateVariableExpense(
-    req: Request<updateVariableExpenseIdType>,
+    req: Request,
     res: Response,
     next: NextFunction,
   ) {
     const userId = req.user!.id;
     const data = req.body;
-    const { id } = req.params;
+    const { id } = req.params as unknown as updateVariableExpenseIdType;
 
     try {
       const updated = await variableExpenseService.updateVariableExpense(
@@ -81,12 +81,12 @@ export const variableExpenseController = {
   },
 
   async deleteVariableExpense(
-    req: Request<getVariableExpenseType>,
+    req: Request,
     res: Response,
     next: NextFunction,
   ) {
     const userId = req.user!.id;
-    const { id } = req.params;
+    const { id } = req.params as unknown as getVariableExpenseType;
     try {
       await variableExpenseService.deleteExpense(userId, id);
 
