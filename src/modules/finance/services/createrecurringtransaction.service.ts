@@ -1,3 +1,4 @@
+import { AppError } from "../../../core/errors/AppError.js";
 import { prisma } from "../../../lib/prisma.js";
 import { CreateRecurringTransaction } from "../schemas/createrecurringtransaction.schema.js";
 
@@ -5,6 +6,15 @@ export async function createRecurringTransactionService(
     userId: string,
     input: CreateRecurringTransaction
 ) {
+    if (input.categoryId) {
+        const category = await prisma.financialCategory.findFirst({
+            where: { id: input.categoryId, userId },
+            select: { id: true }
+        })
+
+        if(!category) throw new AppError("NOT_FOUND", "Category not found", 404)
+    }
+
     return await prisma.recurringTransaction.create({
         data: {
             userId,

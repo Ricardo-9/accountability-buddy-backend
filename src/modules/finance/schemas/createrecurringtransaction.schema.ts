@@ -43,7 +43,7 @@ export const createRecurringTransactionSchema = z.object({
                 if (iss.code === "invalid_format") return "Expected format: YYYY-MM-DD"
                 return "Invalid first ocurrence date"
             }
-        }),
+        }).transform(val => new Date(`${val}T00:00:00`)),
         categoryId: z.uuid("Invalid category id")
             .nullable()
             .optional()
@@ -58,9 +58,8 @@ export const createRecurringTransactionSchema = z.object({
     })
         .superRefine((data, ctx) => {
             const now = new Date()
-            const firstOcurrenceToDate = new Date(data.firstOccurrence)
 
-            if (firstOcurrenceToDate < now) {
+            if (data.firstOccurrence < now) {
                 ctx.addIssue({
                     code: "custom",
                     message: "First ocurrence cannot be in the past",
@@ -78,7 +77,7 @@ export const createRecurringTransactionSchema = z.object({
 
             if (data.recurrenceUnit === "MONTH" &&
                 data.dayOfMonth &&
-                firstOcurrenceToDate.getDate() !== data.dayOfMonth) {
+                data.firstOccurrence.getDate() !== data.dayOfMonth) {
                 ctx.addIssue({
                     code: "custom",
                     message: "First occurrence must match day of month",
