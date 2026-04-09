@@ -25,12 +25,12 @@ export const createRecurringTransactionSchema = z.object({
         }).gt(0, { message: "Amount value must be greater than $0" }),
         recurrenceValue: z.number({
             error: (iss) => {
-                if (iss.input === undefined) return "Recurring value is required"
-                if (iss.code === "invalid_type") return "Recurring value must be a number"
+                if (iss.input === undefined) return "Recurrence value is required"
+                if (iss.code === "invalid_type") return "Recurrence value must be a number"
                 return "Invalid recurring value"
             }
-        }).int({ message: "Recurring value must be an integer" })
-            .min(1, { message: "Recurring value must be at least 1" }),
+        }).int({ message: "Recurrence value must be an integer" })
+            .min(1, { message: "Recurrence value must be at least 1" }),
         recurrenceUnit: z.enum(RecurrenceUnit, {
             error: (iss) => {
                 if (iss.input === undefined) return "Recurrence unit is required"
@@ -85,10 +85,12 @@ export const createRecurringTransactionSchema = z.object({
                 })
             }
 
-            if (data.recurrenceUnit === "DAY" && data.dayOfMonth) {
+            if (data.recurrenceUnit === "DAY" && data.dayOfMonth
+                || data.recurrenceUnit === "WEEK" && data.dayOfMonth
+            ) {
                 ctx.addIssue({
                     code: "custom",
-                    message: "dayOfMonth should not be provided for daily recurrence",
+                    message: "dayOfMonth should not be provided for daily or weekly recurrence",
                     path: ["dayOfMonth"]
                 })
             }
