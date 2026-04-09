@@ -1,4 +1,4 @@
- import { Router } from "express";
+import { Router } from "express";
 import { authenticate } from "../../middlewares/authMiddleware.js";
 import { validateRequest } from "../../middlewares/validateRequest.js";
 import { createFinancialAccountSchema } from "./schemas/createfinancialaccount.schema.js";
@@ -36,7 +36,8 @@ import { getOneRecurringTransactionSchema } from "./schemas/getonerecurringtrans
 import { getOneRecurringTransactionController } from "./controllers/getonerecurringtransaction.controller.js";
 import { deleteByIdSchema } from "./schemas/deletebyid.schema.js";
 import { deleteRecurringTransactionController } from "./controllers/deleterecurringtransaction.controller.js";
-
+import { updateRecurringTransactionSchema } from "./schemas/updaterecurringtransaction.schema.js";
+import { updateRecurringTransactionController } from "./controllers/updaterecurringtransaction.controller.js";
 
 const router = Router();
 
@@ -203,8 +204,8 @@ router.get(
   requireArea(AccountabilityArea.FINANCES),
   requireFinancialAccount,
   validateRequest(getOneRecurringTransactionSchema),
-  getOneRecurringTransactionController
-)
+  getOneRecurringTransactionController,
+);
 
 router.get(
   "/transactions",
@@ -212,8 +213,17 @@ router.get(
   requireArea(AccountabilityArea.FINANCES),
   requireFinancialAccount,
   validateRequest(getRecurringTransactionSchema),
-  getrecurringtransactionController
-)
+  getrecurringtransactionController,
+);
+
+router.patch(
+  "/transactions/:id",
+  authenticate,
+  requireArea(AccountabilityArea.FINANCES),
+  requireFinancialAccount,
+  validateRequest(updateRecurringTransactionSchema),
+  updateRecurringTransactionController,
+);
 
 router.post(
   "/transactions",
@@ -221,8 +231,8 @@ router.post(
   requireArea(AccountabilityArea.FINANCES),
   requireFinancialAccount,
   validateRequest(createRecurringTransactionSchema),
-  createRecurringTransactionController
-)
+  createRecurringTransactionController,
+);
 
 router.delete(
   "/transactions/:id",
@@ -230,7 +240,7 @@ router.delete(
   requireArea(AccountabilityArea.FINANCES),
   requireFinancialAccount,
   validateRequest(deleteByIdSchema),
-  deleteRecurringTransactionController
-)
+  deleteRecurringTransactionController,
+);
 
 export { router as financialRoutes };
