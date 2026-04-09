@@ -57,9 +57,9 @@ describe("variableExpenseService", () => {
 
   describe("getVariableExpenses (multi)", () => {
     it("should return all expenses for the user", async () => {
-      vi.mocked(variableExpenseRepository.findManyById).mockResolvedValue(
-        [mockVariableExpense],
-      );
+      vi.mocked(variableExpenseRepository.findManyById).mockResolvedValue([
+        mockVariableExpense,
+      ]);
 
       const result = await variableExpenseService.getVariableExpenses(
         "user-123",
@@ -82,6 +82,43 @@ describe("variableExpenseService", () => {
       );
 
       expect(result).toEqual([]);
+    });
+
+    it("should filter by categoryId", async () => {
+      vi.mocked(variableExpenseRepository.findManyById).mockResolvedValue([
+        mockVariableExpense,
+      ]);
+
+      await variableExpenseService.getVariableExpenses("user-123", {
+        categoryId: "category1",
+      });
+
+      expect(variableExpenseRepository.findManyById).toHaveBeenCalledWith(
+        "user-123",
+        { categoryId: "category1" },
+      );
+    });
+
+    it("should filter by date range", async () => {
+      vi.mocked(variableExpenseRepository.findManyById).mockResolvedValue([
+        mockVariableExpense,
+      ]);
+
+      const startDate = new Date("2026-01-01");
+      const endDate = new Date("2026-12-31");
+
+      await variableExpenseService.getVariableExpenses("user-1", {
+        startDate,
+        endDate,
+      });
+
+      expect(variableExpenseRepository.findManyById).toHaveBeenCalledWith(
+        "user-1",
+        {
+          startDate,
+          endDate,
+        },
+      );
     });
   });
 
