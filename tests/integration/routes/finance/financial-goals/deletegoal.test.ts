@@ -51,7 +51,7 @@ const userId = "83793157-f162-490c-b503-ea5983ab04b7"
 describe("DELETE /goals/:id", () => {
     beforeEach(() => {
         vi.clearAllMocks(),
-            vi.mocked(prisma.$transaction).mockImplementation(async (fn: any) => fn(mockTx))
+        vi.mocked(prisma.$transaction).mockImplementation(async (fn: any) => fn(mockTx))
         vi.mocked(prisma.userArea.findFirst).mockResolvedValue({ userId } as any)
         vi.mocked(prisma.financeAccount.findUnique).mockResolvedValue({ id: "acc-id" } as any)
     })
@@ -120,5 +120,5 @@ describe("DELETE /goals/:id", () => {
             expect(response.status).toBe(400)
             expect(response.body.error.details[0].message).toBe("Invalid id")
         })
-    }) 
+    })
 })
