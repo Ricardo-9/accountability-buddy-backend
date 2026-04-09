@@ -10,6 +10,7 @@ export async function getRecurringTransactionService(
   return await prisma.recurringTransaction.findMany({
     where: {
       userId,
+      deletedAt: null,
       ...(data.type && { type: data.type }),
       ...(data.categoryId && { categoryId: data.categoryId }),
       ...((data.startDate || data.endDate) && {
