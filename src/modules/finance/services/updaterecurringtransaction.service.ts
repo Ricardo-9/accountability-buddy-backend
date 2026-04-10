@@ -15,7 +15,7 @@ export async function updateRecurringTransactionService(
     throw new AppError("NOT_FOUND", "Recurring transaction not found", 404);
   }
 
-  if (data.categoryId) {
+  if (data.categoryId !== undefined && data.categoryId !== null) {
     const category = await prisma.financialCategory.findFirst({
       where: {
         id: data.categoryId,
@@ -36,7 +36,7 @@ export async function updateRecurringTransactionService(
     amount: data.amount ?? existing.amount,
     recurrenceValue: data.recurrenceValue ?? existing.recurrenceValue,
     recurrenceUnit: data.recurrenceUnit ?? existing.recurrenceUnit,
-    categoryId: data.categoryId ?? existing.categoryId,
+    categoryId: data.categoryId !== undefined ? data.categoryId : existing.categoryId,
     dayOfMonth: data.dayOfMonth ?? existing.dayOfMonth,
   };
 
@@ -47,9 +47,13 @@ export async function updateRecurringTransactionService(
   }
 
   if (merged.recurrenceUnit === "MONTH" && merged.dayOfMonth) {
-    const date = new Date(nextOccurrence);
-    date.setDate(merged.dayOfMonth);
-    nextOccurrence = date;
+    nextOccurrence = new Date(
+      Date.UTC(
+        nextOccurrence.getFullYear(),
+        nextOccurrence.getMonth(),
+        merged.dayOfMonth
+      )
+    );
   }
 
   if (merged.recurrenceUnit !== "MONTH" && merged.dayOfMonth) {
@@ -60,20 +64,15 @@ export async function updateRecurringTransactionService(
     );
   }
 
-  if (nextOccurrence < new Date()) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  if (nextOccurrence < today) {
     throw new AppError(
       "INVALID_DATA",
       "Next occurrence cannot be in the past",
       400,
     );
-  }
-
-  if (
-    merged.recurrenceUnit === "MONTH" &&
-    merged.dayOfMonth &&
-    nextOccurrence.getDate() !== merged.dayOfMonth
-  ) {
-    throw new AppError("INVALID_DATA", "Occurrence must match dayOfMonth", 400);
   }
 
   return await prisma.recurringTransaction.update({
