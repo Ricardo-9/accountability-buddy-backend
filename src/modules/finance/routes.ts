@@ -81,6 +81,7 @@ router.get(
   "/categories",
   authenticate,
   requireArea(AccountabilityArea.FINANCES),
+  requireFinancialAccount,
   financialCategoriesControllers.getCategories,
 );
 
@@ -89,6 +90,7 @@ router.post(
   authenticate,
   requireArea(AccountabilityArea.FINANCES),
   validateRequest(createFinancialCategorySchema),
+  requireFinancialAccount,
   financialCategoriesControllers.createCategory,
 );
 
@@ -97,6 +99,7 @@ router.patch(
   authenticate,
   requireArea(AccountabilityArea.FINANCES),
   validateRequest(updateFinancialCategorySchema),
+  requireFinancialAccount,
   financialCategoriesControllers.updateCategory,
 );
 
@@ -105,6 +108,7 @@ router.delete(
   authenticate,
   requireArea(AccountabilityArea.FINANCES),
   validateRequest(deleteByIdSchema),
+  requireFinancialAccount,
   financialCategoriesControllers.deleteCategory,
 );
 

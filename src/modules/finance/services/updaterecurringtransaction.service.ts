@@ -1,6 +1,7 @@
 import { AppError } from "../../../core/errors/AppError.js";
 import { prisma } from "../../../lib/prisma.js";
 import { updateRecurringTransactionBodyType } from "../schemas/updaterecurringtransaction.schema.js";
+import { Prisma } from "@prisma/client";
 
 export async function updateRecurringTransactionService(
   id: string,
@@ -36,7 +37,10 @@ export async function updateRecurringTransactionService(
     amount: data.amount ?? existing.amount,
     recurrenceValue: data.recurrenceValue ?? existing.recurrenceValue,
     recurrenceUnit: data.recurrenceUnit ?? existing.recurrenceUnit,
-    categoryId: data.categoryId !== undefined ? data.categoryId : existing.categoryId,
+    categoryId:
+      data.categoryId !== undefined
+        ? data.categoryId
+        : existing.categoryId,
     dayOfMonth: data.dayOfMonth ?? existing.dayOfMonth,
   };
 
@@ -51,8 +55,8 @@ export async function updateRecurringTransactionService(
       Date.UTC(
         nextOccurrence.getFullYear(),
         nextOccurrence.getMonth(),
-        merged.dayOfMonth
-      )
+        merged.dayOfMonth,
+      ),
     );
   }
 
@@ -75,30 +79,44 @@ export async function updateRecurringTransactionService(
     );
   }
 
-  return await prisma.recurringTransaction.update({
-    where: { id },
-    data: {
-      type: merged.type,
-      name: merged.name,
-      amount: merged.amount,
-      recurrenceValue: merged.recurrenceValue,
-      recurrenceUnit: merged.recurrenceUnit,
-      categoryId: merged.categoryId,
-      dayOfMonth: merged.dayOfMonth,
-      nextOccurrence,
-    },
-    select: {
-      id: true,
-      userId: true,
-      categoryId: true,
-      type: true,
-      name: true,
-      amount: true,
-      recurrenceValue: true,
-      recurrenceUnit: true,
-      dayOfMonth: true,
-      nextOccurrence: true,
-      updatedAt: true,
-    },
-  });
+  try {
+    return await prisma.recurringTransaction.update({
+      where: { id },
+      data: {
+        type: merged.type,
+        name: merged.name,
+        amount: merged.amount,
+        recurrenceValue: merged.recurrenceValue,
+        recurrenceUnit: merged.recurrenceUnit,
+        categoryId: merged.categoryId,
+        dayOfMonth: merged.dayOfMonth,
+        nextOccurrence,
+      },
+      select: {
+        id: true,
+        userId: true,
+        categoryId: true,
+        type: true,
+        name: true,
+        amount: true,
+        recurrenceValue: true,
+        recurrenceUnit: true,
+        dayOfMonth: true,
+        nextOccurrence: true,
+        updatedAt: true,
+      },
+    });
+  } catch (err) {
+    if (err instanceof Prisma.PrismaClientKnownRequestError) {
+      if (err.code === "P2002") {
+        throw new AppError(
+          "DUPLICATE_REGISTER",
+          "Recurring transaction already exists",
+          409,
+        );
+      }
+    }
+
+    throw err;
+  }
 }
