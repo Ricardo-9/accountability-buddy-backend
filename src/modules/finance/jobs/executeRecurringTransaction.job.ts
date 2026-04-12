@@ -1,24 +1,13 @@
 import nodeCron from "node-cron";
 import { prisma } from "../../../lib/prisma.js";
 import { executeRecurringTransactionService } from "../services/executeRecurringTransaction.service.js";
+import { recurringTransactionRepository } from "../repositories/recurringTransaction.repository.js";
 
 export function executeRecurringTransactionJob() {
     nodeCron.schedule("* * * * *", async () => {
         console.log("[Recurring Transaction Job] running...")
 
-        const now = new Date()
-
-        const transactions = await prisma.recurringTransaction.findMany({
-            where: {
-                nextOccurrence: {
-                    lte: now
-                },
-                deletedAt: null
-            },
-            select: {
-                id: true
-            }
-        })
+        const transactions = await recurringTransactionRepository.findPendingTransactions(prisma)
 
         for (const transaction of transactions) {
             try {
