@@ -57,6 +57,20 @@ vi.mock("../../../../../src/middlewares/requireArea.js", () => ({
   }),
 }));
 
+vi.mock(
+  "../../../../../src/modules/finance/middlewares/requireFinancialAccount.js",
+  () => ({
+    requireFinancialAccount: vi.fn((req: any, _res: any, next: any) => {
+      req.financialAccount = {
+        id: "account-123",
+        userId: "user-123",
+        balance: "1000",
+      };
+      next();
+    }),
+  }),
+);
+
 beforeEach(() => {
   vi.clearAllMocks();
 
@@ -231,6 +245,23 @@ describe("update categories", () => {
 
     expect(response.status).toBe(404);
   });
+
+  it("should return 409 when category name already exists", async () => {
+  vi.mocked(financialCategoriesServices.updateCategory).mockRejectedValue(
+    new AppError(
+      "DUPLICATE_REGISTER",
+      "The user already registered this category",
+      409,
+    ),
+  );
+
+  const response = await request(app)
+    .patch("/finance/categories/3fd12663-f4df-4fcf-a67a-83e3035338ca")
+    .send({ name: "FOOD" });
+
+  expect(response.status).toBe(409);
+  expect(response.body.error.code).toBe("DUPLICATE_REGISTER");
+});
 
   it("should return 500 when database fails", async () => {
     vi.mocked(financialCategoriesServices.updateCategory).mockRejectedValue(

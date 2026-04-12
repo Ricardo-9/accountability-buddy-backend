@@ -2,10 +2,12 @@ import { FinancialCategory } from "@prisma/client";
 import { AppError } from "../../../core/errors/AppError.js";
 import { financialCategoriesRepository } from "../repositories/financialCategories.repository.js";
 import { Prisma } from "@prisma/client";
+import { normalizeCategoryName } from "../helpers/normalizeCategoryName.js";
+
 export async function fetchCategory(
   userId: string,
   categoryId: string,
-): Promise<FinancialCategory> {
+) {
   const category = await financialCategoriesRepository.findOneById(
     userId,
     categoryId,
@@ -27,16 +29,26 @@ export async function fetchCategory(
 }
 
 export const financialCategoriesServices = {
-  async getCategories(userId: string): Promise<FinancialCategory[]> {
+  async getCategories(userId: string) {
     return financialCategoriesRepository.findManyById(userId);
   },
 
-  async createCategory(
-    userId: string,
-    name: string,
-  ): Promise<FinancialCategory> {
+  async createCategory(userId: string, name: string) {
+    const normalizedName = normalizeCategoryName(name);
+
+    if (!normalizedName) {
+      throw new AppError(
+        "INVALID_DATA",
+        "Category name cannot be empty",
+        400,
+      );
+    }
+
     try {
-      return await financialCategoriesRepository.create(userId, name);
+      return await financialCategoriesRepository.create(
+        userId,
+        normalizedName,
+      );
     } catch (err) {
       if (err instanceof Prisma.PrismaClientKnownRequestError) {
         if (err.code === "P2002") {
@@ -55,12 +67,40 @@ export const financialCategoriesServices = {
     userId: string,
     categoryId: string,
     name: string,
-  ): Promise<FinancialCategory> {
+  ) {
     await fetchCategory(userId, categoryId);
-    return await financialCategoriesRepository.update(userId, categoryId, name);
+
+    const normalizedName = normalizeCategoryName(name);
+
+    if (!normalizedName) {
+      throw new AppError(
+        "INVALID_DATA",
+        "Category name cannot be empty",
+        400,
+      );
+    }
+
+    try {
+      return await financialCategoriesRepository.update(
+        userId,
+        categoryId,
+        normalizedName,
+      );
+    } catch (err) {
+      if (err instanceof Prisma.PrismaClientKnownRequestError) {
+        if (err.code === "P2002") {
+          throw new AppError(
+            "DUPLICATE_REGISTER",
+            "The user already registered this category",
+            409,
+          );
+        }
+      }
+      throw err;
+    }
   },
 
-  async deleteCategory(userId: string, categoryId: string): Promise<void> {
+  async deleteCategory(userId: string, categoryId: string) {
     await fetchCategory(userId, categoryId);
     await financialCategoriesRepository.delete(userId, categoryId);
   },

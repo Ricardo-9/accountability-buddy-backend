@@ -25,6 +25,7 @@ const mockRecurringTransaction = {
   nextOccurrence: new Date("2026-05-15"),
   lastExecutedAt: null,
   updatedAt: new Date("2026-01-15"),
+  deletedAt: null
 };
 
 describe("Get one recurring transaction", () => {
@@ -42,7 +43,7 @@ describe("Get one recurring transaction", () => {
 
     expect(result).toEqual(mockRecurringTransaction);
     expect(prisma.recurringTransaction.findUnique).toHaveBeenCalledWith({
-      where: { userId: "user-456", id: "rec-123" },
+      where: { userId: "user-456", id: "rec-123",deletedAt: null },
       select: {
         id: true,
         userId: true,
@@ -61,7 +62,7 @@ describe("Get one recurring transaction", () => {
 
   it("should return null when it does not exists", async () => {
     vi.mocked(prisma.recurringTransaction.findUnique).mockResolvedValue(
-      mockRecurringTransaction,
+      null
     );
 
     const result = await getOneRecurringTransactionService(
@@ -71,7 +72,7 @@ describe("Get one recurring transaction", () => {
 
     expect(result).toEqual(null);
     expect(prisma.recurringTransaction.findUnique).toHaveBeenCalledWith({
-      where: { userId: "user-456", id: "non-existent-id" },
+      where: { userId: "user-456", id: "non-existent-id",deletedAt: null },
       select: {
         id: true,
         userId: true,

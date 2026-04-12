@@ -5,7 +5,7 @@ export async function getOneRecurringTransactionService(
   id: string,
 ) {
   return await prisma.recurringTransaction.findUnique({
-    where: { userId, id },
+    where: { userId, id, deletedAt: null},
     select: {
       id: true,
       userId: true,
