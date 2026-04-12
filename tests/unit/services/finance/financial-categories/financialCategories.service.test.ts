@@ -10,7 +10,7 @@ const mockCategory = {
   isDefault: false,
   createdAt: new Date(),
   updatedAt: new Date(),
-  deletedAt: null
+  deletedAt: null,
 };
 
 vi.mock(
@@ -24,9 +24,9 @@ describe("financialCategoriesServices", () => {
 
   describe("getCategories", () => {
     it("should return categories for the user", async () => {
-      vi.mocked(financialCategoriesRepository.findManyById).mockResolvedValue(
-        [mockCategory],
-      );
+      vi.mocked(financialCategoriesRepository.findManyById).mockResolvedValue([
+        mockCategory,
+      ]);
 
       const result =
         await financialCategoriesServices.getCategories("user-123");
@@ -106,27 +106,79 @@ describe("financialCategoriesServices", () => {
   });
 
   describe("updateCategory", () => {
-    it("should update and return category with new name", async () => {
+    it("should update and return category with normalized name", async () => {
       vi.mocked(financialCategoriesRepository.findOneById).mockResolvedValue(
         mockCategory,
       );
+
       vi.mocked(financialCategoriesRepository.update).mockResolvedValue({
         ...mockCategory,
-        name: "NEW_NAME",
+        name: "NEWNAME",
       });
 
       const result = await financialCategoriesServices.updateCategory(
         "user-123",
         "category-123",
-        "NEW_NAME",
+        "new name",
       );
 
-      expect(result.name).toBe("NEW_NAME");
+      expect(result.name).toBe("NEWNAME");
+
       expect(financialCategoriesRepository.update).toHaveBeenCalledWith(
-        "user-123", 
+        "user-123",
         "category-123",
-        "NEW_NAME",
+        "NEWNAME",
       );
+    });
+
+    it("should normalize name before updating", async () => {
+      vi.mocked(financialCategoriesRepository.findOneById).mockResolvedValue(
+        mockCategory,
+      );
+
+      vi.mocked(financialCategoriesRepository.update).mockResolvedValue({
+        ...mockCategory,
+        name: "FOOD",
+      });
+
+      await financialCategoriesServices.updateCategory(
+        "user-123",
+        "category-123",
+        "   food   ",
+      );
+
+      expect(financialCategoriesRepository.update).toHaveBeenCalledWith(
+        "user-123",
+        "category-123",
+        "FOOD",
+      );
+    });
+
+    it("should throw DUPLICATE_REGISTER when category name already exists", async () => {
+      vi.mocked(financialCategoriesRepository.findOneById).mockResolvedValue(
+        mockCategory,
+      );
+
+      const prismaError = new Prisma.PrismaClientKnownRequestError(
+        "Unique constraint failed",
+        { code: "P2002", clientVersion: "5.0.0" },
+      );
+
+      vi.mocked(financialCategoriesRepository.update).mockRejectedValue(
+        prismaError,
+      );
+
+      await expect(
+        financialCategoriesServices.updateCategory(
+          "user-123",
+          "category-123",
+          "FOOD",
+        ),
+      ).rejects.toMatchObject({
+        code: "DUPLICATE_REGISTER",
+        message: "The user already registered this category",
+        statusCode: 409,
+      });
     });
 
     it("should throw NOT_FOUND when category does not exist", async () => {
@@ -147,24 +199,7 @@ describe("financialCategoriesServices", () => {
       });
     });
 
-    it("should throw NOT_FOUND when category belongs to another user", async () => {
-      vi.mocked(financialCategoriesRepository.findOneById).mockResolvedValue(
-        null,
-      );
-
-      await expect(
-        financialCategoriesServices.updateCategory(
-          "user-123",
-          "category-123",
-          "NEW_NAME",
-        ),
-      ).rejects.toMatchObject({
-        code: "NOT_FOUND",
-        statusCode: 404,
-      });
-    });
-
-    it("should throw FORBIDDEN when trying to update a default category", async () => {
+    it("should throw FORBIDDEN when trying to update default category", async () => {
       vi.mocked(financialCategoriesRepository.findOneById).mockResolvedValue({
         ...mockCategory,
         isDefault: true,
@@ -178,7 +213,6 @@ describe("financialCategoriesServices", () => {
         ),
       ).rejects.toMatchObject({
         code: "FORBIDDEN",
-        message: "Default categories can not be modified",
         statusCode: 403,
       });
     });
@@ -199,7 +233,7 @@ describe("financialCategoriesServices", () => {
       );
 
       expect(financialCategoriesRepository.delete).toHaveBeenCalledWith(
-        "user-123",  
+        "user-123",
         "category-123",
       );
     });

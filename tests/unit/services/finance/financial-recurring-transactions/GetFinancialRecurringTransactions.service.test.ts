@@ -25,6 +25,7 @@ const mockRecurringTransactions = [
     nextOccurrence: new Date("2026-05-15"),
     createdAt: new Date(),
     updatedAt: new Date(),
+    deletedAt: null,
     lastExecutedAt: null,
   },
 ];
@@ -47,7 +48,7 @@ describe("Get recurring transactions", () => {
 
     expect(prisma.recurringTransaction.findMany).toHaveBeenCalledWith({
       where: {
-        userId: "user-1",
+        userId: "user-1",deletedAt: null
       },
       skip: 0,
       take: 10,
@@ -69,7 +70,7 @@ describe("Get recurring transactions", () => {
 
     expect(prisma.recurringTransaction.findMany).toHaveBeenCalledWith({
       where: {
-        userId: "user-1",
+        userId: "user-1",deletedAt: null,
         type: "EXPENSE",
       },
       skip: 0,
@@ -94,6 +95,7 @@ describe("Get recurring transactions", () => {
       where: {
         userId: "user-1",
         categoryId: "cat-1",
+        deletedAt: null
       },
       skip: 0,
       take: 10,
@@ -124,6 +126,7 @@ describe("Get recurring transactions", () => {
           gte: startDate,
           lte: endDate,
         },
+        deletedAt: null
       },
       skip: 0,
       take: 10,
@@ -145,6 +148,7 @@ describe("Get recurring transactions", () => {
     expect(prisma.recurringTransaction.findMany).toHaveBeenCalledWith({
       where: {
         userId: "user-1",
+        deletedAt: null
       },
       skip: 10,
       take: 10,
@@ -166,6 +170,7 @@ describe("Get recurring transactions", () => {
     expect(prisma.recurringTransaction.findMany).toHaveBeenCalledWith({
       where: {
         userId: "user-1",
+        deletedAt: null
       },
       skip: 0,
       take: 10,

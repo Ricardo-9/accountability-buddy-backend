@@ -6,6 +6,5 @@ export const DEFAULT_FINANCIAL_CATEGORIES = [
   "HEALTH",
   "EDUCATION",
   "DEBTS",
-  "SAVINGS",
   "OTHER",
 ] as const;
