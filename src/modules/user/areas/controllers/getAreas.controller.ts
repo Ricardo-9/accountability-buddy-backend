@@ -1,22 +1,18 @@
 import { Request, Response, NextFunction } from "express";
-import { updateAreasService } from "../services/updateareas.service.js";
+import { getAreasService } from "../services/getAreas.service.js";
 import { successResponse } from "../../../../shared/utils/apiResponse.js";
 
-export async function updateAreasController(
+export async function getAreasController(
     req: Request,
     res: Response,
     next: NextFunction
 ) {
     try {
         const userId = req.user!.id
-        const { areas } = req.body
 
-        const result = await updateAreasService(userId, areas)
+        const areas = await getAreasService(userId)
 
-        return successResponse(
-            res, 
-            result
-        )
+        return successResponse(res, areas)
     }
     catch (err) {
         next(err)
