@@ -112,7 +112,7 @@
  *                                          example: example@email.com
  *                                      accessToken:
  *                                          type: string
- *                                          example: "eyJhbGciOiJIUzI1NiIsInR5..." 
+ *                                          example: "eyJhbGciOiJIUzI1NiIsInR5..."
  *          400:
  *              description: Invalid data
  *          401:

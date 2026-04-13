@@ -421,7 +421,7 @@
  *                              type: string
  *                              format: uuid
  *                              example: 7d1effd5-3185-432b-bb39-8b6aa1ef2791
- * 
+ *
  *      responses:
  *          201:
  *              description: Recurring transaction successfully created
@@ -517,10 +517,10 @@
  *              description: Recurring transaction successfully deleted
  *              content:
  *                  application/json:
- *                      schema: 
+ *                      schema:
  *                          type: object
  *                          properties:
- *                              success: 
+ *                              success:
  *                                  type: boolean
  *                                  example: true
  *                              message:
@@ -537,5 +537,5 @@
  *          429:
  *              description: Too many requests
  *          500:
- *              description: Internal server error  
+ *              description: Internal server error
  */

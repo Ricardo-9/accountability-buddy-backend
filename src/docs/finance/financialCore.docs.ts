@@ -33,7 +33,7 @@
  *                      schema:
  *                          type: object
  *                          properties:
- *                              success: 
+ *                              success:
  *                                  type: boolean
  *                                  example: true
  *                              data:
@@ -121,7 +121,7 @@
  *              description: Too many requests
  *          500:
  *              description: Internal server error
-*/
+ */
 
 /**
  * @swagger
@@ -194,7 +194,7 @@
  *          429:
  *              description: Too many requests
  *          500:
- *              description: Internal server error 
+ *              description: Internal server error
  */
 
 /**
@@ -249,7 +249,7 @@
  *                              data:
  *                                  type: object
  *                                  properties:
- *                                      statement: 
+ *                                      statement:
  *                                          type: array
  *                                          items:
  *                                              type: object
@@ -287,5 +287,5 @@
  *          429:
  *              description: Too many requests
  *          500:
- *              description: Internal server error 
+ *              description: Internal server error
  */

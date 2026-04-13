@@ -36,7 +36,7 @@ vi.mock("../../../../src/middlewares/authMiddleware.ts", () => ({
 }));
 
 vi.mock(
-  "../../../../src/modules/user/user-profile/services/userProfile.service.js"
+  "../../../../src/modules/user/user-profile/services/userProfile.service.js",
 );
 
 describe("user profiles", () => {

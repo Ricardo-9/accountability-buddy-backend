@@ -172,7 +172,6 @@
  *              description: Internal server error
  */
 
-
 /**
  * @swagger
  * /user/me:

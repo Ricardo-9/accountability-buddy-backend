@@ -5,41 +5,48 @@ import { recurringTransactionRepository } from "../../../../src/modules/finance/
 import { executeRecurringTransactionService } from "../../../../src/modules/finance/services/executeRecurringTransaction.service";
 
 vi.mock("node-cron", () => ({
-    default: {
-        schedule: vi.fn()
-    }
-}))
+  default: {
+    schedule: vi.fn(),
+  },
+}));
 
-vi.mock("../../../../src/modules/finance/repositories/recurringTransaction.repository")
-vi.mock("../../../../src/modules/finance/services/executeRecurringTransaction.service")
+vi.mock(
+  "../../../../src/modules/finance/repositories/recurringTransaction.repository",
+);
+vi.mock(
+  "../../../../src/modules/finance/services/executeRecurringTransaction.service",
+);
 
 describe("Execute recurring transaction job test", () => {
-    beforeEach(() => vi.clearAllMocks())
-    it("should process all pending transactions", async () => {
-        const fakeCallback = vi.fn()
+  beforeEach(() => vi.clearAllMocks());
+  it("should process all pending transactions", async () => {
+    const fakeCallback = vi.fn();
 
-        vi.mocked(nodeCron.schedule).mockImplementation((expression: any, cb: any) => {
-            fakeCallback.mockImplementation(cb as any)
+    vi.mocked(nodeCron.schedule).mockImplementation(
+      (expression: any, cb: any) => {
+        fakeCallback.mockImplementation(cb as any);
 
-            return {
-                start: vi.fn(),
-                stop: vi.fn()
-            } as any
-        })
+        return {
+          start: vi.fn(),
+          stop: vi.fn(),
+        } as any;
+      },
+    );
 
-        vi.mocked(recurringTransactionRepository.findPendingTransactions).mockResolvedValue([
-            { id: "1" },
-            { id: "2" }
-        ])
+    vi.mocked(
+      recurringTransactionRepository.findPendingTransactions,
+    ).mockResolvedValue([{ id: "1" }, { id: "2" }]);
 
-        executeRecurringTransactionJob()
+    executeRecurringTransactionJob();
 
-        await fakeCallback()
+    await fakeCallback();
 
-        expect(executeRecurringTransactionService).toHaveBeenCalledTimes(2)
-        expect(executeRecurringTransactionService).toHaveBeenCalledWith("1")
-        expect(executeRecurringTransactionService).toHaveBeenCalledWith("2")
-        expect(nodeCron.schedule).toHaveBeenCalledWith("* * * * *", expect.any(Function))
-    })
-})
-
+    expect(executeRecurringTransactionService).toHaveBeenCalledTimes(2);
+    expect(executeRecurringTransactionService).toHaveBeenCalledWith("1");
+    expect(executeRecurringTransactionService).toHaveBeenCalledWith("2");
+    expect(nodeCron.schedule).toHaveBeenCalledWith(
+      "* * * * *",
+      expect.any(Function),
+    );
+  });
+});

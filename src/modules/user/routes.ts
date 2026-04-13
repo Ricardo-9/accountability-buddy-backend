@@ -13,12 +13,26 @@ import { getAreasController } from "./areas/controllers/getareas.controller.js";
 const router = Router();
 
 //AUTH
-router.post("/signup", authLimiter, validateRequest(signupSchema), signupController);
-router.post("/signin", authLimiter, validateRequest(signinSchema), signinController);
-
+router.post(
+  "/signup",
+  authLimiter,
+  validateRequest(signupSchema),
+  signupController,
+);
+router.post(
+  "/signin",
+  authLimiter,
+  validateRequest(signinSchema),
+  signinController,
+);
 
 //AREAS
-router.get("/areas", authenticate, getAreasController)
-router.put("/areas", authenticate, validateRequest(updateAreasSchema), updateAreasController);
+router.get("/areas", authenticate, getAreasController);
+router.put(
+  "/areas",
+  authenticate,
+  validateRequest(updateAreasSchema),
+  updateAreasController,
+);
 
 export { router as userRoutes };

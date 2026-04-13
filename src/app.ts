@@ -20,10 +20,10 @@ app.use(testRoutes);
 // User profile routes
 app.use("/user", userProfileRoutes);
 
-app.use("/user",userRoutes)
+app.use("/user", userRoutes);
 
 // Finance routes
-app.use("/finance", financialRoutes)
+app.use("/finance", financialRoutes);
 
 // Health check
 app.use(healthRouter);

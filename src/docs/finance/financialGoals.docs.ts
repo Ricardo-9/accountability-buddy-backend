@@ -112,7 +112,7 @@
  *                                      newBalance:
  *                                          type: string
  *                                          description: Updated account balance after goal creation (decimal serialized as string)
- *                                          example: 2000                                           
+ *                                          example: 2000
  *                              message:
  *                                  type: string
  *                                  example: Financial goal successfully created
@@ -147,7 +147,7 @@
  *            schema:
  *              type: string
  *              format: uuid
- *              example: 7d1effd5-3185-432b-bb39-8b6aa1ef2791 
+ *              example: 7d1effd5-3185-432b-bb39-8b6aa1ef2791
  *          - in: query
  *            name: limit
  *            required: false
@@ -242,7 +242,7 @@
  *          429:
  *              description: Too many requests
  *          500:
- *              description: Internal server error           
+ *              description: Internal server error
  */
 
 /**
@@ -302,7 +302,7 @@
  *                      schema:
  *                          type: object
  *                          properties:
- *                              success: 
+ *                              success:
  *                                  type: boolean
  *                                  example: true
  *                              data:
@@ -373,7 +373,7 @@
  *          429:
  *              description: Too many requests
  *          500:
- *              description: Internal server error   
+ *              description: Internal server error
  */
 
 /**
@@ -413,7 +413,7 @@
  *                      schema:
  *                          type: object
  *                          properties:
- *                              success: 
+ *                              success:
  *                                  type: boolean
  *                                  example: true
  *                              data:
@@ -454,8 +454,8 @@
  *          429:
  *              description: Too many requests
  *          500:
- *              description: Internal server error                                               
- *          
+ *              description: Internal server error
+ *
  */
 
 /**
@@ -483,7 +483,7 @@
  *                      schema:
  *                          type: object
  *                          properties:
- *                              success: 
+ *                              success:
  *                                  type: boolean
  *                                  example: true
  *                              data:
@@ -508,5 +508,5 @@
  *          429:
  *              description: Too many requests
  *          500:
- *              description: Internal server error   
+ *              description: Internal server error
  */

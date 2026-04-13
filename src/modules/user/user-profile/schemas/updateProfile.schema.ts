@@ -16,8 +16,8 @@ const updateProfileBodySchema = z
       data.birthDate !== undefined ||
       data.phone !== undefined,
     { message: "At least one field must be provided" },
-  )
-  
+  );
+
 export const updateProfileSchema = z.object({
   body: updateProfileBodySchema,
 });

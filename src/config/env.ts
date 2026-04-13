@@ -6,9 +6,11 @@ dotenv.config();
 const envSchema = z.object({
   DATABASE_URL: z.url(),
   PORT: z.coerce.number().default(3000),
-  NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
+  NODE_ENV: z
+    .enum(["development", "production", "test"])
+    .default("development"),
   SUPABASE_URL: z.url(),
-  SUPABASE_KEY: z.string()
-})
+  SUPABASE_KEY: z.string(),
+});
 
-export const config = envSchema.parse(process.env)
+export const config = envSchema.parse(process.env);
