@@ -1,6 +1,6 @@
 import { describe, vi, expect, it, beforeEach } from "vitest";
 import { supabase } from "../../../../../src/lib/supabase";
-import { signupService } from "../../../../../src/modules/user/auth/services/signup.service";
+import { signUpService } from "../../../../../src/modules/user/auth/services/signUp.service";
 import { AuthError, User } from "@supabase/supabase-js";
 
 vi.mock("../../../../../src/lib/supabase", () => ({
@@ -30,7 +30,7 @@ describe("Signup service tests", () => {
       error: null,
     });
 
-    const result = await signupService("test@example.com", "password");
+    const result = await signUpService("test@example.com", "password");
 
     expect(result).toEqual(fakeUser);
     expect(mockSignUp).toHaveBeenCalledWith({
@@ -51,7 +51,7 @@ describe("Signup service tests", () => {
     });
 
     await expect(
-      signupService("test@example.com", "password"),
+      signUpService("test@example.com", "password"),
     ).rejects.toMatchObject({
       code: "AUTH_ERROR",
       message: "User already registered",
@@ -68,7 +68,7 @@ describe("Signup service tests", () => {
     });
 
     await expect(
-      signupService("test@example.com", "password"),
+      signUpService("test@example.com", "password"),
     ).rejects.toMatchObject({
       code: "AUTH_ERROR",
       message: "User creation failed",
