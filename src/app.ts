@@ -22,10 +22,13 @@ app.use("/user", userProfileRoutes);
 
 app.use("/user",userRoutes)
 
+// Finance routes
 app.use("/finance", financialRoutes)
 
+// Health check
 app.use(healthRouter);
 
+// Docs
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.use(errorHandler);
