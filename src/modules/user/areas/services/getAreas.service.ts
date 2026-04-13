@@ -1,15 +1,7 @@
-import { prisma } from "../../../../lib/prisma.js";
+import { userAreasRepository } from "../repositories/userAreas.repository.js";
 
 export async function getAreasService(id: string) {
-  const areas = await prisma.userArea.findMany({
-    where: { userId: id },
-    select: {
-      area: true,
-    },
-    orderBy: {
-      area: "asc",
-    },
-  });
+  const areas = await userAreasRepository.findAreas(id)
 
   return areas.map((a) => a.area);
 }
