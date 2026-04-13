@@ -1,8 +1,8 @@
-import { signupService } from "../services/signup.service.js";
+import { signUpService } from "../services/signUp.service.js";
 import { successResponse } from "../../../../shared/utils/apiResponse.js";
 import { Request, Response, NextFunction } from "express";
 
-export async function signupController(
+export async function signUpController(
   req: Request,
   res: Response,
   next: NextFunction,
@@ -10,7 +10,7 @@ export async function signupController(
   try {
     const { email, password } = req.body;
 
-    const user = await signupService(email, password);
+    const user = await signUpService(email, password);
 
     return successResponse(res, {
       id: user.id,

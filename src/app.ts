@@ -8,6 +8,7 @@ import swaggerUi from "swagger-ui-express";
 import swaggerSpec from "./swagger.js";
 import { userRoutes } from "./modules/user/routes.js";
 import { financialRoutes } from "./modules/finance/routes.js";
+import { userAuthRoutes } from "./modules/user/auth/routes.js";
 
 const app = express();
 
@@ -17,8 +18,8 @@ app.use(rateLimiter);
 
 app.use(testRoutes);
 
-// User profile routes
-app.use("/user", userProfileRoutes);
+// User routes
+app.use("/user", userProfileRoutes, userAuthRoutes);
 
 app.use("/user",userRoutes)
 
