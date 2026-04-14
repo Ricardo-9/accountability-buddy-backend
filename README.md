@@ -12,23 +12,24 @@
 
 ## Stack
 
-| Camada | Tecnologia |
-|---|---|
-| Runtime | Node.js |
-| Linguagem | TypeScript |
-| Framework | Express |
-| ORM | Prisma |
-| Banco de dados | PostgreSQL (Supabase) |
-| Autenticação | Supabase Auth (JWT via JWKS / `jose`) |
-| Validação | Zod |
-| Documentação | Swagger / OpenAPI (JSDoc) |
-| Testes | Vitest + Supertest |
+| Camada         | Tecnologia                            |
+| -------------- | ------------------------------------- |
+| Runtime        | Node.js                               |
+| Linguagem      | TypeScript                            |
+| Framework      | Express                               |
+| ORM            | Prisma                                |
+| Banco de dados | PostgreSQL (Supabase)                 |
+| Autenticação   | Supabase Auth (JWT via JWKS / `jose`) |
+| Validação      | Zod                                   |
+| Documentação   | Swagger / OpenAPI (JSDoc)             |
+| Testes         | Vitest + Supertest                    |
 
 ---
 
 ## Arquitetura
 
 O projeto segue uma **arquitetura em camadas** estrita com separação clara de responsabilidades:
+
 ```
 Request → Router → Middleware → Controller → Service → Repository → Database
 ```
@@ -44,6 +45,7 @@ Todos os módulos em `src/modules/` seguem esse padrão.
 ---
 
 ## Estrutura do Projeto
+
 ```
 src/
 ├── @types/            # Extensões de tipo do Express (req.user)
@@ -83,7 +85,7 @@ Todas as operações sensíveis ao saldo rodam em uma única `prisma.$transactio
 
 Ao atualizar o valor de uma despesa, o service calcula a **diferença** entre o valor antigo e o novo, ajustando o saldo apenas pela diferença — não pelo novo valor completo. Exemplo: despesa era R$50, atualizada para R$80 → saldo é decrementado em R$30.
 
-### Zod 
+### Zod
 
 Schemas de atualização parcial utilizam `Object.assign` na camada de repository para montar o payload de update dinamicamente, evitando erros do TypeScript causados por campos `undefined` sendo passados ao Prisma.
 
@@ -104,6 +106,7 @@ O projeto possui duas camadas de testes:
 **Testes unitários** (Vitest) cobrem todos os métodos de service com repositories mockados, incluindo happy paths, erros de not found, violações de constraints do Prisma e rethrow de erros desconhecidos.
 
 **Testes de integração** (Vitest + Supertest) testam todos os endpoints de ponta a ponta com services e middlewares mockados, cobrindo status codes, formato das respostas, erros de validação, falhas de autenticação, erros de permissão por área e cenários de falha no banco de dados.
+
 ```
 tests/
 ├── unit/services/
@@ -125,6 +128,7 @@ tests/
 ---
 
 ## Variáveis de Ambiente
+
 ```bash
 DATABASE_URL=
 DIRECT_URL=
@@ -138,6 +142,7 @@ Consulte o `.env.example` como referência.
 ---
 
 ## Rodando Localmente
+
 ```bash
 # Instalar dependências
 npm install
@@ -164,4 +169,4 @@ O **domínio de Finanças** é o domínio principal a ser implementado, incluind
 
 ## Desenvolvedores
 
-**Ricardo Rocha Alves e Kaiky Rodrigues de Oliveira** — Estagiários na Lua Soft | Estudantes de Engenharia de Software na UFCA (Universidade Federal do Cariri) 
+**Ricardo Rocha Alves e Kaiky Rodrigues de Oliveira** — Estagiários na Lua Soft | Estudantes de Engenharia de Software na UFCA (Universidade Federal do Cariri)

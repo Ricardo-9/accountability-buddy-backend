@@ -6,7 +6,7 @@ export const authLimiter = rateLimit({
   max: 5,
   standardHeaders: true,
   legacyHeaders: false,
-  skipSuccessfulRequests:true,
+  skipSuccessfulRequests: true,
   handler: (_req, _res, _next) => {
     throw new AppError(
       "TOO_MANY_REQUESTS",

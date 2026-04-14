@@ -19,11 +19,12 @@ app.use(rateLimiter);
 app.use(testRoutes);
 app.use(healthRouter);
 
+
 // User routes
 app.use("/user", userProfileRoutes, userAuthRoutes, userAreasRoutes);
 
 // Finance routes
-app.use("/finance", financialRoutes)
+app.use("/finance", financialRoutes);
 
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 

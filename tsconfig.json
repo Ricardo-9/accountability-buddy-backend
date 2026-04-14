@@ -25,7 +25,7 @@
   "include": [
     "src/**/*",
     "src/lib",
-    "src/modules/finance/services/getrecurringtransaction.service.ts"
+    "src/modules/finance/recurring-transactions/services/getRecurringTransaction.service.ts"
   ],
   "exclude": ["node_modules", "dist"]
 }

@@ -36,7 +36,6 @@ O diagrama completo, utilizado como base para a modelagem no Prisma, está dispo
 
 📁 `DB-docs/erd.png`
 
-
 ---
 
 ## Estrutura por Domínio
@@ -47,16 +46,16 @@ O diagrama completo, utilizado como base para a modelagem no Prisma, está dispo
 
 Armazena informações complementares do usuário autenticado via Supabase e centraliza as referências de todas as outras tabelas por meio do `userId`. Ao utilizar o mesmo UUID do Supabase Auth, garantimos integridade e evitamos duplicação de identidade.
 
-| Campo | Tipo | Descrição |
-|---|---|---|
-| `id` | String | Mesmo ID do Supabase Auth (PK) |
-| `fullName` | String? | Nome completo |
-| `birthDate` | DateTime? | Data de nascimento (Date) |
-| `phone` | String? | Telefone para contato |
-| `status` | Enum `ProfileStatus` | Status da conta (`ACTIVE`, `DELETED`) |
-| `createdAt` | DateTime | Data de criação |
-| `updatedAt` | DateTime | Última atualização |
-| `deletedAt` | DateTime? | Data de exclusão lógica (soft delete) |
+| Campo       | Tipo                 | Descrição                             |
+| ----------- | -------------------- | ------------------------------------- |
+| `id`        | String               | Mesmo ID do Supabase Auth (PK)        |
+| `fullName`  | String?              | Nome completo                         |
+| `birthDate` | DateTime?            | Data de nascimento (Date)             |
+| `phone`     | String?              | Telefone para contato                 |
+| `status`    | Enum `ProfileStatus` | Status da conta (`ACTIVE`, `DELETED`) |
+| `createdAt` | DateTime             | Data de criação                       |
+| `updatedAt` | DateTime             | Última atualização                    |
+| `deletedAt` | DateTime?            | Data de exclusão lógica (soft delete) |
 
 ---
 
@@ -64,13 +63,13 @@ Armazena informações complementares do usuário autenticado via Supabase e cen
 
 Associa o usuário a uma ou mais áreas de accountability, permitindo personalização do app.
 
-| Campo | Tipo | Descrição |
-|---|---|---|
-| `id` | String | PK (UUID) |
-| `userId` | String | FK para `UserProfile` |
-| `area` | Enum `AccountabilityArea` | Área de interesse (`GYM`, `NUTRITION`, `FINANCES`, `PRODUCTIVITY`) |
-| `createdAt` | DateTime | |
-| `updatedAt` | DateTime | |
+| Campo       | Tipo                      | Descrição                                                          |
+| ----------- | ------------------------- | ------------------------------------------------------------------ |
+| `id`        | String                    | PK (UUID)                                                          |
+| `userId`    | String                    | FK para `UserProfile`                                              |
+| `area`      | Enum `AccountabilityArea` | Área de interesse (`GYM`, `NUTRITION`, `FINANCES`, `PRODUCTIVITY`) |
+| `createdAt` | DateTime                  |                                                                    |
+| `updatedAt` | DateTime                  |                                                                    |
 
 > **Constraint:** `@@unique([userId, area])` — cada área pode ser associada apenas uma vez por usuário.
 
@@ -82,13 +81,13 @@ Associa o usuário a uma ou mais áreas de accountability, permitindo personaliz
 
 Armazena o saldo atual consolidado do usuário.
 
-| Campo | Tipo | Descrição |
-|---|---|---|
-| `id` | String | PK (UUID) |
-| `userId` | String | Único por usuário |
-| `balance` | Decimal | Saldo atual |
-| `createdAt` | DateTime | |
-| `updatedAt` | DateTime | |
+| Campo       | Tipo     | Descrição         |
+| ----------- | -------- | ----------------- |
+| `id`        | String   | PK (UUID)         |
+| `userId`    | String   | Único por usuário |
+| `balance`   | Decimal  | Saldo atual       |
+| `createdAt` | DateTime |                   |
+| `updatedAt` | DateTime |                   |
 
 > **Justificativa:** Manter o estado atual separado do histórico otimiza consultas em dashboards. O histórico de evolução do saldo é armazenado em `FinanceBalanceHistory`.
 
@@ -98,14 +97,14 @@ Armazena o saldo atual consolidado do usuário.
 
 Registra snapshots do saldo e variações ao longo do tempo.
 
-| Campo | Tipo | Descrição |
-|---|---|---|
-| `id` | String | PK (UUID) |
-| `userId` | String | |
-| `balance` | Decimal | Saldo na data do snapshot |
-| `change` | Decimal | Variação do saldo (positiva ou negativa) |
-| `type` | Enum `BalanceChangeType` | Origem da variação (`INITIAL_BALANCE`, `INCOME`, `EXPENSE`, `GOAL_CREATE`, `GOAL_UPDATE`, `GOAL_DEPOSIT`, `GOAL_DELETED`) |
-| `createdAt` | DateTime | Data do registro |
+| Campo       | Tipo                     | Descrição                                                                                                                 |
+| ----------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------- |
+| `id`        | String                   | PK (UUID)                                                                                                                 |
+| `userId`    | String                   |                                                                                                                           |
+| `balance`   | Decimal                  | Saldo na data do snapshot                                                                                                 |
+| `change`    | Decimal                  | Variação do saldo (positiva ou negativa)                                                                                  |
+| `type`      | Enum `BalanceChangeType` | Origem da variação (`INITIAL_BALANCE`, `INCOME`, `EXPENSE`, `GOAL_CREATE`, `GOAL_UPDATE`, `GOAL_DEPOSIT`, `GOAL_DELETED`) |
+| `createdAt` | DateTime                 | Data do registro                                                                                                          |
 
 > **Índices:** `[userId, createdAt]` para consultas temporais eficientes.
 
@@ -115,14 +114,14 @@ Registra snapshots do saldo e variações ao longo do tempo.
 
 Categorias personalizadas para despesas, transações recorrentes e metas financeiras. Suporta soft delete.
 
-| Campo | Tipo | Descrição |
-|---|---|---|
-| `id` | String | PK (UUID) |
-| `userId` | String | |
-| `name` | String | Nome da categoria |
-| `isDefault` | Boolean | Se é uma categoria padrão do sistema |
-| `createdAt` | DateTime | |
-| `updatedAt` | DateTime | |
+| Campo       | Tipo      | Descrição                             |
+| ----------- | --------- | ------------------------------------- |
+| `id`        | String    | PK (UUID)                             |
+| `userId`    | String    |                                       |
+| `name`      | String    | Nome da categoria                     |
+| `isDefault` | Boolean   | Se é uma categoria padrão do sistema  |
+| `createdAt` | DateTime  |                                       |
+| `updatedAt` | DateTime  |                                       |
 | `deletedAt` | DateTime? | Data de exclusão lógica (soft delete) |
 
 > **Constraint:** `@@unique([userId, name, deletedAt])` — permite reutilizar o mesmo nome após exclusão lógica.
@@ -133,17 +132,17 @@ Categorias personalizadas para despesas, transações recorrentes e metas financ
 
 Despesas variáveis não periódicas, registradas individualmente e descontadas diretamente do saldo da conta financeira.
 
-| Campo | Tipo | Descrição |
-|---|---|---|
-| `id` | String | PK (UUID) |
-| `userId` | String | |
-| `categoryId` | String? | FK para `FinancialCategory` (SetNull) |
-| `name` | String | Nome da despesa |
-| `amount` | Decimal | Valor |
-| `expenseDate` | DateTime | Data da despesa (Date) |
-| `createdAt` | DateTime | |
-| `updatedAt` | DateTime | |
-| `deletedAt` | DateTime? | Data de exclusão lógica (soft delete) |
+| Campo         | Tipo      | Descrição                             |
+| ------------- | --------- | ------------------------------------- |
+| `id`          | String    | PK (UUID)                             |
+| `userId`      | String    |                                       |
+| `categoryId`  | String?   | FK para `FinancialCategory` (SetNull) |
+| `name`        | String    | Nome da despesa                       |
+| `amount`      | Decimal   | Valor                                 |
+| `expenseDate` | DateTime  | Data da despesa (Date)                |
+| `createdAt`   | DateTime  |                                       |
+| `updatedAt`   | DateTime  |                                       |
+| `deletedAt`   | DateTime? | Data de exclusão lógica (soft delete) |
 
 > **Índices:** `[userId, expenseDate]` e `categoryId`.
 
@@ -153,21 +152,21 @@ Despesas variáveis não periódicas, registradas individualmente e descontadas 
 
 Transações recorrentes (receitas ou despesas), com controle de periodicidade e próxima execução.
 
-| Campo | Tipo | Descrição |
-|---|---|---|
-| `id` | String | PK (UUID) |
-| `userId` | String | |
-| `categoryId` | String? | FK para `FinancialCategory` (SetNull) |
-| `type` | Enum `TransactionType` | Tipo (`INCOME`, `EXPENSE`) |
-| `name` | String | Nome da transação |
-| `amount` | Decimal | Valor |
-| `recurrenceValue` | Int | Valor numérico da recorrência |
-| `recurrenceUnit` | Enum `RecurrenceUnit` | Unidade (`DAY`, `WEEK`, `MONTH`) |
-| `dayOfMonth` | Int? | Dia do mês de execução (opcional) |
-| `nextOccurrence` | DateTime | Próxima data de execução |
-| `lastExecutedAt` | DateTime? | Última vez que foi executada |
-| `createdAt` | DateTime | |
-| `updatedAt` | DateTime | |
+| Campo             | Tipo                   | Descrição                             |
+| ----------------- | ---------------------- | ------------------------------------- |
+| `id`              | String                 | PK (UUID)                             |
+| `userId`          | String                 |                                       |
+| `categoryId`      | String?                | FK para `FinancialCategory` (SetNull) |
+| `type`            | Enum `TransactionType` | Tipo (`INCOME`, `EXPENSE`)            |
+| `name`            | String                 | Nome da transação                     |
+| `amount`          | Decimal                | Valor                                 |
+| `recurrenceValue` | Int                    | Valor numérico da recorrência         |
+| `recurrenceUnit`  | Enum `RecurrenceUnit`  | Unidade (`DAY`, `WEEK`, `MONTH`)      |
+| `dayOfMonth`      | Int?                   | Dia do mês de execução (opcional)     |
+| `nextOccurrence`  | DateTime               | Próxima data de execução              |
+| `lastExecutedAt`  | DateTime?              | Última vez que foi executada          |
+| `createdAt`       | DateTime               |                                       |
+| `updatedAt`       | DateTime               |                                       |
 
 > **Índices:** `userId` e `nextOccurrence` (para jobs de execução automática).
 
@@ -177,14 +176,14 @@ Transações recorrentes (receitas ou despesas), com controle de periodicidade e
 
 Histórico de execuções de cada transação recorrente.
 
-| Campo | Tipo | Descrição |
-|---|---|---|
-| `id` | String | PK (UUID) |
-| `transactionId` | String | FK para `RecurringTransaction` (Cascade) |
-| `amount` | Decimal | Valor executado |
-| `executedAt` | DateTime | Data/hora da execução |
-| `balanceBefore` | Decimal | Saldo antes da execução |
-| `balanceAfter` | Decimal | Saldo após a execução |
+| Campo           | Tipo     | Descrição                                |
+| --------------- | -------- | ---------------------------------------- |
+| `id`            | String   | PK (UUID)                                |
+| `transactionId` | String   | FK para `RecurringTransaction` (Cascade) |
+| `amount`        | Decimal  | Valor executado                          |
+| `executedAt`    | DateTime | Data/hora da execução                    |
+| `balanceBefore` | Decimal  | Saldo antes da execução                  |
+| `balanceAfter`  | Decimal  | Saldo após a execução                    |
 
 > **Índices:** `[transactionId, executedAt]`.
 
@@ -194,20 +193,20 @@ Histórico de execuções de cada transação recorrente.
 
 Metas financeiras com prazo e perfil de investimento. Suporta soft delete.
 
-| Campo | Tipo | Descrição |
-|---|---|---|
-| `id` | String | PK (UUID) |
-| `userId` | String | |
-| `categoryId` | String? | FK para `FinancialCategory` (SetNull) |
-| `name` | String | Nome da meta |
-| `target` | Decimal | Valor alvo |
-| `initialAmount` | Decimal | Valor inicial aportado |
-| `durationValue` | Int | Prazo numérico |
-| `durationUnit` | Enum `DurationUnit` | Unidade (`WEEKS`, `MONTHS`) |
-| `style` | Enum `InvestorStyle` | Perfil (`LOW`, `MEDIUM`, `HIGH`) |
-| `createdAt` | DateTime | |
-| `updatedAt` | DateTime | |
-| `deletedAt` | DateTime? | Data de exclusão lógica (soft delete) |
+| Campo           | Tipo                 | Descrição                             |
+| --------------- | -------------------- | ------------------------------------- |
+| `id`            | String               | PK (UUID)                             |
+| `userId`        | String               |                                       |
+| `categoryId`    | String?              | FK para `FinancialCategory` (SetNull) |
+| `name`          | String               | Nome da meta                          |
+| `target`        | Decimal              | Valor alvo                            |
+| `initialAmount` | Decimal              | Valor inicial aportado                |
+| `durationValue` | Int                  | Prazo numérico                        |
+| `durationUnit`  | Enum `DurationUnit`  | Unidade (`WEEKS`, `MONTHS`)           |
+| `style`         | Enum `InvestorStyle` | Perfil (`LOW`, `MEDIUM`, `HIGH`)      |
+| `createdAt`     | DateTime             |                                       |
+| `updatedAt`     | DateTime             |                                       |
+| `deletedAt`     | DateTime?            | Data de exclusão lógica (soft delete) |
 
 > **Índices:** `userId` e `categoryId`.
 
@@ -217,12 +216,12 @@ Metas financeiras com prazo e perfil de investimento. Suporta soft delete.
 
 Registros de depósitos realizados para uma meta (1:N com `FinancialGoal`).
 
-| Campo | Tipo | Descrição |
-|---|---|---|
-| `id` | String | PK (UUID) |
-| `goalId` | String | FK para `FinancialGoal` (Cascade) |
-| `amount` | Decimal | Valor depositado |
-| `createdAt` | DateTime | |
+| Campo       | Tipo     | Descrição                         |
+| ----------- | -------- | --------------------------------- |
+| `id`        | String   | PK (UUID)                         |
+| `goalId`    | String   | FK para `FinancialGoal` (Cascade) |
+| `amount`    | Decimal  | Valor depositado                  |
+| `createdAt` | DateTime |                                   |
 
 > **Índices:** `goalId`.
 
@@ -232,12 +231,12 @@ Registros de depósitos realizados para uma meta (1:N com `FinancialGoal`).
 
 Registra snapshots do progresso total depositado em uma meta ao longo do tempo.
 
-| Campo | Tipo | Descrição |
-|---|---|---|
-| `id` | String | PK (UUID) |
-| `goalId` | String | FK para `FinancialGoal` (Cascade) |
-| `totalDeposited` | Decimal | Total acumulado na meta |
-| `createdAt` | DateTime | |
+| Campo            | Tipo     | Descrição                         |
+| ---------------- | -------- | --------------------------------- |
+| `id`             | String   | PK (UUID)                         |
+| `goalId`         | String   | FK para `FinancialGoal` (Cascade) |
+| `totalDeposited` | Decimal  | Total acumulado na meta           |
+| `createdAt`      | DateTime |                                   |
 
 > **Índices:** `[goalId, createdAt]`.
 
@@ -249,18 +248,18 @@ Registra snapshots do progresso total depositado em uma meta ao longo do tempo.
 
 Perfil nutricional do usuário, com dados básicos e preferências.
 
-| Campo | Tipo | Descrição |
-|---|---|---|
-| `id` | String | PK (UUID) |
-| `userId` | String | Único por usuário |
-| `goal` | String? | Objetivo (ex.: emagrecer, ganhar massa) |
-| `heightCm` | Int? | Altura em cm |
-| `weightKg` | Decimal? | Peso atual |
-| `preference` | String? | Preferências alimentares |
-| `allergies` | String? | Restrições/alergias |
-| `waterGoalLiters` | Decimal? | Meta diária de água em litros |
-| `createdAt` | DateTime | |
-| `updatedAt` | DateTime | |
+| Campo             | Tipo     | Descrição                               |
+| ----------------- | -------- | --------------------------------------- |
+| `id`              | String   | PK (UUID)                               |
+| `userId`          | String   | Único por usuário                       |
+| `goal`            | String?  | Objetivo (ex.: emagrecer, ganhar massa) |
+| `heightCm`        | Int?     | Altura em cm                            |
+| `weightKg`        | Decimal? | Peso atual                              |
+| `preference`      | String?  | Preferências alimentares                |
+| `allergies`       | String?  | Restrições/alergias                     |
+| `waterGoalLiters` | Decimal? | Meta diária de água em litros           |
+| `createdAt`       | DateTime |                                         |
+| `updatedAt`       | DateTime |                                         |
 
 ---
 
@@ -268,14 +267,14 @@ Perfil nutricional do usuário, com dados básicos e preferências.
 
 Armazenamento flexível de dietas em formato **JSON** para o MVP. Futuramente pode ser normalizado.
 
-| Campo | Tipo | Descrição |
-|---|---|---|
-| `id` | String | PK (UUID) |
-| `userId` | String | |
-| `name` | String | Nome da dieta |
-| `structure` | Json | Estrutura da dieta (refeições, alimentos, etc.) |
-| `createdAt` | DateTime | |
-| `updatedAt` | DateTime | |
+| Campo       | Tipo     | Descrição                                       |
+| ----------- | -------- | ----------------------------------------------- |
+| `id`        | String   | PK (UUID)                                       |
+| `userId`    | String   |                                                 |
+| `name`      | String   | Nome da dieta                                   |
+| `structure` | Json     | Estrutura da dieta (refeições, alimentos, etc.) |
+| `createdAt` | DateTime |                                                 |
+| `updatedAt` | DateTime |                                                 |
 
 > **Índices:** `userId`.
 
@@ -285,13 +284,13 @@ Armazenamento flexível de dietas em formato **JSON** para o MVP. Futuramente po
 
 Ingredientes cadastrados pelo usuário, reutilizáveis em receitas.
 
-| Campo | Tipo | Descrição |
-|---|---|---|
-| `id` | String | PK (UUID) |
-| `userId` | String | |
-| `name` | String | Nome do ingrediente |
-| `createdAt` | DateTime | |
-| `updatedAt` | DateTime | |
+| Campo       | Tipo     | Descrição           |
+| ----------- | -------- | ------------------- |
+| `id`        | String   | PK (UUID)           |
+| `userId`    | String   |                     |
+| `name`      | String   | Nome do ingrediente |
+| `createdAt` | DateTime |                     |
+| `updatedAt` | DateTime |                     |
 
 > **Constraint:** `@@unique([userId, name])`.
 > **Índices:** `userId`.
@@ -302,17 +301,17 @@ Ingredientes cadastrados pelo usuário, reutilizáveis em receitas.
 
 Receitas do usuário, criadas manualmente ou via IA. Os ingredientes são associados via `RecipeIngredient`.
 
-| Campo | Tipo | Descrição |
-|---|---|---|
-| `id` | String | PK (UUID) |
-| `userId` | String | |
-| `name` | String | Nome da receita |
-| `preparation` | String | Modo de preparo |
-| `notes` | String? | Observações adicionais |
-| `source` | Enum `RecipeSource` | Origem (`AI`, `USER`) |
-| `editedByUser` | Boolean | Se foi editada manualmente |
-| `createdAt` | DateTime | |
-| `updatedAt` | DateTime | |
+| Campo          | Tipo                | Descrição                  |
+| -------------- | ------------------- | -------------------------- |
+| `id`           | String              | PK (UUID)                  |
+| `userId`       | String              |                            |
+| `name`         | String              | Nome da receita            |
+| `preparation`  | String              | Modo de preparo            |
+| `notes`        | String?             | Observações adicionais     |
+| `source`       | Enum `RecipeSource` | Origem (`AI`, `USER`)      |
+| `editedByUser` | Boolean             | Se foi editada manualmente |
+| `createdAt`    | DateTime            |                            |
+| `updatedAt`    | DateTime            |                            |
 
 > **Índices:** `userId`.
 
@@ -322,13 +321,13 @@ Receitas do usuário, criadas manualmente ou via IA. Os ingredientes são associ
 
 Tabela pivô que associa ingredientes a receitas com quantidade em gramas (N:N).
 
-| Campo | Tipo | Descrição |
-|---|---|---|
-| `id` | String | PK (UUID) |
-| `recipeId` | String | FK para `Recipe` (Cascade) |
-| `ingredientId` | String | FK para `Ingredient` (Restrict) |
-| `quantityGrams` | Decimal | Quantidade do ingrediente em gramas |
-| `createdAt` | DateTime | |
+| Campo           | Tipo     | Descrição                           |
+| --------------- | -------- | ----------------------------------- |
+| `id`            | String   | PK (UUID)                           |
+| `recipeId`      | String   | FK para `Recipe` (Cascade)          |
+| `ingredientId`  | String   | FK para `Ingredient` (Restrict)     |
+| `quantityGrams` | Decimal  | Quantidade do ingrediente em gramas |
+| `createdAt`     | DateTime |                                     |
 
 > **Constraint:** `@@unique([recipeId, ingredientId])`.
 > **Índices:** `recipeId`.
@@ -339,12 +338,12 @@ Tabela pivô que associa ingredientes a receitas com quantidade em gramas (N:N).
 
 Registro de consumo de água.
 
-| Campo | Tipo | Descrição |
-|---|---|---|
-| `id` | String | PK (UUID) |
-| `userId` | String | |
-| `amountMl` | Int | Quantidade em mililitros |
-| `loggedAt` | DateTime | Data/hora do registro |
+| Campo      | Tipo     | Descrição                |
+| ---------- | -------- | ------------------------ |
+| `id`       | String   | PK (UUID)                |
+| `userId`   | String   |                          |
+| `amountMl` | Int      | Quantidade em mililitros |
+| `loggedAt` | DateTime | Data/hora do registro    |
 
 > **Índices:** `[userId, loggedAt]`.
 
@@ -356,17 +355,17 @@ Registro de consumo de água.
 
 Perfil físico e objetivos do usuário.
 
-| Campo | Tipo | Descrição |
-|---|---|---|
-| `id` | String | PK (UUID) |
-| `userId` | String | Único por usuário |
-| `goal` | String? | Objetivo (ex.: hipertrofia, emagrecimento) |
-| `heightCm` | Int? | Altura em cm |
-| `weightKg` | Decimal? | Peso atual |
-| `injuries` | String? | Lesões ou limitações |
-| `level` | Enum `FitnessLevel`? | Nível (`BEGINNER`, `INTERMEDIATE`, `ADVANCED`) |
-| `createdAt` | DateTime | |
-| `updatedAt` | DateTime | |
+| Campo       | Tipo                 | Descrição                                      |
+| ----------- | -------------------- | ---------------------------------------------- |
+| `id`        | String               | PK (UUID)                                      |
+| `userId`    | String               | Único por usuário                              |
+| `goal`      | String?              | Objetivo (ex.: hipertrofia, emagrecimento)     |
+| `heightCm`  | Int?                 | Altura em cm                                   |
+| `weightKg`  | Decimal?             | Peso atual                                     |
+| `injuries`  | String?              | Lesões ou limitações                           |
+| `level`     | Enum `FitnessLevel`? | Nível (`BEGINNER`, `INTERMEDIATE`, `ADVANCED`) |
+| `createdAt` | DateTime             |                                                |
+| `updatedAt` | DateTime             |                                                |
 
 ---
 
@@ -374,13 +373,13 @@ Perfil físico e objetivos do usuário.
 
 Cabeçalho de um plano de treino.
 
-| Campo | Tipo | Descrição |
-|---|---|---|
-| `id` | String | PK (UUID) |
-| `userId` | String | |
-| `name` | String | Nome do plano |
-| `createdAt` | DateTime | |
-| `updatedAt` | DateTime | |
+| Campo       | Tipo     | Descrição     |
+| ----------- | -------- | ------------- |
+| `id`        | String   | PK (UUID)     |
+| `userId`    | String   |               |
+| `name`      | String   | Nome do plano |
+| `createdAt` | DateTime |               |
+| `updatedAt` | DateTime |               |
 
 > **Índices:** `userId`.
 
@@ -390,11 +389,11 @@ Cabeçalho de um plano de treino.
 
 Dias que compõem um plano de treino.
 
-| Campo | Tipo | Descrição |
-|---|---|---|
-| `id` | String | PK (UUID) |
-| `workoutPlanId` | String | FK para `WorkoutPlan` (Cascade) |
-| `weekDay` | Enum `WeekDay` | Dia da semana |
+| Campo           | Tipo           | Descrição                       |
+| --------------- | -------------- | ------------------------------- |
+| `id`            | String         | PK (UUID)                       |
+| `workoutPlanId` | String         | FK para `WorkoutPlan` (Cascade) |
+| `weekDay`       | Enum `WeekDay` | Dia da semana                   |
 
 > **Constraint:** `@@unique([workoutPlanId, weekDay])`.
 > **Índices:** `workoutPlanId`.
@@ -405,16 +404,16 @@ Dias que compõem um plano de treino.
 
 Exercícios de um dia específico do plano.
 
-| Campo | Tipo | Descrição |
-|---|---|---|
-| `id` | String | PK (UUID) |
-| `workoutPlanDayId` | String | FK para `WorkoutPlanDay` (Cascade) |
-| `name` | String | Nome do exercício |
-| `sets` | Int | Número de séries previstas |
-| `repsMin` | Int | Repetições mínimas |
-| `repsMax` | Int | Repetições máximas |
-| `restSeconds` | Int | Descanso em segundos |
-| `notes` | String? | Observações |
+| Campo              | Tipo    | Descrição                          |
+| ------------------ | ------- | ---------------------------------- |
+| `id`               | String  | PK (UUID)                          |
+| `workoutPlanDayId` | String  | FK para `WorkoutPlanDay` (Cascade) |
+| `name`             | String  | Nome do exercício                  |
+| `sets`             | Int     | Número de séries previstas         |
+| `repsMin`          | Int     | Repetições mínimas                 |
+| `repsMax`          | Int     | Repetições máximas                 |
+| `restSeconds`      | Int     | Descanso em segundos               |
+| `notes`            | String? | Observações                        |
 
 > **Índices:** `workoutPlanDayId`.
 
@@ -424,11 +423,11 @@ Exercícios de um dia específico do plano.
 
 Registro de um treino efetivamente realizado.
 
-| Campo | Tipo | Descrição |
-|---|---|---|
-| `id` | String | PK (UUID) |
-| `workoutPlanDayId` | String | FK para `WorkoutPlanDay` (Cascade) |
-| `createdAt` | DateTime | Data/hora do registro |
+| Campo              | Tipo     | Descrição                          |
+| ------------------ | -------- | ---------------------------------- |
+| `id`               | String   | PK (UUID)                          |
+| `workoutPlanDayId` | String   | FK para `WorkoutPlanDay` (Cascade) |
+| `createdAt`        | DateTime | Data/hora do registro              |
 
 > **Índices:** `[workoutPlanDayId, createdAt]`.
 
@@ -438,16 +437,16 @@ Registro de um treino efetivamente realizado.
 
 Detalhes de cada exercício executado no treino registrado.
 
-| Campo | Tipo | Descrição |
-|---|---|---|
-| `id` | String | PK (UUID) |
-| `workoutTrackingId` | String | FK para `WorkoutTracking` (Cascade) |
-| `name` | String | Nome do exercício |
-| `maxWeight` | Decimal? | Carga máxima utilizada (kg) |
-| `maxSets` | Int? | Número de séries realizadas |
-| `maxReps` | Int? | Repetições máximas alcançadas |
-| `restSeconds` | Int? | Descanso praticado (segundos) |
-| `notes` | String? | Observações |
+| Campo               | Tipo     | Descrição                           |
+| ------------------- | -------- | ----------------------------------- |
+| `id`                | String   | PK (UUID)                           |
+| `workoutTrackingId` | String   | FK para `WorkoutTracking` (Cascade) |
+| `name`              | String   | Nome do exercício                   |
+| `maxWeight`         | Decimal? | Carga máxima utilizada (kg)         |
+| `maxSets`           | Int?     | Número de séries realizadas         |
+| `maxReps`           | Int?     | Repetições máximas alcançadas       |
+| `restSeconds`       | Int?     | Descanso praticado (segundos)       |
+| `notes`             | String?  | Observações                         |
 
 > **Índices:** `workoutTrackingId`.
 
@@ -457,11 +456,11 @@ Detalhes de cada exercício executado no treino registrado.
 
 Histórico temporal de peso.
 
-| Campo | Tipo | Descrição |
-|---|---|---|
-| `id` | String | PK (UUID) |
-| `userId` | String | |
-| `weightKg` | Decimal | Peso em kg |
+| Campo      | Tipo     | Descrição             |
+| ---------- | -------- | --------------------- |
+| `id`       | String   | PK (UUID)             |
+| `userId`   | String   |                       |
+| `weightKg` | Decimal  | Peso em kg            |
 | `loggedAt` | DateTime | Data/hora do registro |
 
 > **Índices:** `[userId, loggedAt]`.
@@ -474,16 +473,16 @@ Histórico temporal de peso.
 
 Tarefas com classificação por domínio e status.
 
-| Campo | Tipo | Descrição |
-|---|---|---|
-| `id` | String | PK (UUID) |
-| `userId` | String | |
-| `title` | String | Título da tarefa |
-| `domain` | Enum `Domain` | Domínio relacionado (`WORK`, `HOBBIES`, `SLEEP`, `LEISURE`) |
-| `scheduledDate` | DateTime | Data programada (Date) |
-| `status` | Enum `TaskStatus` | Situação (`PENDING`, `PARTIAL`, `COMPLETED`, `SKIPPED`) |
-| `createdAt` | DateTime | |
-| `updatedAt` | DateTime | |
+| Campo           | Tipo              | Descrição                                                   |
+| --------------- | ----------------- | ----------------------------------------------------------- |
+| `id`            | String            | PK (UUID)                                                   |
+| `userId`        | String            |                                                             |
+| `title`         | String            | Título da tarefa                                            |
+| `domain`        | Enum `Domain`     | Domínio relacionado (`WORK`, `HOBBIES`, `SLEEP`, `LEISURE`) |
+| `scheduledDate` | DateTime          | Data programada (Date)                                      |
+| `status`        | Enum `TaskStatus` | Situação (`PENDING`, `PARTIAL`, `COMPLETED`, `SKIPPED`)     |
+| `createdAt`     | DateTime          |                                                             |
+| `updatedAt`     | DateTime          |                                                             |
 
 > **Índices:** `[userId, scheduledDate]` — otimiza consultas por período.
 
@@ -495,17 +494,17 @@ Tarefas com classificação por domínio e status.
 
 Registra relatórios gerados por IA associados a um usuário e domínio.
 
-| Campo | Tipo | Descrição |
-|---|---|---|
-| `id` | String | PK (UUID) |
-| `userId` | String | |
-| `domain` | Enum `AccountabilityArea` | Área do relatório |
-| `type` | Enum `ReportType` | Escopo (`WEEKLY`, `MONTHLY`) |
-| `periodStart` | DateTime | Início do período avaliado |
-| `periodEnd` | DateTime | Fim do período avaliado |
-| `metricsJson` | Json | Métricas consideradas no relatório |
-| `aiSummary` | String | Texto gerado pela IA |
-| `createdAt` | DateTime | |
+| Campo         | Tipo                      | Descrição                          |
+| ------------- | ------------------------- | ---------------------------------- |
+| `id`          | String                    | PK (UUID)                          |
+| `userId`      | String                    |                                    |
+| `domain`      | Enum `AccountabilityArea` | Área do relatório                  |
+| `type`        | Enum `ReportType`         | Escopo (`WEEKLY`, `MONTHLY`)       |
+| `periodStart` | DateTime                  | Início do período avaliado         |
+| `periodEnd`   | DateTime                  | Fim do período avaliado            |
+| `metricsJson` | Json                      | Métricas consideradas no relatório |
+| `aiSummary`   | String                    | Texto gerado pela IA               |
+| `createdAt`   | DateTime                  |                                    |
 
 > **Constraint:** `@@unique([userId, domain, type, periodStart, periodEnd])`.
 > **Índices:** `[userId, domain, type]` e `[userId, periodStart]`.
@@ -559,6 +558,7 @@ Alguns modelos foram mantidos simples no MVP (ex.: `Diet` com JSON) para agiliza
 ---
 
 ## Estrutura da Aplicação (Contexto do Banco de Dados)
+
 ```
 accountability-backend/
 ├── DB-docs/
@@ -591,7 +591,7 @@ accountability-backend/
 │   │   └── express.d.ts
 │   ├── config/
 │   │   └── env.ts
-│   ├── core/  
+│   ├── core/
 │   ├── docs/
 │   ├── lib/
 │   │   ├── prisma.ts
@@ -603,7 +603,7 @@ accountability-backend/
 │   │   ├── nutrition/
 │   │   ├── productivity/
 │   │   └── user/
-│   │       
+│   │
 │   ├── shared/
 │   ├── app.ts
 │   ├── server.ts
@@ -611,7 +611,7 @@ accountability-backend/
 ├── tests/
 │   ├── integration/
 │   └── unit/
-│           
+│
 ├── .env.example
 ├── .gitignore
 ├── package.json

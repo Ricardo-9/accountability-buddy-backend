@@ -12,10 +12,15 @@ export async function signUpController(
 
     const user = await signUpService(email, password);
 
-    return successResponse(res, {
-      id: user.id,
-      email: user.email,
-    }, undefined, 201);
+    return successResponse(
+      res,
+      {
+        id: user.id,
+        email: user.email,
+      },
+      undefined,
+      201,
+    );
   } catch (err) {
     next(err);
   }

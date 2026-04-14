@@ -1,6 +1,6 @@
 import app from "./app.js";
 import { config } from "./config/env.js";
-import { executeRecurringTransactionJob } from "./modules/finance/jobs/executeRecurringTransaction.job.js";
+import { executeRecurringTransactionJob } from "./modules/finance/financial-core/jobs/executeRecurringTransaction.job.js";
 
 executeRecurringTransactionJob();
 

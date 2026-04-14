@@ -1,6 +1,6 @@
 import { describe, expect, it, beforeEach, vi } from "vitest";
 import { prisma } from "../../../../../src/lib/prisma";
-import { getRecurringTransactionService } from "../../../../../src/modules/finance/services/getrecurringtransaction.service"
+import { getRecurringTransactionService } from "../../../../../src/modules/finance/services/getrecurringtransaction.service";
 import { Prisma } from "@prisma/client";
 
 vi.mock("../../../../../src/lib/prisma", () => ({
@@ -48,7 +48,8 @@ describe("Get recurring transactions", () => {
 
     expect(prisma.recurringTransaction.findMany).toHaveBeenCalledWith({
       where: {
-        userId: "user-1",deletedAt: null
+        userId: "user-1",
+        deletedAt: null,
       },
       skip: 0,
       take: 10,
@@ -70,7 +71,8 @@ describe("Get recurring transactions", () => {
 
     expect(prisma.recurringTransaction.findMany).toHaveBeenCalledWith({
       where: {
-        userId: "user-1",deletedAt: null,
+        userId: "user-1",
+        deletedAt: null,
         type: "EXPENSE",
       },
       skip: 0,
@@ -95,7 +97,7 @@ describe("Get recurring transactions", () => {
       where: {
         userId: "user-1",
         categoryId: "cat-1",
-        deletedAt: null
+        deletedAt: null,
       },
       skip: 0,
       take: 10,
@@ -126,7 +128,7 @@ describe("Get recurring transactions", () => {
           gte: startDate,
           lte: endDate,
         },
-        deletedAt: null
+        deletedAt: null,
       },
       skip: 0,
       take: 10,
@@ -148,7 +150,7 @@ describe("Get recurring transactions", () => {
     expect(prisma.recurringTransaction.findMany).toHaveBeenCalledWith({
       where: {
         userId: "user-1",
-        deletedAt: null
+        deletedAt: null,
       },
       skip: 10,
       take: 10,
@@ -170,7 +172,7 @@ describe("Get recurring transactions", () => {
     expect(prisma.recurringTransaction.findMany).toHaveBeenCalledWith({
       where: {
         userId: "user-1",
-        deletedAt: null
+        deletedAt: null,
       },
       skip: 0,
       take: 10,

@@ -107,9 +107,11 @@ describe("variable expenses", () => {
     });
 
     it("should return 401 when user is not authenticated", async () => {
-      vi.mocked(authenticate).mockImplementationOnce(async (_req, _res, next) => {
-        next(new AppError("UNAUTHORIZED", "Invalid or expired token", 401));
-      });
+      vi.mocked(authenticate).mockImplementationOnce(
+        async (_req, _res, next) => {
+          next(new AppError("UNAUTHORIZED", "Invalid or expired token", 401));
+        },
+      );
 
       const response = await request(app).get(
         "/finance/variable-expense/3fd12663-f4df-4fcf-a67a-83e3035338ca",
@@ -209,9 +211,11 @@ describe("variable expenses", () => {
     });
 
     it("should return 401 when user is not authenticated", async () => {
-      vi.mocked(authenticate).mockImplementationOnce(async (_req, _res, next) => {
-        next(new AppError("UNAUTHORIZED", "Invalid or expired token", 401));
-      });
+      vi.mocked(authenticate).mockImplementationOnce(
+        async (_req, _res, next) => {
+          next(new AppError("UNAUTHORIZED", "Invalid or expired token", 401));
+        },
+      );
 
       const response = await request(app).get("/finance/variable-expense");
 
@@ -286,7 +290,11 @@ describe("variable expenses", () => {
     it("should return 400 when amount is negative", async () => {
       const response = await request(app)
         .post("/finance/variable-expense")
-        .send({ name: "Random Expense", amount: -50, expenseDate: "2025-04-01" });
+        .send({
+          name: "Random Expense",
+          amount: -50,
+          expenseDate: "2025-04-01",
+        });
 
       expect(response.status).toBe(400);
       expect(response.body.error.code).toBe("VALIDATION_ERROR");
@@ -311,9 +319,11 @@ describe("variable expenses", () => {
     });
 
     it("should return 401 when user is not authenticated", async () => {
-      vi.mocked(authenticate).mockImplementationOnce(async (_req, _res, next) => {
-        next(new AppError("UNAUTHORIZED", "Invalid or expired token", 401));
-      });
+      vi.mocked(authenticate).mockImplementationOnce(
+        async (_req, _res, next) => {
+          next(new AppError("UNAUTHORIZED", "Invalid or expired token", 401));
+        },
+      );
 
       const response = await request(app)
         .post("/finance/variable-expense")
@@ -359,10 +369,12 @@ describe("variable expenses", () => {
 
   describe("update variable expense", () => {
     it("should return 200 and update the expense", async () => {
-      vi.mocked(variableExpenseService.updateVariableExpense).mockResolvedValue({
-        ...mockExpenseDb,
-        name: "Updated Name",
-      });
+      vi.mocked(variableExpenseService.updateVariableExpense).mockResolvedValue(
+        {
+          ...mockExpenseDb,
+          name: "Updated Name",
+        },
+      );
 
       const response = await request(app)
         .patch("/finance/variable-expense/3fd12663-f4df-4fcf-a67a-83e3035338ca")
@@ -442,9 +454,11 @@ describe("variable expenses", () => {
     });
 
     it("should return 401 when user is not authenticated", async () => {
-      vi.mocked(authenticate).mockImplementationOnce(async (_req, _res, next) => {
-        next(new AppError("UNAUTHORIZED", "Invalid or expired token", 401));
-      });
+      vi.mocked(authenticate).mockImplementationOnce(
+        async (_req, _res, next) => {
+          next(new AppError("UNAUTHORIZED", "Invalid or expired token", 401));
+        },
+      );
 
       const response = await request(app)
         .patch("/finance/variable-expense/3fd12663-f4df-4fcf-a67a-83e3035338ca")
@@ -519,9 +533,11 @@ describe("variable expenses", () => {
     });
 
     it("should return 401 when user is not authenticated", async () => {
-      vi.mocked(authenticate).mockImplementationOnce(async (_req, _res, next) => {
-        next(new AppError("UNAUTHORIZED", "Invalid or expired token", 401));
-      });
+      vi.mocked(authenticate).mockImplementationOnce(
+        async (_req, _res, next) => {
+          next(new AppError("UNAUTHORIZED", "Invalid or expired token", 401));
+        },
+      );
 
       const response = await request(app).delete(
         "/finance/variable-expense/3fd12663-f4df-4fcf-a67a-83e3035338ca",

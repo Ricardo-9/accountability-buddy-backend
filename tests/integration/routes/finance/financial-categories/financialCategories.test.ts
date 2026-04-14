@@ -12,7 +12,7 @@ const mockCategoryDb = {
   isDefault: false,
   createdAt: new Date("2024-01-01T00:00:00.000Z"),
   updatedAt: new Date("2024-01-01T00:00:00.000Z"),
-  deletedAt: null
+  deletedAt: null,
 };
 
 const mockCategoryResponse = {
@@ -209,7 +209,9 @@ describe("update categories", () => {
   });
 
   it("should return 400 when id is not an uuid", async () => {
-    const response = await request(app).patch("/finance/categories/123").send({ name: "NEW_NAME" });;
+    const response = await request(app)
+      .patch("/finance/categories/123")
+      .send({ name: "NEW_NAME" });
 
     expect(response.status).toBe(400);
     expect(response.body.error.code).toBe("VALIDATION_ERROR");
@@ -220,9 +222,9 @@ describe("update categories", () => {
       next(new AppError("UNAUTHORIZED", "Invalid or expired token", 401));
     });
 
-    const response = await request(app).patch(
-      "/finance/categories/3fd12663-f4df-4fcf-a67a-83e3035338ca",
-    ).send({ name: "NEW_NAME" });;
+    const response = await request(app)
+      .patch("/finance/categories/3fd12663-f4df-4fcf-a67a-83e3035338ca")
+      .send({ name: "NEW_NAME" });
 
     expect(response.status).toBe(401);
   });
@@ -236,7 +238,6 @@ describe("update categories", () => {
 
     expect(response.status).toBe(403);
   });
-  
 
   it("should return 404 when id is missing", async () => {
     const response = await request(app)
@@ -247,21 +248,21 @@ describe("update categories", () => {
   });
 
   it("should return 409 when category name already exists", async () => {
-  vi.mocked(financialCategoriesServices.updateCategory).mockRejectedValue(
-    new AppError(
-      "DUPLICATE_REGISTER",
-      "The user already registered this category",
-      409,
-    ),
-  );
+    vi.mocked(financialCategoriesServices.updateCategory).mockRejectedValue(
+      new AppError(
+        "DUPLICATE_REGISTER",
+        "The user already registered this category",
+        409,
+      ),
+    );
 
-  const response = await request(app)
-    .patch("/finance/categories/3fd12663-f4df-4fcf-a67a-83e3035338ca")
-    .send({ name: "FOOD" });
+    const response = await request(app)
+      .patch("/finance/categories/3fd12663-f4df-4fcf-a67a-83e3035338ca")
+      .send({ name: "FOOD" });
 
-  expect(response.status).toBe(409);
-  expect(response.body.error.code).toBe("DUPLICATE_REGISTER");
-});
+    expect(response.status).toBe(409);
+    expect(response.body.error.code).toBe("DUPLICATE_REGISTER");
+  });
 
   it("should return 500 when database fails", async () => {
     vi.mocked(financialCategoriesServices.updateCategory).mockRejectedValue(

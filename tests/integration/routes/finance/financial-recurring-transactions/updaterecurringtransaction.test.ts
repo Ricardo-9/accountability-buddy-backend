@@ -130,11 +130,9 @@ describe("update recurring transaction", () => {
   });
 
   it("should return 401 when user is not authenticated", async () => {
-    vi.mocked(authenticate).mockImplementationOnce(
-      async (_req, _res, next) => {
-        next(new AppError("UNAUTHORIZED", "Invalid or expired token", 401));
-      },
-    );
+    vi.mocked(authenticate).mockImplementationOnce(async (_req, _res, next) => {
+      next(new AppError("UNAUTHORIZED", "Invalid or expired token", 401));
+    });
 
     const response = await request(app)
       .patch("/finance/transactions/3f8642d3-806a-49d2-b365-3149ef1bd0ed")
@@ -158,22 +156,16 @@ describe("update recurring transaction", () => {
   });
 
   it("should return 404 when route id is missing", async () => {
-    const response = await request(app)
-      .patch("/finance/transactions")
-      .send({
-        name: "New Name",
-      });
+    const response = await request(app).patch("/finance/transactions").send({
+      name: "New Name",
+    });
 
     expect(response.status).toBe(404);
   });
 
   it("should return 404 when recurring transaction not found", async () => {
     vi.mocked(updateRecurringTransactionService).mockRejectedValue(
-      new AppError(
-        "NOT_FOUND",
-        "Recurring transaction not found",
-        404,
-      ),
+      new AppError("NOT_FOUND", "Recurring transaction not found", 404),
     );
 
     const response = await request(app)

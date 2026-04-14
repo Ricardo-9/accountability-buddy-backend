@@ -10,7 +10,6 @@ import { z } from "zod";
 
 const router = Router();
 
-
 router.get("/protected-test", authLimiter, authenticate, (_req, res) => {
   return successResponse(res, null, "ONLY_FOR_TESTS", 200);
 });
