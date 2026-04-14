@@ -14,7 +14,7 @@ export async function createCategoryController(
       name,
     );
 
-    return successResponse(res, category, "Category created");
+    return successResponse(res, category, "Financial Category sucessfully created");
   } catch (err) {
     next(err);
   }
