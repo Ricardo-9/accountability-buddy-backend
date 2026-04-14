@@ -1,5 +1,5 @@
 import { Prisma, BalanceChangeType } from "@prisma/client";
-import { AppError } from "../../../core/errors/AppError.js";
+import { AppError } from "../../../../core/errors/AppError.js";
 
 type AdjustBalanceWithTxParams = {
   tx: Prisma.TransactionClient;

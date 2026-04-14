@@ -3,8 +3,9 @@ import { prisma } from "../../../../../src/lib/prisma";
 import request from "supertest";
 import { Prisma } from "@prisma/client";
 import app from "../../../../../src/app";
-import { PrismaClientKnownRequestError } from "@prisma/client/runtime/client";
+import { AppError } from "../../../../../src/core/errors/AppError";
 import { authMiddlewareTests } from "../../../shared/authMiddlewareTests";
+import { createFinancialAccountService } from "../../../../../src/modules/finance/financial-core/services/createFinancialAccount.service";
 
 vi.mock("jose", async (importOriginal) => {
   const original = await importOriginal<typeof import("jose")>();
@@ -20,21 +21,13 @@ vi.mock("jose", async (importOriginal) => {
 
 vi.mock("../../../../../src/lib/prisma", () => ({
   prisma: {
-    $transaction: vi.fn(),
     userArea: {
-      findFirst: vi.fn(),
-    },
-    financeAccount: {
-      create: vi.fn(),
-    },
-    financeBalanceHistory: {
-      create: vi.fn(),
-    },
-    financialCategory: {
-      createMany: vi.fn(),
-    },
-  },
-}));
+      findFirst: vi.fn()
+    }
+  }
+}))
+
+vi.mock("../../../../../src/modules/finance/financial-core/services/createFinancialAccount.service")
 
 const validToken = "valid-token";
 
@@ -48,13 +41,15 @@ const mockAccount = {
 };
 
 describe("POST /accounts test", async () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks()
+    vi.mocked(prisma.userArea.findFirst).mockResolvedValue({ userId: "userId" } as any)
+  });
+
+  authMiddlewareTests("post", "/finance/accounts", "FINANCES");
 
   it("should return 201 and account data", async () => {
-    vi.mocked(prisma.$transaction).mockResolvedValue([mockAccount, {}, []]);
-    vi.mocked(prisma.userArea.findFirst).mockResolvedValue({
-      userId: "userId",
-    } as any);
+    vi.mocked(createFinancialAccountService).mockResolvedValue(mockAccount)
 
     const response = await request(app)
       .post("/finance/accounts")
@@ -70,17 +65,12 @@ describe("POST /accounts test", async () => {
         createdAt: createdAt.toISOString(),
       },
     });
-    expect(prisma.$transaction).toHaveBeenCalledOnce();
   });
 
   it("should create account when balance = 0", async () => {
-    vi.mocked(prisma.$transaction).mockResolvedValue([
+    vi.mocked(createFinancialAccountService).mockResolvedValue(
       { ...mockAccount, balance: new Prisma.Decimal(0) },
-      {},
-    ]);
-    vi.mocked(prisma.userArea.findFirst).mockResolvedValue({
-      userId: "userId",
-    } as any);
+    );
 
     const response = await request(app)
       .post("/finance/accounts")
@@ -98,13 +88,8 @@ describe("POST /accounts test", async () => {
     });
   });
 
-  authMiddlewareTests("post", "/finance/accounts", "FINANCES");
 
   it("should throw error 400 (VALIDATION_ERROR) if balance is missing", async () => {
-    vi.mocked(prisma.userArea.findFirst).mockResolvedValue({
-      userId: "userId",
-    } as any);
-
     const response = await request(app)
       .post("/finance/accounts")
       .set("Authorization", `Bearer ${validToken}`)
@@ -115,10 +100,6 @@ describe("POST /accounts test", async () => {
   });
 
   it("should throw error 400 (VALIDATION_ERROR) if balance is not a number", async () => {
-    vi.mocked(prisma.userArea.findFirst).mockResolvedValue({
-      userId: "userId",
-    } as any);
-
     const response = await request(app)
       .post("/finance/accounts")
       .set("Authorization", `Bearer ${validToken}`)
@@ -131,10 +112,6 @@ describe("POST /accounts test", async () => {
   });
 
   it("should throw error 400 (VALIDATION_ERROR) if balance < 0", async () => {
-    vi.mocked(prisma.userArea.findFirst).mockResolvedValue({
-      userId: "userId",
-    } as any);
-
     const response = await request(app)
       .post("/finance/accounts")
       .set("Authorization", `Bearer ${validToken}`)
@@ -147,14 +124,13 @@ describe("POST /accounts test", async () => {
   });
 
   it("should throw error 409 (DUPLICATE_REGISTER) if user already has an account", async () => {
-    vi.mocked(prisma.$transaction).mockRejectedValueOnce(
-      new PrismaClientKnownRequestError("Constraint violated", {
-        code: "P2002",
-      } as any),
+    vi.mocked(createFinancialAccountService).mockRejectedValue(
+      new AppError(
+        "DUPLICATE_REGISTER",
+        "User already has an account",
+        409
+      )
     );
-    vi.mocked(prisma.userArea.findFirst).mockResolvedValue({
-      userId: "userId",
-    } as any);
 
     const response = await request(app)
       .post("/finance/accounts")
@@ -164,4 +140,15 @@ describe("POST /accounts test", async () => {
     expect(response.status).toBe(409);
     expect(response.body.error.message).toBe("User already has an account");
   });
-});
+
+  it("should throw 500 for server errors", async () => {
+    vi.mocked(createFinancialAccountService).mockRejectedValue(new Error("Db error"));
+
+    const response = await request(app)
+      .post("/finance/accounts")
+      .set("Authorization", `Bearer ${validToken}`)
+      .send({ balance: 1000 });
+
+    expect(response.status).toBe(500);
+  })
+}); 

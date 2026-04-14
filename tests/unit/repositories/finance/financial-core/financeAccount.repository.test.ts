@@ -1,0 +1,124 @@
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { prisma } from "../../../../../src/lib/prisma";
+import { financeAccountRepository } from "../../../../../src/modules/finance/financial-core/repositories/financeAccount.repository";
+import { Prisma } from "@prisma/client";
+import { DEFAULT_FINANCIAL_CATEGORIES } from "../../../../../src/modules/finance/consts/defaultFinancialCategories";
+
+vi.mock("../../../../../src/lib/prisma", () => ({
+    prisma: {
+        $transaction: vi.fn(),
+        financeAccount: { create: vi.fn() },
+        financeBalanceHistory: { create: vi.fn() },
+        financialCategory: { createMany: vi.fn() }
+    }
+}))
+
+const userId = "random-id";
+const balance = 10000;
+
+const mockAccount = {
+    id: "account-id",
+    userId,
+    balance: new Prisma.Decimal(balance),
+    createdAt: new Date(),
+};
+
+describe("Finance account repository test", () => {
+    beforeEach(() => vi.clearAllMocks())
+    describe("getAccountBalance", () => {
+        it("should call tx.financeAccount with correct params", async () => {
+            const mockFindUnique = vi.fn().mockResolvedValue({ balance })
+
+            const txMock = {
+                financeAccount: {
+                    findUnique: mockFindUnique
+                }
+            } as any
+
+            const result = await financeAccountRepository.getAccountBalance(txMock, "userId")
+
+            expect(result).toEqual({ balance })
+            expect(mockFindUnique).toHaveBeenCalledWith({
+                where: { userId: "userId" },
+                select: { balance: true }
+            })
+        })
+
+        it("should return null if account does not exist", async () => {
+            const txMock = {
+                financeAccount: {
+                    findUnique: vi.fn().mockResolvedValue(null)
+                }
+            } as any
+
+            const result = await financeAccountRepository.getAccountBalance(txMock, "userId")
+
+            expect(result).toBeNull()
+        })
+    })
+    describe("createFinancialAccount", () => {
+        it("should call prisma transaction with financialAccount.create, financeBalanceHistory.create and financialCategory.createMany", async () => {
+            const createMock = vi.fn();
+            const historyMock = vi.fn();
+            const categoryMock = vi.fn();
+
+            vi.mocked(prisma.financeAccount.create).mockReturnValue(createMock() as any);
+            vi.mocked(prisma.financeBalanceHistory.create).mockReturnValue(historyMock() as any);
+            vi.mocked(prisma.financialCategory.createMany).mockReturnValue(categoryMock() as any);
+
+            vi.mocked(prisma.$transaction).mockResolvedValueOnce([mockAccount]);
+
+            await financeAccountRepository.createFinancialAccount(userId, balance);
+
+            expect(prisma.financeAccount.create).toHaveBeenCalled();
+            expect(prisma.financeBalanceHistory.create).toHaveBeenCalled();
+            expect(prisma.financialCategory.createMany).toHaveBeenCalled();
+        });
+
+        it("should call financialAccount.create with correct params", async () => {
+            vi.mocked(prisma.$transaction).mockResolvedValueOnce([mockAccount]);
+
+            await financeAccountRepository.createFinancialAccount(userId, balance);
+
+            expect(prisma.financeAccount.create).toHaveBeenCalledWith({
+                data: { userId, balance },
+                select: {
+                    id: true,
+                    userId: true,
+                    balance: true,
+                    createdAt: true
+                }
+            })
+        })
+
+        it("should call financeBalanceHistory.create with correct params", async () => {
+            vi.mocked(prisma.$transaction).mockResolvedValueOnce([mockAccount]);
+
+            await financeAccountRepository.createFinancialAccount(userId, balance);
+
+            expect(prisma.financeBalanceHistory.create).toHaveBeenCalledWith({
+                data: {
+                    userId,
+                    balance,
+                    change: balance,
+                    type: "INITIAL_BALANCE"
+                }
+            })
+        })
+
+        it("should call financialCategory.createMany with correct params", async () => {
+            vi.mocked(prisma.$transaction).mockResolvedValueOnce([mockAccount]);
+
+            await financeAccountRepository.createFinancialAccount(userId, balance);
+
+            expect(prisma.financialCategory.createMany).toHaveBeenCalledWith({
+                data: DEFAULT_FINANCIAL_CATEGORIES.map((name) => ({
+                    userId,
+                    name,
+                    isDefault: true
+                })),
+                skipDuplicates: true
+            })
+        })
+    })
+})
