@@ -1,14 +1,14 @@
 import { Router } from "express";
-import { signupController } from "./auth/controllers/signup.controller.js";
+import { signUpController } from "./auth/controllers/signUp.controller.js";
 import { validateRequest } from "../../middlewares/validateRequest.js";
-import { signupSchema } from "./auth/schemas/signup.schema.js";
-import { signinSchema } from "./auth/schemas/signin.schema.js";
-import { signinController } from "./auth/controllers/signin.controller.js";
+import { signupSchema } from "./auth/schemas/signUp.schema.js";
+import { signinSchema } from "./auth/schemas/signIn.schema.js";
+import { signInController } from "./auth/controllers/signIn.controller.js";
 import { authLimiter } from "./auth/middlewares/authRateLimit.js";
 import { authenticate } from "../../middlewares/authMiddleware.js";
-import { updateAreasController } from "./areas/controllers/updateareas.controller.js";
-import { updateAreasSchema } from "./areas/schemas/updateareas.schema.js";
-import { getAreasController } from "./areas/controllers/getareas.controller.js";
+import { updateAreasController } from "./areas/controllers/updateAreas.controller.js";
+import { updateAreasSchema } from "./areas/schemas/updateAreas.schema.js";
+import { getAreasController } from "./areas/controllers/getAreas.controller.js";
 
 const router = Router();
 
@@ -17,13 +17,13 @@ router.post(
   "/signup",
   authLimiter,
   validateRequest(signupSchema),
-  signupController,
+  signUpController,
 );
 router.post(
   "/signin",
   authLimiter,
   validateRequest(signinSchema),
-  signinController,
+  signInController,
 );
 
 //AREAS

@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { getAreasService } from "../services/getareas.service.js";
+import { getAreasService } from "../services/getAreas.service.js";
 import { successResponse } from "../../../../shared/utils/apiResponse.js";
 
 export async function getAreasController(

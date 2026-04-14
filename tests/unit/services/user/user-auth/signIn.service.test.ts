@@ -1,6 +1,6 @@
 import { describe, vi, expect, it, beforeEach } from "vitest";
 import { supabase } from "../../../../../src/lib/supabase";
-import { signinService } from "../../../../../src/modules/user/auth/services/signin.service";
+import { signInService } from "../../../../../src/modules/user/auth/services/signIn.service";
 import { User, Session, AuthError } from "@supabase/supabase-js";
 import { AppError } from "../../../../../src/core/errors/AppError";
 
@@ -32,7 +32,7 @@ describe("SignIn service tests", () => {
       error: null,
     });
 
-    const result = await signinService("test@example.com", "password");
+    const result = await signInService("test@example.com", "password");
 
     expect(result).toEqual(fakeData);
     expect(mockSignIn).toHaveBeenCalledWith({
@@ -52,7 +52,7 @@ describe("SignIn service tests", () => {
       } as AuthError,
     });
 
-    const result = signinService("wrong@email.com", "wrongpass");
+    const result = signInService("wrong@email.com", "wrongpass");
 
     await expect(result).rejects.toThrow(AppError);
     await expect(result).rejects.toMatchObject({

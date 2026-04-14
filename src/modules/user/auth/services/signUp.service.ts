@@ -1,7 +1,7 @@
 import { AppError } from "../../../../core/errors/AppError.js";
 import { supabase } from "../../../../lib/supabase.js";
 
-export async function signupService(email: string, password: string) {
+export async function signUpService(email: string, password: string) {
   const { data, error } = await supabase.auth.signUp({
     email,
     password,

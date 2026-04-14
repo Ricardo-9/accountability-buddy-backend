@@ -1,8 +1,8 @@
 import { describe, beforeEach, vi, expect, it } from "vitest";
-import { prisma } from "../../../../src/lib/prisma.js";
 import request from "supertest";
 import app from "../../../../src/app.js";
 import { jwtVerify } from "jose";
+import { userAreasRepository } from "../../../../src/modules/user/areas/repositories/userAreas.repository.js";
 
 vi.mock("jose", async (importOriginal) => {
   const original = await importOriginal<typeof import("jose")>();
@@ -16,16 +16,7 @@ vi.mock("jose", async (importOriginal) => {
   };
 });
 
-vi.mock("../../../../src/lib/prisma.js", () => ({
-  prisma: {
-    userArea: {
-      findMany: vi.fn(),
-      deleteMany: vi.fn(),
-      createManyAndReturn: vi.fn(),
-    },
-    $transaction: vi.fn(),
-  },
-}));
+vi.mock("../../../../src/modules/user/areas/repositories/userAreas.repository.js")
 
 const validToken = "valid-token";
 
@@ -34,7 +25,7 @@ describe("User area routes", () => {
 
   describe("GET /areas", () => {
     it("should return 200 and the user areas", async () => {
-      vi.mocked(prisma.userArea.findMany).mockResolvedValue([
+      vi.mocked(userAreasRepository.findAreas).mockResolvedValue([
         { area: "GYM" },
         { area: "FINANCES" },
       ] as any);
@@ -50,7 +41,7 @@ describe("User area routes", () => {
     });
 
     it("should return 200 and an empty array when the user has no areas", async () => {
-      vi.mocked(prisma.userArea.findMany).mockResolvedValue([]);
+      vi.mocked(userAreasRepository.findAreas).mockResolvedValue([]);
 
       const response = await request(app)
         .get("/user/areas")
@@ -80,7 +71,7 @@ describe("User area routes", () => {
     });
 
     it("should return 500 if database fails", async () => {
-      vi.mocked(prisma.userArea.findMany).mockRejectedValueOnce(
+      vi.mocked(userAreasRepository.findAreas).mockRejectedValueOnce(
         new Error("DB error"),
       );
 
@@ -94,9 +85,8 @@ describe("User area routes", () => {
 
   describe("PUT /areas", () => {
     it("should return 200 and the updated areas", async () => {
-      vi.mocked(prisma.$transaction).mockResolvedValue([
-        {},
-        [{ area: "GYM" }, { area: "FINANCES" }],
+      vi.mocked(userAreasRepository.replaceUserAreas).mockResolvedValue([
+        { area: "GYM" }, { area: "FINANCES" },
       ]);
 
       const response = await request(app)
@@ -166,7 +156,7 @@ describe("User area routes", () => {
     });
 
     it("should return 500 if database fails", async () => {
-      vi.mocked(prisma.$transaction).mockRejectedValueOnce(
+      vi.mocked(userAreasRepository.replaceUserAreas).mockRejectedValueOnce(
         new Error("DB error"),
       );
 
