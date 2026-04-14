@@ -19,9 +19,9 @@ export const updateFinancialCategorySchema = z.object({
   }),
 });
 
-export type updateFinancialCategoryBody = z.infer<
+export type updateFinancialCategoryBodyType = z.infer<
   typeof updateFinancialCategorySchema
 >["body"];
-export type updatefinancialCategoryId = z.infer<
+export type updatefinancialCategoryIdType = z.infer<
   typeof updateFinancialCategorySchema
 >["params"];

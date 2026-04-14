@@ -1,10 +1,10 @@
 import { Request, Response, NextFunction } from "express";
 import { deleteRecurringTransactionService } from "../services/deleteRecurringTransaction.service.js";
 import { successResponse } from "../../../../shared/utils/apiResponse.js";
-import { DeleteByIdSchema } from "../../financial-categories/schemas/deletebyid.schema.js";
+import { DeleteByIdSchemaType } from "../../financial-categories/schemas/deletebyid.schema.js";
 
 export async function deleteRecurringTransactionController(
-  req: Request<DeleteByIdSchema>,
+  req: Request<DeleteByIdSchemaType>,
   res: Response,
   next: NextFunction,
 ) {
