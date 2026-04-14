@@ -35,5 +35,5 @@ router.put(
   updateAreasController,
 );
 
-//
+//export
 export { router as userRoutes };
