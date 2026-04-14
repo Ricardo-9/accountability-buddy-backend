@@ -1,43 +1,16 @@
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/client";
-import { prisma } from "../../../../lib/prisma.js";
 import { AppError } from "../../../../core/errors/AppError.js";
-import { DEFAULT_FINANCIAL_CATEGORIES } from "../../consts/defaultFinancialCategories.js";
+import { financeAccountRepository } from "../repositories/financeAccount.repository.js";
 
 export async function createFinancialAccountService(
   userId: string,
   balance: number,
 ) {
   try {
-    const [account] = await prisma.$transaction([
-      prisma.financeAccount.create({
-        data: {
-          userId,
-          balance,
-        },
-        select: {
-          id: true,
-          userId: true,
-          balance: true,
-          createdAt: true,
-        },
-      }),
-      prisma.financeBalanceHistory.create({
-        data: {
-          userId,
-          balance,
-          change: balance,
-          type: "INITIAL_BALANCE",
-        },
-      }),
-      prisma.financialCategory.createMany({
-        data: DEFAULT_FINANCIAL_CATEGORIES.map((name) => ({
-          userId,
-          name,
-          isDefault: true,
-        })),
-        skipDuplicates: true,
-      }),
-    ]);
+    const account = await financeAccountRepository.createFinancialAccount(
+      userId,
+      balance
+    )
 
     return account;
   } catch (err) {

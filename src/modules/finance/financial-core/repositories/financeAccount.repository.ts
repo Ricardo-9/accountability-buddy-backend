@@ -1,4 +1,6 @@
 import { Prisma } from "@prisma/client";
+import { prisma } from "../../../../lib/prisma.js";
+import { DEFAULT_FINANCIAL_CATEGORIES } from "../../consts/defaultFinancialCategories.js";
 
 export const financeAccountRepository = {
   async getAccountBalance(tx: Prisma.TransactionClient, id: string) {
@@ -7,4 +9,36 @@ export const financeAccountRepository = {
       select: { balance: true },
     });
   },
+
+  async createFinancialAccount(id: string, balance: number) {
+    const [account] = await prisma.$transaction([
+      prisma.financeAccount.create({
+        data: { userId: id, balance },
+        select: {
+          id: true,
+          userId: true,
+          balance: true,
+          createdAt: true
+        }
+      }),
+      prisma.financeBalanceHistory.create({
+        data: {
+          userId: id,
+          balance,
+          change: balance,
+          type: "INITIAL_BALANCE"
+        }
+      }),
+      prisma.financialCategory.createMany({
+        data: DEFAULT_FINANCIAL_CATEGORIES.map((name) => ({
+          userId: id,
+          name,
+          isDefault: true
+        })),
+        skipDuplicates: true
+      })
+    ])
+
+    return account
+  }
 };
