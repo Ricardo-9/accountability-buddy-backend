@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { successResponse } from "../../../../shared/utils/apiResponse.js";
-import { financialCategoriesServices } from "../services/financialCategories.service.js";
-
+import { createCategory } from "../services/createCategory.service.js";
 export async function createCategoryController(
   req: Request,
   res: Response,
@@ -10,7 +9,7 @@ export async function createCategoryController(
   const userId = req.user!.id;
   const { name } = req.body;
   try {
-    const category = await financialCategoriesServices.createCategory(
+    const category = await createCategory(
       userId,
       name,
     );

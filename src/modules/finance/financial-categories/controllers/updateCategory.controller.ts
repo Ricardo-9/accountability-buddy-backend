@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { successResponse } from "../../../../shared/utils/apiResponse.js";
-import { financialCategoriesServices } from "../services/financialCategories.service.js";
+import { updateCategory } from "../services/updateCategory.service.js";
 import { updatefinancialCategoryIdType } from "../schemas/updateCategory.schema.js";
 
 export async function updateCategoryController(
@@ -12,7 +12,7 @@ export async function updateCategoryController(
   const { name } = req.body;
   const { id } = req.params;
   try {
-    const updatedCategory = await financialCategoriesServices.updateCategory(
+    const updatedCategory = await updateCategory(
       userId,
       id,
       name,
