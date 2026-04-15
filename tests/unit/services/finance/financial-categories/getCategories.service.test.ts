@@ -10,31 +10,95 @@ const mockCategory = {
 };
 
 vi.mock(
-  "../../../../../src/modules/finance/repositories/financialCategories.repository",
+  "../../../../../src/modules/finance/financial-categories/repositories/financialCategories.repository",
 );
 
-describe("get categories service test",()=>{
+describe("get categories service test", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
 
-    it("should return categories for the user",async()=>{
-        vi.mocked(financialCategoriesRepository.findManyById).mockResolvedValue([mockCategory])
+  it("should return categories for the user", async () => {
+    vi.mocked(financialCategoriesRepository.findManyById).mockResolvedValue([
+      mockCategory,
+    ]);
 
-        const result = await getCategoriesService("userId")
+    const result = await getCategoriesService("userId");
 
-        expect(result).toEqual([mockCategory])
-    }),
+    expect(result).toEqual([mockCategory]);
 
-    it("should return categories for the user",async()=>{
+    expect(financialCategoriesRepository.findManyById).toHaveBeenCalledWith(
+      "userId",
+      10,
+      undefined,
+    );
+  });
 
-    }),
+  it("should use the default limit of 10", async () => {
+    vi.mocked(financialCategoriesRepository.findManyById).mockResolvedValue([
+      mockCategory,
+    ]);
 
-    it("should return categories for the user",async()=>{
+    await getCategoriesService("userId");
 
-    }),
+    expect(financialCategoriesRepository.findManyById).toHaveBeenCalledWith(
+      "userId",
+      10,
+      undefined,
+    );
+  });
 
-    it("should return categories for the user",async()=>{
+  it("should pass limit to repository", async () => {
+    vi.mocked(financialCategoriesRepository.findManyById).mockResolvedValue([
+      mockCategory,
+    ]);
 
-    }),
+    await getCategoriesService("userId", 11);
 
+    expect(financialCategoriesRepository.findManyById).toHaveBeenCalledWith(
+      "userId",
+      11,
+      undefined,
+    );
+  });
 
+  it("should pass cursor to repository", async () => {
+    vi.mocked(financialCategoriesRepository.findManyById).mockResolvedValue([
+      mockCategory,
+    ]);
 
-})
+    await getCategoriesService("userId", undefined, "cursor-123");
+
+    expect(financialCategoriesRepository.findManyById).toHaveBeenCalledWith(
+      "userId",
+      10,
+      "cursor-123",
+    );
+  });
+
+  it("should pass limit and cursor to repository", async () => {
+    vi.mocked(financialCategoriesRepository.findManyById).mockResolvedValue([
+      mockCategory,
+    ]);
+
+    await getCategoriesService("userId", 5, "cursor-123");
+
+    expect(financialCategoriesRepository.findManyById).toHaveBeenCalledWith(
+      "userId",
+      5,
+      "cursor-123",
+    );
+  });
+
+  it("should propagate repository errors", async () => {
+    const error = new Error("Database failed");
+
+    vi.mocked(financialCategoriesRepository.findManyById).mockRejectedValue(
+      error,
+    );
+
+    await expect(getCategoriesService("user-123")).rejects.toThrow(
+      "Database failed",
+    );
+  });
+});
