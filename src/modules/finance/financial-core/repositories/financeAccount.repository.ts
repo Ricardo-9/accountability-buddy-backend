@@ -11,7 +11,7 @@ export const financeAccountRepository = {
         userId: true,
         balance: true,
         createdAt: true,
-        updatedAt: true,
+        updatedAt: true
       }
     })
   },

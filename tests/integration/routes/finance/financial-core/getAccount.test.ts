@@ -1,9 +1,11 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { authMiddlewareTests } from "../../../shared/authMiddlewareTests";
 import { prisma } from "../../../../../src/lib/prisma";
+import { getAccountService } from "../../../../../src/modules/finance/financial-core/services/getAccount.service";
 import request from "supertest";
 import { Prisma } from "@prisma/client";
 import app from "../../../../../src/app";
+import { AppError } from "../../../../../src/core/errors/AppError";
 
 vi.mock("jose", async (importOriginal) => {
   const original = await importOriginal<typeof import("jose")>();
@@ -19,14 +21,24 @@ vi.mock("jose", async (importOriginal) => {
 
 vi.mock("../../../../../src/lib/prisma", () => ({
   prisma: {
-    financeAccount: {
-      findUnique: vi.fn(),
-    },
     userArea: {
       findFirst: vi.fn(),
-    },
+    }
   },
 }));
+
+let userHaveAccount: boolean
+
+vi.mock("../../../../../src/modules/finance/middlewares/requireFinancialAccount", () => ({
+  requireFinancialAccount: vi.fn((_req: any, _res: any, next: any) => {
+    if (!userHaveAccount) {
+      return next(new AppError("NOT_FOUND", "User account not found", 404))
+    }
+    next()
+  })
+}))
+
+vi.mock("../../../../../src/modules/finance/financial-core/services/getAccount.service")
 
 const validToken = "valid-token";
 
@@ -42,17 +54,22 @@ const mockAccount = {
 };
 
 describe("GET /accounts test", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks()
+    vi.mocked(prisma.userArea.findFirst).mockResolvedValue({ userId: "userId" } as any)
+    userHaveAccount = true
+  });
+
+  authMiddlewareTests("post", "/finance/accounts", "FINANCES");
 
   it("should return 200 and account data", async () => {
-    vi.mocked(prisma.financeAccount.findUnique).mockResolvedValue(mockAccount);
-    vi.mocked(prisma.userArea.findFirst).mockResolvedValue({
-      userId: "userId",
-    } as any);
+    vi.mocked(getAccountService).mockResolvedValue(mockAccount);
 
     const response = await request(app)
       .get("/finance/accounts")
       .set("Authorization", `Bearer ${validToken}`);
+
+    console.log(response)
 
     expect(response.status).toBe(200);
     expect(response.body).toMatchObject({
@@ -66,13 +83,9 @@ describe("GET /accounts test", () => {
     });
   });
 
-  authMiddlewareTests("post", "/finance/accounts", "FINANCES");
 
-  it("should throw error 404 (NOT_FOUND) if user does not have an account", async () => {
-    vi.mocked(prisma.financeAccount.findUnique).mockResolvedValue(null);
-    vi.mocked(prisma.userArea.findFirst).mockResolvedValue({
-      userId: "userId",
-    } as any);
+  it("should throw 404 (NOT_FOUND) if user does not have an account", async () => {
+    userHaveAccount = false
 
     const response = await request(app)
       .get("/finance/accounts")
@@ -81,4 +94,14 @@ describe("GET /accounts test", () => {
     expect(response.status).toBe(404);
     expect(response.body.error.message).toBe("User account not found");
   });
+
+  it("should throw 500 for server errors", async () => {
+    vi.mocked(getAccountService).mockRejectedValue(new Error("Db error"));
+
+    const response = await request(app)
+      .get("/finance/accounts")
+      .set("Authorization", `Bearer ${validToken}`);
+
+    expect(response.status).toBe(500);
+  })
 });

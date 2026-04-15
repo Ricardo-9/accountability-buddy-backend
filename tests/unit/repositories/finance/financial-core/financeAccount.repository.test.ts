@@ -7,7 +7,10 @@ import { DEFAULT_FINANCIAL_CATEGORIES } from "../../../../../src/modules/finance
 vi.mock("../../../../../src/lib/prisma", () => ({
     prisma: {
         $transaction: vi.fn(),
-        financeAccount: { create: vi.fn() },
+        financeAccount: {
+            create: vi.fn(),
+            findUnique: vi.fn()
+        },
         financeBalanceHistory: { create: vi.fn() },
         financialCategory: { createMany: vi.fn() }
     }
@@ -25,6 +28,28 @@ const mockAccount = {
 
 describe("Finance account repository test", () => {
     beforeEach(() => vi.clearAllMocks())
+    describe("getAccount", () => {
+        it("should call prisma with correct params", async () => {
+            const updatedAt = new Date()
+
+            vi.mocked(prisma.financeAccount.findUnique).mockResolvedValue({ ...mockAccount, updatedAt })
+
+            const result = await financeAccountRepository.getAccount(userId)
+
+            expect(result).toEqual({ ...mockAccount, updatedAt })
+            expect(prisma.financeAccount.findUnique).toHaveBeenCalledWith({
+                where: { userId },
+                select: {
+                    id: true,
+                    userId: true,
+                    balance: true,
+                    createdAt: true,
+                    updatedAt: true
+                }
+            })
+        })
+    })
+
     describe("getAccountBalance", () => {
         it("should call tx.financeAccount with correct params", async () => {
             const mockFindUnique = vi.fn().mockResolvedValue({ balance })
@@ -35,11 +60,11 @@ describe("Finance account repository test", () => {
                 }
             } as any
 
-            const result = await financeAccountRepository.getAccountBalance(txMock, "userId")
+            const result = await financeAccountRepository.getAccountBalance(txMock, userId)
 
             expect(result).toEqual({ balance })
             expect(mockFindUnique).toHaveBeenCalledWith({
-                where: { userId: "userId" },
+                where: { userId },
                 select: { balance: true }
             })
         })
