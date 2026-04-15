@@ -53,5 +53,41 @@ export const financeAccountRepository = {
     ])
 
     return account
+  },
+
+  async getStatement(
+    id: string,
+    limit: number,
+    startDate?: Date,
+    endDate?: Date,
+    cursor?: string
+  ) {
+    return await prisma.financeBalanceHistory.findMany({
+      where: {
+        userId: id,
+        ...(startDate || endDate ? {
+          createdAt: {
+            ...(startDate && { gte: startDate }),
+            ...(endDate && { lte: endDate })
+          }
+        } : {})
+      },
+      select: {
+        id: true,
+        balance: true,
+        change: true,
+        type: true,
+        createdAt: true
+      },
+      orderBy: [
+        { createdAt: "desc" },
+        { id: "desc" }
+      ],
+      take: limit + 1,
+      ...(cursor && {
+        skip: 1,
+        cursor: { id: cursor }
+      })
+    })
   }
 };
