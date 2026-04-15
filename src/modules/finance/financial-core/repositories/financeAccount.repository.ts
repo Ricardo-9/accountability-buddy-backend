@@ -3,6 +3,19 @@ import { prisma } from "../../../../lib/prisma.js";
 import { DEFAULT_FINANCIAL_CATEGORIES } from "../../consts/defaultFinancialCategories.js";
 
 export const financeAccountRepository = {
+  async getAccount(id: string) {
+    return await prisma.financeAccount.findUnique({
+      where: { userId: id },
+      select: {
+        id: true,
+        userId: true,
+        balance: true,
+        createdAt: true,
+        updatedAt: true,
+      }
+    })
+  },
+
   async getAccountBalance(tx: Prisma.TransactionClient, id: string) {
     return await tx.financeAccount.findUnique({
       where: { userId: id },
