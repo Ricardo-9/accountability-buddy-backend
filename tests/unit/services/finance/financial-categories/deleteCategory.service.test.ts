@@ -13,6 +13,8 @@ vi.mock(
 );
 
 describe("delete categories service test", () => {
+  beforeEach(() => vi.clearAllMocks());
+  
   (it("should delete the category", async () => {
     vi.mocked(fetchCategory).mockResolvedValue({
       id: "categoryId",
@@ -36,7 +38,6 @@ describe("delete categories service test", () => {
       deletedAt: new Date("2026-04-15T16:17:57.589Z"),
     });
   }),
-
     it("should throw NOT_FOUND when category does not exist", async () => {
       const notFoundError = new AppError(
         "NOT_FOUND",
@@ -49,7 +50,6 @@ describe("delete categories service test", () => {
         deleteCategoryService("userId", "categoryId"),
       ).rejects.toThrow("category not found");
     }),
-
     it("should throw FORBIDDEN when category is default", async () => {
       const isDefaultdError = new AppError(
         "FORBIDDEN",
