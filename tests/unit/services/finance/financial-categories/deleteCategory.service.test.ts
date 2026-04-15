@@ -12,7 +12,7 @@ vi.mock(
   "../../../../../src/modules/finance/financial-categories/helpers/fetchCategory.helper",
 );
 
-describe("delete categories service test", () => {
+describe("delete category service test", () => {
   beforeEach(() => vi.clearAllMocks());
   
   (it("should delete the category", async () => {
@@ -31,6 +31,8 @@ describe("delete categories service test", () => {
 
     const result = await deleteCategoryService("userId", "categoryId");
 
+    expect(fetchCategory).toHaveBeenCalledWith("userId", "categoryId");
+
     expect(result).toEqual({
       id: "categoryId",
       name: "MOCKCATEGORY",
@@ -48,7 +50,11 @@ describe("delete categories service test", () => {
 
       await expect(
         deleteCategoryService("userId", "categoryId"),
-      ).rejects.toThrow("category not found");
+      ).rejects.toMatchObject({
+      code: "NOT_FOUND",
+      statusCode: 404,
+      message: "category not found"
+    })
     }),
     it("should throw FORBIDDEN when category is default", async () => {
       const isDefaultdError = new AppError(
@@ -60,6 +66,10 @@ describe("delete categories service test", () => {
 
       await expect(
         deleteCategoryService("userId", "categoryId"),
-      ).rejects.toThrow("Default categories can not be modified");
+      ).rejects.toMatchObject({
+      code: "FORBIDDEN",
+      statusCode: 403,
+      message:"Default categories can not be modified"
+    })
     }));
 });

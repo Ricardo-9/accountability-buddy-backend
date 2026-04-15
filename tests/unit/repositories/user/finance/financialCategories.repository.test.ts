@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { prisma } from "../../../../../src/lib/prisma";
-
 import { financialCategoriesRepository } from "../../../../../src/modules/finance/financial-categories/repositories/financialCategories.repository";
 
 vi.mock("../../../../../src/lib/prisma", () => ({
@@ -37,12 +36,46 @@ describe("financialCategoriesRepository", () => {
     });
   });
 
-  it("should find many categories", async () => {
+  it("should find many categories with pagination", async () => {
     vi.mocked(prisma.financialCategory.findMany).mockResolvedValue([]);
 
     await financialCategoriesRepository.findManyById("user", 10);
 
-    expect(prisma.financialCategory.findMany).toHaveBeenCalled();
+    expect(prisma.financialCategory.findMany).toHaveBeenCalledWith({
+      where: { userId: "user", deletedAt: null },
+      select: {
+        id: true,
+        isDefault: true,
+        name: true,
+        updatedAt: true,
+      },
+      orderBy: [{ isDefault: "desc" }, { name: "asc" }],
+      take: 11,
+    });
+  });
+
+  it("should apply cursor pagination", async () => {
+    vi.mocked(prisma.financialCategory.findMany).mockResolvedValue([]);
+
+    await financialCategoriesRepository.findManyById(
+      "user",
+      10,
+      "cursor-1",
+    );
+
+    expect(prisma.financialCategory.findMany).toHaveBeenCalledWith({
+      where: { userId: "user", deletedAt: null },
+      select: {
+        id: true,
+        isDefault: true,
+        name: true,
+        updatedAt: true,
+      },
+      orderBy: [{ isDefault: "desc" }, { name: "asc" }],
+      take: 11,
+      skip: 1,
+      cursor: { id: "cursor-1" },
+    });
   });
 
   it("should create category", async () => {
@@ -98,6 +131,12 @@ describe("financialCategoriesRepository", () => {
       },
       data: {
         deletedAt: expect.any(Date),
+      },
+      select: {
+        id: true,
+        isDefault: true,
+        name: true,
+        deletedAt: true,
       },
     });
   });

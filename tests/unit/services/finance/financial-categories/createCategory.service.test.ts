@@ -38,6 +38,9 @@ describe("create category service test", () => {
 
       await expect(
         createCategoryService("userId", "mockcategory"),
-      ).rejects.toThrow("The user already registered this category");
+      ).rejects.toMatchObject({
+      code: "DUPLICATE_REGISTER",
+      statusCode: 409,
+    })
     }));
 });

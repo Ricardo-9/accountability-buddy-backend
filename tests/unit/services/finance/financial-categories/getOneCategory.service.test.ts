@@ -38,6 +38,10 @@ describe("get one category service test", () => {
 
       await expect(
         getOneCategoryService("userId", "categoryId"),
-      ).rejects.toThrow("category not found");
+      ).rejects.toMatchObject({
+      code: "NOT_FOUND",
+      statusCode: 404,
+      message: "category not found"
+    })
     }));
 });
