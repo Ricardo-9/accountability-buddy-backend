@@ -90,6 +90,12 @@ export const financialCategoriesRepository = {
     return prisma.financialCategory.update({
       where: { id: categoryId ,userId},
       data: { deletedAt: new Date() },
+      select: {
+        id: true,
+        isDefault: true,
+        name: true,
+        deletedAt: true
+      },
     });
   },
 };

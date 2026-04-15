@@ -4,7 +4,7 @@ import { Prisma } from "@prisma/client";
 import { normalizeCategoryName } from "../../shared/helpers/normalizeCategoryName.js";
 import { fetchCategory } from "../helpers/fetchCategory.helper.js";
 
-export async function updateCategory(
+export async function updateCategoryService(
   userId: string,
   categoryId: string,
   name: string,

@@ -3,7 +3,7 @@ import { AppError } from "../../../../core/errors/AppError.js";
 import { Prisma } from "@prisma/client";
 import { normalizeCategoryName } from "../../shared/helpers/normalizeCategoryName.js";
 
-export async function createCategory(userId: string, name: string) {
+export async function createCategoryService(userId: string, name: string) {
   const normalizedName = normalizeCategoryName(name);
 
   if (!normalizedName) {

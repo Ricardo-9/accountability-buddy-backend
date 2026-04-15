@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { successResponse } from "../../../../shared/utils/apiResponse.js";
-import { deleteCategory } from "../services/deleteCategory.service.js";
+import { deleteCategoryService } from "../services/deleteCategory.service.js";
 import { DeleteByIdSchemaType } from "../schemas/deletebyid.schema.js";
 
 export async function deleteCategoryController(
@@ -12,8 +12,12 @@ export async function deleteCategoryController(
   const { id } = req.params;
 
   try {
-    const deletedCatgory = await deleteCategory(userId, id);
-    return successResponse(res, deletedCatgory, "Financial Category sucessfully deleted");
+    const deletedCategory = await deleteCategoryService(userId, id);
+    return successResponse(
+      res,
+      deletedCategory,
+      "Financial Category sucessfully deleted",
+    );
   } catch (err) {
     next(err);
   }
