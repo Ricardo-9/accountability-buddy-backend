@@ -1,11 +1,11 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { authMiddlewareTests } from "../../../shared/authMiddlewareTests";
 import { prisma } from "../../../../../src/lib/prisma";
-import { getAccountService } from "../../../../../src/modules/finance/financial-core/services/getAccount.service";
-import request from "supertest";
+import { financeAccountRepository } from "../../../../../src/modules/finance/financial-core/repositories/financeAccount.repository";
 import { Prisma } from "@prisma/client";
 import app from "../../../../../src/app";
 import { AppError } from "../../../../../src/core/errors/AppError";
+import request from "supertest"
 
 vi.mock("jose", async (importOriginal) => {
   const original = await importOriginal<typeof import("jose")>();
@@ -38,7 +38,7 @@ vi.mock("../../../../../src/modules/finance/middlewares/requireFinancialAccount"
   })
 }))
 
-vi.mock("../../../../../src/modules/finance/financial-core/services/getAccount.service")
+vi.mock("../../../../../src/modules/finance/financial-core/repositories/financeAccount.repository")
 
 const validToken = "valid-token";
 
@@ -63,13 +63,11 @@ describe("GET /accounts test", () => {
   authMiddlewareTests("post", "/finance/accounts", "FINANCES");
 
   it("should return 200 and account data", async () => {
-    vi.mocked(getAccountService).mockResolvedValue(mockAccount);
+    vi.mocked(financeAccountRepository.getAccount).mockResolvedValue(mockAccount);
 
     const response = await request(app)
       .get("/finance/accounts")
       .set("Authorization", `Bearer ${validToken}`);
-
-    console.log(response)
 
     expect(response.status).toBe(200);
     expect(response.body).toMatchObject({
@@ -96,7 +94,7 @@ describe("GET /accounts test", () => {
   });
 
   it("should throw 500 for server errors", async () => {
-    vi.mocked(getAccountService).mockRejectedValue(new Error("Db error"));
+    vi.mocked(financeAccountRepository.getAccount).mockRejectedValue(new Error("Db error"));
 
     const response = await request(app)
       .get("/finance/accounts")
