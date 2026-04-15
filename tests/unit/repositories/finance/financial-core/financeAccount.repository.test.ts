@@ -3,6 +3,7 @@ import { prisma } from "../../../../../src/lib/prisma";
 import { financeAccountRepository } from "../../../../../src/modules/finance/financial-core/repositories/financeAccount.repository";
 import { Prisma } from "@prisma/client";
 import { DEFAULT_FINANCIAL_CATEGORIES } from "../../../../../src/modules/finance/consts/defaultFinancialCategories";
+import { FinanceBalanceHistory } from "@prisma/client";
 
 vi.mock("../../../../../src/lib/prisma", () => ({
     prisma: {
@@ -11,7 +12,10 @@ vi.mock("../../../../../src/lib/prisma", () => ({
             create: vi.fn(),
             findUnique: vi.fn()
         },
-        financeBalanceHistory: { create: vi.fn() },
+        financeBalanceHistory: {
+            create: vi.fn(),
+            findMany: vi.fn()
+        },
         financialCategory: { createMany: vi.fn() }
     }
 }))
@@ -144,6 +148,98 @@ describe("Finance account repository test", () => {
                 })),
                 skipDuplicates: true
             })
+        })
+    })
+
+    describe("getStatement", () => {
+        it("should fetch statement without filters", async () => {
+            await financeAccountRepository.getStatement("userId", 10)
+
+            expect(prisma.financeBalanceHistory.findMany).toHaveBeenCalledWith({
+                where: { userId: "userId" },
+                select: {
+                    id: true,
+                    balance: true,
+                    change: true,
+                    type: true,
+                    createdAt: true
+                },
+                orderBy: [
+                    { createdAt: "desc" },
+                    { id: "desc" }
+                ],
+                take: 11
+            })
+        })
+
+        it("should apply startDate filter", async () => {
+            const startDate = new Date("2026-03-22")
+
+            await financeAccountRepository.getStatement("userId", 10, startDate)
+
+            expect(prisma.financeBalanceHistory.findMany).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    where: {
+                        userId: "userId",
+                        createdAt: { gte: startDate }
+                    }
+                })
+            )
+        })
+
+        it("should apply endDate filter", async () => {
+            const endDate = new Date("2026-03-21")
+
+            await financeAccountRepository.getStatement("userId", 10, undefined, endDate)
+
+            expect(prisma.financeBalanceHistory.findMany).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    where: {
+                        userId: "userId",
+                        createdAt: { lte: endDate }
+                    }
+                })
+            )
+        })
+
+        it("should apply endDate and startDate filter", async () => {
+            const startDate = new Date("2026-03-22")
+            const endDate = new Date("2026-03-24")
+
+            await financeAccountRepository.getStatement("userId", 10, startDate, endDate)
+
+            expect(prisma.financeBalanceHistory.findMany).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    where: {
+                        userId: "userId",
+                        createdAt: {
+                            gte: startDate,
+                            lte: endDate
+                        }
+                    }
+                })
+            )
+        })
+
+        it("should apply cursor pagination", async () => {
+            await financeAccountRepository.getStatement("userId", 10, undefined, undefined, "cursorId")
+
+            expect(prisma.financeBalanceHistory.findMany).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    skip: 1,
+                    cursor: { id: "cursorId" }
+                })
+            )
+        })
+
+        it("should request limit + 1 items", async () => {
+            await financeAccountRepository.getStatement("userId", 10)
+
+            expect(prisma.financeBalanceHistory.findMany).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    take: 11
+                })
+            )
         })
     })
 })
