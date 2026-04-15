@@ -17,7 +17,7 @@ vi.mock(
 describe("get one category service test", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  (it("should return categories for the user", async () => {
+  (it("should return the category for the user", async () => {
     vi.mocked(financialCategoriesRepository.findOneById).mockResolvedValue(
       mockCategory,
     );
