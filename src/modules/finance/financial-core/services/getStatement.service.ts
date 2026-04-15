@@ -7,11 +7,18 @@ export async function getStatementService(
   endDate?: Date,
   cursor?: string,
 ) {
-  return await financeAccountRepository.getStatement(
+  const statement = await financeAccountRepository.getStatement(
     userId,
     limit,
     startDate,
     endDate,
     cursor
   )
+
+  const hasNextPage = statement.length > limit;
+  const data = hasNextPage ? statement.slice(0, -1) : statement;
+
+  const nextCursor = hasNextPage ? data.at(-1)?.id : null;
+
+  return { statement: data, nextCursor}
 }

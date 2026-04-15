@@ -13,21 +13,16 @@ export async function getStatementController(
     req.query as unknown as GetStatementSchema;
 
   try {
-    const statement = await getStatementService(
+    const {statement, nextCursor} = await getStatementService(
       userId,
+      limit,
       startDate,
       endDate,
-      limit,
       cursor,
     );
 
-    const hasNextPage = statement.length > limit;
-    const data = hasNextPage ? statement.slice(0, -1) : statement;
-
-    const nextCursor = hasNextPage ? data.at(-1)?.id : null;
-
     return successResponse(res, {
-      statement: data,
+      statement,
       nextCursor,
     });
   } catch (err) {
