@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { getAccountService } from "../services/getAccount.service.js";
+import { financeAccountRepository } from "../repositories/financeAccount.repository.js";
 import { successResponse } from "../../../../shared/utils/apiResponse.js";
 
 export async function getAccountController(
@@ -10,7 +10,7 @@ export async function getAccountController(
   const userId = req.user!.id;
 
   try {
-    const account = await getAccountService(userId);
+    const account = await financeAccountRepository.getAccount(userId);
 
     return successResponse(res, {
       accountId: account!.id,
