@@ -18,7 +18,7 @@ export async function updateCategoryController(
       name,
     );
 
-    return successResponse(res, updatedCategory, "Financial Category sucessfully updated");
+    return successResponse(res, {category:updatedCategory}, "Financial Category sucessfully updated");
   } catch (err) {
     next(err);
   }
