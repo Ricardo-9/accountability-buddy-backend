@@ -1,5 +1,5 @@
 import { RecurringTransaction } from "@prisma/client";
-import { AppError } from "../../../core/errors/AppError.js";
+import { AppError } from "../../../../core/errors/AppError.js";
 
 export function calculateNextOccurrence(transaction: RecurringTransaction) {
   function addDays(date: Date, days: number) {
