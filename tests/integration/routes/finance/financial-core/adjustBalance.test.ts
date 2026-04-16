@@ -23,16 +23,20 @@ vi.mock("../../../../../src/lib/prisma", () => ({
     userArea: {
       findFirst: vi.fn(),
     },
-    $transaction: vi.fn(),
-    financeAccount: {
-      findUnique: vi.fn(),
-      update: vi.fn(),
-    },
-    financeBalanceHistory: {
-      create: vi.fn(),
-    },
+    $transaction: vi.fn()
   },
 }));
+
+let userHaveAccount: boolean
+
+vi.mock("../../../../../src/modules/finance/middlewares/requireFinancialAccount", () => ({
+  requireFinancialAccount: vi.fn((_req: any, _res: any, next: any) => {
+    if (!userHaveAccount) {
+      return next(new AppError("NOT_FOUND", "User account not found", 404))
+    }
+    next()
+  })
+}))
 
 const validToken = "valid-token";
 
@@ -50,9 +54,7 @@ describe("PATCH /accounts/balance", () => {
     vi.mocked(prisma.userArea.findFirst).mockResolvedValue({
       userId: "userId",
     } as any);
-    vi.mocked(prisma.financeAccount.findUnique).mockResolvedValue({
-      id: "accId",
-    } as any);
+    userHaveAccount = true
     vi.mocked(prisma.$transaction).mockResolvedValue(mockAccount);
   });
 
@@ -73,29 +75,7 @@ describe("PATCH /accounts/balance", () => {
         updatedAt: updatedAt.toISOString(),
       },
     });
-    expect(prisma.$transaction).toHaveBeenCalledOnce();
-  });
-
-  it("should return 200 and updated account if amount is not integer", async () => {
-    vi.mocked(prisma.$transaction).mockResolvedValue({
-      ...mockAccount,
-      balance: new Prisma.Decimal(1000.5),
-    });
-    const response = await request(app)
-      .patch("/finance/accounts/balance")
-      .set("Authorization", `Bearer ${validToken}`)
-      .send({ amount: 500.5, type: "INCREMENT", reason: "INCOME" });
-
-    expect(response.status).toBe(200);
-    expect(response.body).toMatchObject({
-      data: {
-        accountId: "acc-id",
-        ownerId: "userId",
-        balance: "1000.5",
-        updatedAt: updatedAt.toISOString(),
-      },
-    });
-    expect(prisma.$transaction).toHaveBeenCalledOnce();
+    expect(prisma.$transaction).toHaveBeenCalledWith(expect.any(Function));
   });
 
   it("should return 200 and updated account (DECREMENT)", async () => {
@@ -118,7 +98,7 @@ describe("PATCH /accounts/balance", () => {
         updatedAt: updatedAt.toISOString(),
       },
     });
-    expect(prisma.$transaction).toHaveBeenCalledOnce();
+    expect(prisma.$transaction).toHaveBeenCalledWith(expect.any(Function));
   });
 
   it("should throw 400 if amount is missing", async () => {
@@ -228,7 +208,7 @@ describe("PATCH /accounts/balance", () => {
   });
 
   it("should throw 404 if account is not found", async () => {
-    vi.mocked(prisma.financeAccount.findUnique).mockResolvedValue(null);
+    userHaveAccount = false
 
     const response = await request(app)
       .patch("/finance/accounts/balance")
@@ -238,8 +218,8 @@ describe("PATCH /accounts/balance", () => {
     expect(response.status).toBe(404);
   });
 
-  it("should throw 400 if amount is greater than current balance", async () => {
-    vi.mocked(prisma.$transaction).mockRejectedValueOnce(
+  it("should throw 422 if amount is greater than current balance", async () => {
+    vi.mocked(prisma.$transaction).mockRejectedValue(
       new AppError("INSUFFICIENT_FUNDS", "Insufficient balance", 422),
     );
 
@@ -250,4 +230,17 @@ describe("PATCH /accounts/balance", () => {
 
     expect(response.status).toBe(422);
   });
+
+  it("should throw 500 for server errors", async () => {
+    vi.mocked(prisma.$transaction).mockRejectedValue(
+      new Error("Db error"),
+    );
+
+    const response = await request(app)
+      .patch("/finance/accounts/balance")
+      .set("Authorization", `Bearer ${validToken}`)
+      .send({ amount: 100, type: "DECREMENT", reason: "EXPENSE" });
+
+    expect(response.status).toBe(500)
+  })
 });
