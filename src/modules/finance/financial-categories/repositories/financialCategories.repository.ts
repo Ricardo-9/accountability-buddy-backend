@@ -37,22 +37,6 @@ export const financialCategoriesRepository = {
     });
   },
 
-  async findByNameExcludingId(
-    userId: string,
-    name: string,
-    categoryId: string,
-  ) {
-    return prisma.financialCategory.findFirst({
-      where: {
-        userId,
-        name,
-        deletedAt: null,
-        NOT: { id: categoryId },
-      },
-      select: { id: true },
-    });
-  },
-
   async create(userId: string, name: string) {
     return prisma.financialCategory.create({
       data: {
