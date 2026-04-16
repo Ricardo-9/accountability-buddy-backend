@@ -9,10 +9,28 @@
  * @swagger
  * /finance/categories:
  *  get:
- *      summary: Get all financial categories for the authenticated user
+ *      summary: Get financial categories (paginated)
+ *      description: Returns financial categories ordered with default categories first, then by name ascending
  *      tags: [Financial Categories]
  *      security:
  *          - bearerAuth: []
+ *      parameters:
+ *          - in: query
+ *            name: limit
+ *            required: false
+ *            schema:
+ *                type: integer
+ *                minimum: 1
+ *                maximum: 100
+ *                default: 10
+ *            description: Number of categories to return
+ *          - in: query
+ *            name: cursor
+ *            required: false
+ *            schema:
+ *                type: string
+ *                format: uuid
+ *            description: Cursor for pagination
  *      responses:
  *          200:
  *              description: Categories successfully retrieved
@@ -25,38 +43,31 @@
  *                                  type: boolean
  *                                  example: true
  *                              data:
- *                                  type: array
- *                                  items:
- *                                      type: object
- *                                      required:
- *                                          - id
- *                                          - userId
- *                                          - name
- *                                          - isDefault
- *                                      properties:
- *                                          id:
- *                                              type: string
- *                                              format: uuid
- *                                              example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
- *                                          userId:
- *                                              type: string
- *                                              format: uuid
- *                                              example: "bc2d0f53-5041-46e8-a14c-267875a49f0c"
- *                                          name:
- *                                              type: string
- *                                              example: "Alimentação"
- *                                          isDefault:
- *                                              type: boolean
- *                                              example: false
- *                                          createdAt:
- *                                              type: string
- *                                              format: date-time
- *                                              example: "2026-01-10T12:00:00Z"
- *                                          updatedAt:
- *                                              type: string
- *                                              format: date-time
- *                                              nullable: true
- *                                              example: "2026-03-15T08:30:00Z"
+ *                                  type: object
+ *                                  properties:
+ *                                      categories:
+ *                                          type: array
+ *                                          items:
+ *                                              type: object
+ *                                              properties:
+ *                                                  id:
+ *                                                      type: string
+ *                                                      format: uuid
+ *                                                  name:
+ *                                                      type: string
+ *                                                      example: "Alimentação"
+ *                                                  isDefault:
+ *                                                      type: boolean
+ *                                                      example: false
+ *                                                  updatedAt:
+ *                                                      type: string
+ *                                                      format: date-time
+ *                                                      nullable: true
+ *                                      nextCursor:
+ *                                          type: string
+ *                                          format: uuid
+ *                                          nullable: true
+ *                                          example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
  *          401:
  *              description: Missing or invalid token
  *          403:
@@ -66,6 +77,63 @@
  *          500:
  *              description: Internal server error
  */
+
+
+/**
+ * @swagger
+ * /finance/categories/{id}:
+ *  get:
+ *      summary: Get one financial category
+ *      tags: [Financial Categories]
+ *      security:
+ *          - bearerAuth: []
+ *      parameters:
+ *          - in: path
+ *            name: id
+ *            required: true
+ *            schema:
+ *                type: string
+ *                format: uuid
+ *            description: Category id
+ *      responses:
+ *          200:
+ *              description: Category successfully retrieved
+ *              content:
+ *                  application/json:
+ *                      schema:
+ *                          type: object
+ *                          properties:
+ *                              success:
+ *                                  type: boolean
+ *                                  example: true
+ *                              data:
+ *                                  type: object
+ *                                  properties:
+ *                                      id:
+ *                                          type: string
+ *                                          format: uuid
+ *                                      name:
+ *                                          type: string
+ *                                          example: "Alimentação"
+ *                                      isDefault:
+ *                                          type: boolean
+ *                                          example: false
+ *                                      updatedAt:
+ *                                          type: string
+ *                                          format: date-time
+ *                                          nullable: true
+ *          401:
+ *              description: Missing or invalid token
+ *          403:
+ *              description: User does not have access to the FINANCES area
+ *          404:
+ *              description: Category not found
+ *          429:
+ *              description: Too many requests
+ *          500:
+ *              description: Internal server error
+ */
+
 
 /**
  * @swagger
@@ -88,7 +156,7 @@
  *                              type: string
  *                              minLength: 2
  *                              maxLength: 120
- *                              example: "Transport"
+ *                              example: "Transporte"
  *      responses:
  *          200:
  *              description: Category successfully created
@@ -105,48 +173,32 @@
  *                                  example: Category created
  *                              data:
  *                                  type: object
- *                                  required:
- *                                      - id
- *                                      - userId
- *                                      - name
- *                                      - isDefault
  *                                  properties:
  *                                      id:
  *                                          type: string
  *                                          format: uuid
- *                                          example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
- *                                      userId:
- *                                          type: string
- *                                          format: uuid
- *                                          example: "bc2d0f53-5041-46e8-a14c-267875a49f0c"
  *                                      name:
  *                                          type: string
- *                                          example: "Transporte"
  *                                      isDefault:
  *                                          type: boolean
- *                                          example: false
- *                                      createdAt:
- *                                          type: string
- *                                          format: date-time
- *                                          example: "2026-01-10T12:00:00Z"
  *                                      updatedAt:
  *                                          type: string
  *                                          format: date-time
  *                                          nullable: true
- *                                          example: null
  *          400:
- *              description: Invalid data or missing required fields
+ *              description: Invalid request data
  *          401:
  *              description: Missing or invalid token
  *          403:
  *              description: User does not have access to the FINANCES area
  *          409:
- *              description: Category with this name already exists for the user
+ *              description: Category already exists
  *          429:
  *              description: Too many requests
  *          500:
  *              description: Internal server error
  */
+
 
 /**
  * @swagger
@@ -163,8 +215,6 @@
  *            schema:
  *                type: string
  *                format: uuid
- *            description: The ID of the category to update
- *            example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
  *      requestBody:
  *          required: true
  *          content:
@@ -189,47 +239,27 @@
  *                          properties:
  *                              success:
  *                                  type: boolean
- *                                  example: true
  *                              message:
  *                                  type: string
  *                                  example: Category updated
  *                              data:
  *                                  type: object
- *                                  required:
- *                                      - id
- *                                      - userId
- *                                      - name
- *                                      - isDefault
  *                                  properties:
  *                                      id:
  *                                          type: string
  *                                          format: uuid
- *                                          example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
- *                                      userId:
- *                                          type: string
- *                                          format: uuid
- *                                          example: "bc2d0f53-5041-46e8-a14c-267875a49f0c"
  *                                      name:
  *                                          type: string
- *                                          example: "Lazer"
  *                                      isDefault:
  *                                          type: boolean
- *                                          example: false
- *                                      createdAt:
- *                                          type: string
- *                                          format: date-time
- *                                          example: "2026-01-10T12:00:00Z"
  *                                      updatedAt:
  *                                          type: string
  *                                          format: date-time
  *                                          nullable: true
- *                                          example: "2026-03-20T14:00:00Z"
- *          400:
- *              description: Invalid data or missing required fields
  *          401:
  *              description: Missing or invalid token
  *          403:
- *              description: User does not have access to the FINANCES area, or category is a default and cannot be modified
+ *              description: Default categories can not be modified
  *          404:
  *              description: Category not found
  *          429:
@@ -237,6 +267,7 @@
  *          500:
  *              description: Internal server error
  */
+
 
 /**
  * @swagger
@@ -253,8 +284,6 @@
  *            schema:
  *                type: string
  *                format: uuid
- *            description: The ID of the category to delete
- *            example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
  *      responses:
  *          200:
  *              description: Category successfully deleted
@@ -270,13 +299,12 @@
  *                                  type: string
  *                                  example: Category deleted
  *                              data:
- *                                  type: object
  *                                  nullable: true
  *                                  example: null
  *          401:
  *              description: Missing or invalid token
  *          403:
- *              description: User does not have access to the FINANCES area, or category is a default and cannot be deleted
+ *              description: Default categories can not be deleted
  *          404:
  *              description: Category not found
  *          429:

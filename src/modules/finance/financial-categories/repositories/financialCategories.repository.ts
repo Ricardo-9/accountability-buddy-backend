@@ -12,34 +12,28 @@ export const financialCategoriesRepository = {
         id: true,
         isDefault: true,
         name: true,
+        updatedAt:true
       },
     });
   },
 
-  async findManyById(userId: string) {
+  async findManyById(userId: string,
+  limit = 10,
+  cursor?: string) {
     return prisma.financialCategory.findMany({
       where: { userId, deletedAt: null },
       select: {
         id: true,
         isDefault: true,
         name: true,
+        updatedAt:true
       },
-    });
-  },
-
-  async findByNameExcludingId(
-    userId: string,
-    name: string,
-    categoryId: string,
-  ) {
-    return prisma.financialCategory.findFirst({
-      where: {
-        userId,
-        name,
-        deletedAt: null,
-        NOT: { id: categoryId },
-      },
-      select: { id: true },
+      orderBy: [{isDefault:"desc"},{name:"asc"}],
+      take: limit + 1,
+      ...(cursor && {
+        skip: 1,
+        cursor: { id: cursor },
+      }),
     });
   },
 
@@ -53,6 +47,7 @@ export const financialCategoriesRepository = {
         id: true,
         isDefault: true,
         name: true,
+        updatedAt:true
       },
     });
   },
@@ -70,14 +65,21 @@ export const financialCategoriesRepository = {
         id: true,
         isDefault: true,
         name: true,
+        updatedAt:true
       },
     });
   },
 
   async delete(userId: string, categoryId: string) {
     return prisma.financialCategory.update({
-      where: { id: categoryId },
+      where: { id: categoryId ,userId},
       data: { deletedAt: new Date() },
+      select: {
+        id: true,
+        isDefault: true,
+        name: true,
+        deletedAt: true
+      },
     });
   },
 };

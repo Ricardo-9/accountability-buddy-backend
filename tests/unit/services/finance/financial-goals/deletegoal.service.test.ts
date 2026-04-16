@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { prisma } from "../../../../../src/lib/prisma";
-import { adjustBalanceWithTx } from "../../../../../src/modules/finance/helpers/adjustBalanceWithTx.helper";
-import { deleteGoalService } from "../../../../../src/modules/finance/services/deletegoal.service";
+import { adjustBalanceWithTx } from "../../../../../src/modules/finance/shared/helpers/adjustBalanceWithTx.helper";
+import { deleteGoalService } from "../../../../../src/modules/finance/financial-goals/services/deleteGoal.service";
 import { Prisma } from "@prisma/client";
 
 vi.mock("../../../../../src/lib/prisma", () => ({
@@ -21,7 +21,7 @@ const mockTx = {
 };
 
 vi.mock(
-  "../../../../../src/modules/finance/helpers/adjustBalanceWithTx.helper",
+ "../../../../../src/modules/finance/shared/helpers/adjustBalanceWithTx.helper",
 );
 
 const goalId = "goalId";

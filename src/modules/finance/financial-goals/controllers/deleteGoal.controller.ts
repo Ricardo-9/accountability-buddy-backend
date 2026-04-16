@@ -1,10 +1,10 @@
 import { Request, Response, NextFunction } from "express";
 import { deleteGoalService } from "../services/deleteGoal.service.js";
 import { successResponse } from "../../../../shared/utils/apiResponse.js";
-import { DeleteByIdSchema } from "../../financial-categories/schemas/deletebyid.schema.js";
+import { DeleteByIdSchemaType } from "../../financial-categories/schemas/deletebyid.schema.js";
 
 export async function deleteGoalController(
-  req: Request<DeleteByIdSchema>,
+  req: Request<DeleteByIdSchemaType>,
   res: Response,
   next: NextFunction,
 ) {

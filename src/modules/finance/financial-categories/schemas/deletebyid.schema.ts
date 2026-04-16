@@ -6,4 +6,4 @@ export const deleteByIdSchema = z.object({
   }),
 });
 
-export type DeleteByIdSchema = z.infer<typeof deleteByIdSchema>["params"];
+export type DeleteByIdSchemaType = z.infer<typeof deleteByIdSchema>["params"];
