@@ -13,6 +13,7 @@ import { updateFinancialCategorySchema } from "./schemas/updateCategory.schema.j
 import { deleteByIdSchema } from "./schemas/deletebyid.schema.js";
 import { getByIdSchema } from "./schemas/getOneCategory.schema.js";
 import { getOneCategoryController } from "./controllers/getOneCategory.controller.js";
+import { getCategoriesSchema } from "./schemas/getCategories.schema.js";
 
 const router = Router();
 
@@ -30,6 +31,7 @@ router.get(
   authenticate,
   requireArea(AccountabilityArea.FINANCES),
   requireFinancialAccount,
+  validateRequest(getCategoriesSchema),
   getCategoriesController
 );
 

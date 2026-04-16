@@ -8,7 +8,7 @@ export const getCategoriesSchema = z.object({
       .min(1, { error: "Limit must be at least 1" })
       .max(100, { error: "Limit must be at most 100" })
       .default(10),
-    cursor: z.uuid({ error: "Invalid cursor" }).optional(),
+    cursor: z.string().uuid({ error: "Invalid cursor" }).optional(),
   }),
 });
 
