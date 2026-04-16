@@ -4,6 +4,8 @@ import { prisma } from "../../../../../src/lib/prisma";
 import request from "supertest";
 import app from "../../../../../src/app";
 import { FinanceBalanceHistory } from "@prisma/client";
+import { AppError } from "../../../../../src/core/errors/AppError";
+import { financeAccountRepository } from "../../../../../src/modules/finance/financial-core/repositories/financeAccount.repository";
 
 vi.mock("jose", async (importOriginal) => {
   const original = await importOriginal<typeof import("jose")>();
@@ -19,17 +21,24 @@ vi.mock("jose", async (importOriginal) => {
 
 vi.mock("../../../../../src/lib/prisma", () => ({
   prisma: {
-    financeAccount: {
-      findUnique: vi.fn(),
-    },
-    financeBalanceHistory: {
-      findMany: vi.fn(),
-    },
     userArea: {
       findFirst: vi.fn(),
-    },
+    }
   },
 }));
+
+vi.mock("../../../../../src/modules/finance/financial-core/repositories/financeAccount.repository")
+
+let userHaveAccount: boolean
+
+vi.mock("../../../../../src/modules/finance/middlewares/requireFinancialAccount", () => ({
+  requireFinancialAccount: vi.fn((_req: any, _res: any, next: any) => {
+    if (!userHaveAccount) {
+      return next(new AppError("NOT_FOUND", "User account not found", 404))
+    }
+    next()
+  })
+}))
 
 const validToken = "valid-token";
 
@@ -63,10 +72,8 @@ describe("GET /accounts/statement", () => {
     vi.mocked(prisma.userArea.findFirst).mockResolvedValue({
       userId: "userId",
     } as any);
-    vi.mocked(prisma.financeAccount.findUnique).mockResolvedValue({
-      id: "accId",
-    } as any);
-    vi.mocked(prisma.financeBalanceHistory.findMany).mockResolvedValue(
+    userHaveAccount = true
+    vi.mocked(financeAccountRepository.getStatement).mockResolvedValue(
       mockStatement,
     );
   });
@@ -92,15 +99,13 @@ describe("GET /accounts/statement", () => {
       .query({ startDate });
 
     expect(response.status).toBe(200);
-    expect(prisma.financeBalanceHistory.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: expect.objectContaining({
-          createdAt: {
-            gte: new Date(startDate),
-          },
-        }),
-      }),
-    );
+    expect(financeAccountRepository.getStatement).toHaveBeenCalledWith(
+      "userId",
+      expect.any(Number),
+      new Date(startDate),
+      undefined,
+      undefined
+    )
   });
 
   it("should filter by end date", async () => {
@@ -112,15 +117,13 @@ describe("GET /accounts/statement", () => {
       .query({ endDate });
 
     expect(response.status).toBe(200);
-    expect(prisma.financeBalanceHistory.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: expect.objectContaining({
-          createdAt: {
-            lte: new Date(endDate),
-          },
-        }),
-      }),
-    );
+    expect(financeAccountRepository.getStatement).toHaveBeenCalledWith(
+      "userId",
+      expect.any(Number),
+      undefined,
+      new Date(endDate),
+      undefined
+    )
   });
 
   it("should filter by start date and end date", async () => {
@@ -133,16 +136,13 @@ describe("GET /accounts/statement", () => {
       .query({ startDate, endDate });
 
     expect(response.status).toBe(200);
-    expect(prisma.financeBalanceHistory.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: expect.objectContaining({
-          createdAt: {
-            gte: new Date(startDate),
-            lte: new Date(endDate),
-          },
-        }),
-      }),
-    );
+    expect(financeAccountRepository.getStatement).toHaveBeenCalledWith(
+      "userId",
+      expect.any(Number),
+      new Date(startDate),
+      new Date(endDate),
+      undefined
+    )
   });
 
   it("should apply limit", async () => {
@@ -152,11 +152,13 @@ describe("GET /accounts/statement", () => {
       .query({ limit: 10 });
 
     expect(response.status).toBe(200);
-    expect(prisma.financeBalanceHistory.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        take: 10 + 1,
-      }),
-    );
+    expect(financeAccountRepository.getStatement).toHaveBeenCalledWith(
+      "userId",
+      10,
+      undefined,
+      undefined,
+      undefined
+    )
   });
 
   it("should apply cursor pagination", async () => {
@@ -166,12 +168,13 @@ describe("GET /accounts/statement", () => {
       .query({ cursor: "5ddd7449-d063-495a-af5b-c0561c511009" });
 
     expect(response.status).toBe(200);
-    expect(prisma.financeBalanceHistory.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        skip: 1,
-        cursor: { id: "5ddd7449-d063-495a-af5b-c0561c511009" },
-      }),
-    );
+    expect(financeAccountRepository.getStatement).toHaveBeenCalledWith(
+      "userId",
+      expect.any(Number),
+      undefined,
+      undefined,
+      "5ddd7449-d063-495a-af5b-c0561c511009"
+    )
   });
 
   it("should throw 400 when startDate is invalid", async () => {
@@ -247,7 +250,7 @@ describe("GET /accounts/statement", () => {
   });
 
   it("should throw 404 when account is not found", async () => {
-    vi.mocked(prisma.financeAccount.findUnique).mockResolvedValue(null);
+    userHaveAccount = false
 
     const response = await request(app)
       .get("/finance/accounts/statement")
@@ -255,4 +258,14 @@ describe("GET /accounts/statement", () => {
 
     expect(response.status).toBe(404);
   });
+
+  it("should throw 500 for server errors", async () => {
+    vi.mocked(financeAccountRepository.getStatement).mockRejectedValue(new Error("Db error"))
+
+    const response = await request(app)
+      .get("/finance/accounts/statement")
+      .set("Authorization", `Bearer ${validToken}`);
+
+    expect(response.status).toBe(500);
+  })
 });
