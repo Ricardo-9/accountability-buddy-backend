@@ -3,7 +3,7 @@ import request from "supertest";
 import app from "../../../../../src/app.js";
 import { AppError } from "../../../../../src/core/errors/AppError.js";
 import { authenticate } from "../../../../../src/middlewares/authMiddleware.js";
-import { updateCategoryService } from "../../../../../src/modules/finance/financial-categories/services/updateCategory.service.js";
+import { createCategoryService } from "../../../../../src/modules/finance/financial-categories/services/createCategory.service.js";
 
 const mockCategory = {
   id: "3fd12663-f4df-4fcf-a67a-83e3035338ca",
@@ -12,11 +12,16 @@ const mockCategory = {
   updatedAt: new Date("2024-01-01T00:00:00.000Z"),
 };
 
+const mockCategoryResponse = {
+  ...mockCategory,
+  updatedAt: mockCategory.updatedAt.toISOString(),
+};
+
 let requireAreaShouldFail = false;
 let requireFinancialAccountShouldFail = false;
 
 vi.mock(
-  "../../../../../src/modules/finance/financial-categories/services/updateCategory.service.js",
+  "../../../../../src/modules/finance/financial-categories/services/createCategory.service.js",
 );
 
 vi.mock("../../../../../src/middlewares/authMiddleware.js", () => ({
@@ -55,62 +60,38 @@ vi.mock(
 
 beforeEach(() => {
   vi.clearAllMocks();
+
   requireAreaShouldFail = false;
   requireFinancialAccountShouldFail = false;
 });
 
-describe("update category integration test", () => {
-  it("should update and return the category for the user", async () => {
-    vi.mocked(updateCategoryService).mockResolvedValue({
-      ...mockCategory,
-      name: "UPDATEDMOCKCATEGORY",
-    });
+describe("create category integration test", () => {
+  (it("should create and return the category for the user", async () => {
+    vi.mocked(createCategoryService).mockResolvedValue(mockCategory);
 
     const response = await request(app)
-      .patch("/finance/categories/3fd12663-f4df-4fcf-a67a-83e3035338ca")
-      .send({ name: "UPDATEDMOCKCATEGORY" });
+      .post("/finance/categories")
+      .send({ name: "MOCKCATEGORY" });
 
-    expect(response.body.data.category.name).toEqual("UPDATEDMOCKCATEGORY");
+    expect(response.body.data).toEqual({ category: mockCategoryResponse });
     expect(response.status).toBe(200);
+  }),
+    it("should return 400 when name does not exist", async () => {
+      const response = await request(app).post("/finance/categories");
 
-    expect(updateCategoryService).toHaveBeenCalledWith(
-      "user-123",
-      "3fd12663-f4df-4fcf-a67a-83e3035338ca",
-      "UPDATEDMOCKCATEGORY",
-    );
-  });
-
-  it("should return 400 when id is not uuid", async () => {
-    const response = await request(app)
-      .patch("/finance/categories/123")
-      .send({ name: "TEST" });
-
-    expect(response.status).toBe(400);
-  });
-
-  it("should return 400 when name does not exist", async () => {
-    const response = await request(app).patch(
-      "/finance/categories/3fd12663-f4df-4fcf-a67a-83e3035338ca",
-    );
-
-    expect(response.status).toBe(400);
-  });
-
+      expect(response.status).toBe(400);
+    }));
   it("should return 400 when name is too short", async () => {
     const response = await request(app)
-      .patch("/finance/categories/3fd12663-f4df-4fcf-a67a-83e3035338ca")
+      .post("/finance/categories")
       .send({ name: "A" });
 
     expect(response.status).toBe(400);
   });
-
   it("should return 400 when name is too long", async () => {
-    const response = await request(app)
-      .patch("/finance/categories/3fd12663-f4df-4fcf-a67a-83e3035338ca")
-      .send({
-        name:
-          "DDLpTqRvWxYzAbCdEfGhIjKlMnOpQrStUvWxYzAbCdEfGhIjKlMnOpQrStUvWxYzAbCdEfGhIjKlMnOpQrStUvWxYzAbCdEfGhIjKlMnOpQrStUvWxYzAbCdE",
-      });
+    const response = await request(app).post("/finance/categories").send({
+      name: "DDLpTqRvWxYzAbCdEfGhIjKlMnOpQrStUvWxYzAbCdEfGhIjKlMnOpQrStUvWxYzAbCdEfGhIjKlMnOpQrStUvWxYzAbCdEfGhIjKlMnOpQrStUvWxYzAbCdE",
+    });
 
     expect(response.status).toBe(400);
   });
@@ -121,7 +102,7 @@ describe("update category integration test", () => {
     });
 
     const response = await request(app)
-      .patch("/finance/categories/3fd12663-f4df-4fcf-a67a-83e3035338ca")
+      .post("/finance/categories")
       .send({ name: "mockCategory" });
 
     expect(response.status).toBe(401);
@@ -131,44 +112,42 @@ describe("update category integration test", () => {
     requireAreaShouldFail = true;
 
     const response = await request(app)
-      .patch("/finance/categories/3fd12663-f4df-4fcf-a67a-83e3035338ca")
+      .post("/finance/categories")
       .send({ name: "mockCategory" });
 
     expect(response.status).toBe(403);
   });
 
-  it("should return 404 when user does not have an account", async () => {
+  it("should throw error 404 (NOT_FOUND) if user does not have an account", async () => {
     requireFinancialAccountShouldFail = true;
-
     const response = await request(app)
-      .patch("/finance/categories/3fd12663-f4df-4fcf-a67a-83e3035338ca")
+      .post("/finance/categories")
       .send({ name: "mockCategory" });
-
     expect(response.status).toBe(404);
     expect(response.body.error.message).toBe("User account not found");
   });
 
-  it("should return 409 when category already exists", async () => {
+  it("should throw error 409 (DUPLICATE_REGISTER) if category already exist", async () => {
     const duplicateError = new AppError(
       "DUPLICATE_REGISTER",
       "The user already registered this category",
       409,
     );
-
-    vi.mocked(updateCategoryService).mockRejectedValue(duplicateError);
-
+    vi.mocked(createCategoryService).mockRejectedValue(duplicateError);
     const response = await request(app)
-      .patch("/finance/categories/3fd12663-f4df-4fcf-a67a-83e3035338ca")
+      .post("/finance/categories")
       .send({ name: "mockCategory" });
-
     expect(response.status).toBe(409);
+    expect(response.body.error.message).toBe(
+      "The user already registered this category",
+    );
   });
 
   it("should return 500 when database fails", async () => {
-    vi.mocked(updateCategoryService).mockRejectedValue(new Error("DB error"));
+    vi.mocked(createCategoryService).mockRejectedValue(new Error("DB error"));
 
     const response = await request(app)
-      .patch("/finance/categories/3fd12663-f4df-4fcf-a67a-83e3035338ca")
+      .post("/finance/categories")
       .send({ name: "mockCategory" });
 
     expect(response.status).toBe(500);

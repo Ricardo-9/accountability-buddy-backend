@@ -15,7 +15,7 @@ export async function deleteCategoryController(
     const deletedCategory = await deleteCategoryService(userId, id);
     return successResponse(
       res,
-      deletedCategory,
+      {category:deletedCategory},
       "Financial Category sucessfully deleted",
     );
   } catch (err) {

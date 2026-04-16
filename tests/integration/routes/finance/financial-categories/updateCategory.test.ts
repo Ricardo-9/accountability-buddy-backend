@@ -147,6 +147,19 @@ describe("update category integration test", () => {
     expect(response.body.error.message).toBe("User account not found");
   });
 
+  it("should return 404 when category not found", async () => {
+    vi.mocked(updateCategoryService).mockRejectedValue(
+      new AppError("NOT_FOUND", "category not found", 404),
+    );
+
+    const response = await request(app)
+      .patch("/finance/categories/3fd12663-f4df-4fcf-a67a-83e3035338ca")
+      .send({ name: "updatedMockCategory" });
+
+    expect(response.status).toBe(404);
+    expect(response.body.error.message).toBe("category not found");
+  });
+
   it("should throw error 409 (DUPLICATE_REGISTER) if category name is already registered", async () => {
     const duplicateError = new AppError(
       "DUPLICATE_REGISTER",

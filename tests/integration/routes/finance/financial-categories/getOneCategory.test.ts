@@ -114,6 +114,18 @@ describe("get one category integration test", () => {
     expect(response.body.error.message).toBe("User account not found");
   });
 
+  it("should return 404 when category not found", async () => {
+  vi.mocked(getOneCategoryService).mockRejectedValue(
+    new AppError("NOT_FOUND", "category not found", 404)
+  )
+
+  const response = await request(app)
+    .get("/finance/categories/3fd12663-f4df-4fcf-a67a-83e3035338ca")
+
+  expect(response.status).toBe(404)
+  expect(response.body.error.message).toBe("category not found");
+})
+
   it("should return 500 when database fails", async () => {
     vi.mocked(getOneCategoryService).mockRejectedValue(new Error("DB error"));
 
