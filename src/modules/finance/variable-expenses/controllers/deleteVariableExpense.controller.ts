@@ -11,9 +11,9 @@ export async function deleteVariableExpenseController(
   const userId = req.user!.id;
   const { id } = req.params;
   try {
-    await deleteVariableExpenseService(userId, id);
+    const deletedExpense = await deleteVariableExpenseService(userId, id);
 
-    return successResponse(res, null, "sucessfuly deleted");
+    return successResponse(res, {variableExpense:deletedExpense}, "sucessfuly deleted");
   } catch (err) {
     next(err);
   }

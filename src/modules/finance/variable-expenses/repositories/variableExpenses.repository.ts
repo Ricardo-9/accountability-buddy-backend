@@ -3,37 +3,69 @@ import { CreateVariableExpenseType } from "../schemas/createVariableExpense.sche
 import { adjustBalanceWithTx } from "../../shared/helpers/adjustBalanceWithTx.helper.js";
 import { Prisma } from "@prisma/client";
 import { updateVariableExpenseType } from "../schemas/updateVariableExpense.schema.js";
-import { GetVariableExpensesQueryType } from "../schemas/getVariableExpenses.schema.js";
 
 export const variableExpenseRepository = {
   async findOneById(userId: string, expenseId: string) {
     return prisma.variableExpense.findUnique({
       where: { id: expenseId, userId, deletedAt: null },
+      select: {
+        id: true,
+        name: true,
+        amount: true,
+        expenseDate: true,
+        updatedAt: true,
+        category: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
     });
   },
 
-  async findManyById(userId: string, filters: GetVariableExpensesQueryType) {
+  async findManyById(
+    userId: string,
+    startDate?: Date,
+    endDate?: Date,
+    categoryId?: string,
+    limit = 10,
+    cursor?: string,
+  ) {
     return prisma.variableExpense.findMany({
       where: {
         userId,
-        ...((filters.startDate || filters.endDate) && {
+        ...((startDate || endDate) && {
           expenseDate: {
-            ...(filters.startDate && { gte: filters.startDate }),
-            ...(filters.endDate && { gte: filters.endDate }),
+            ...(startDate && { gte: startDate }),
+            ...(endDate && { lte: endDate }),
           },
         }),
-        ...(filters.categoryId && { categoryId: filters.categoryId }),
+        ...(categoryId && { categoryId: categoryId }),
         deletedAt: null,
       },
-      orderBy: { expenseDate: "desc" },
+      select: {
+        id: true,
+        name: true,
+        amount: true,
+        expenseDate: true,
+        updatedAt: true,
+        category: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+      orderBy: [{ expenseDate: "desc" }, { id:"desc" }],
+      take: limit + 1,
+      ...(cursor && {
+        skip: 1,
+        cursor: { id: cursor },
+      }),
     });
   },
 
-  async findByCategorie(userId: string, categoryId: string) {
-    return prisma.variableExpense.findMany({
-      where: { userId, categoryId, deletedAt: null },
-    });
-  },
 
   async create(userId: string, data: CreateVariableExpenseType) {
     return await prisma.$transaction(async (tx) => {
@@ -44,6 +76,19 @@ export const variableExpenseRepository = {
           name: data.name,
           amount: new Prisma.Decimal(data.amount),
           expenseDate: data.expenseDate,
+        },
+        select: {
+          id: true,
+          name: true,
+          amount: true,
+          expenseDate: true,
+          updatedAt: true,
+          category: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
         },
       });
 
@@ -81,6 +126,19 @@ export const variableExpenseRepository = {
             categoryId: data.categoryId ?? null,
           },
         ),
+        select: {
+          id: true,
+          name: true,
+          amount: true,
+          expenseDate: true,
+          updatedAt: true,
+          category: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
       });
 
       if (amountToAdjust !== undefined) {
@@ -102,6 +160,19 @@ export const variableExpenseRepository = {
       const deleted = await tx.variableExpense.update({
         where: { id: expenseId, userId, deletedAt: null },
         data: { deletedAt: new Date() },
+        select: {
+          id: true,
+          name: true,
+          amount: true,
+          expenseDate: true,
+          deletedAt: true,
+          category: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
       });
 
       await adjustBalanceWithTx({

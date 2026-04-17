@@ -5,7 +5,7 @@ import { AppError } from "../../../../core/errors/AppError.js";
 export async function fetchExpense(
   userId: string,
   expenseId: string,
-): Promise<VariableExpense> {
+) {
   const expense = await variableExpenseRepository.findOneById(
     userId,
     expenseId,

@@ -4,17 +4,32 @@ import { GetVariableExpensesQueryType } from "../schemas/getVariableExpenses.sch
 import { Request, Response, NextFunction } from "express";
 
 export async function getVariableExpensesController(
-  req: Request<any, any, any, GetVariableExpensesQueryType>,
+  req: Request,
   res: Response,
   next: NextFunction,
 ) {
   const userId = req.user!.id;
-  const filters = req.query;
+  const { startDate, endDate, categoryId, limit, cursor } = req.query as unknown as GetVariableExpensesQueryType;
 
   try {
-    const variableExpenses = await getVariableExpensesService(userId, filters);
+    const variableExpenses = await getVariableExpensesService(
+      userId,
+      startDate,
+      endDate,
+      categoryId,
+      limit,
+      cursor,
+    );
 
-    return successResponse(res, { variableExpenses: variableExpenses });
+    const hasNextPage = variableExpenses.length > limit;
+    const data = hasNextPage ? variableExpenses.slice(0, -1) : variableExpenses;
+
+    const nextCursor = hasNextPage ? data.at(-1)?.id : null;
+
+    return successResponse(res, {
+      variableExpenses: data,
+      nextCursor,
+    });
   } catch (err) {
     next(err);
   }
