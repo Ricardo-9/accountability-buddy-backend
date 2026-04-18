@@ -13,6 +13,7 @@ import { updateVariableExpenseController } from "./controllers/updateVariableExp
 import { createVariableExpenseController } from "./controllers/createVariableExpense.controller.js";
 import { getVariableExpensesController } from "./controllers/getVariableExpenses.controller.js";
 import { getOneVariableExpenseController } from "./controllers/getOneVariableExpense.controller.js";
+import { requireFinancialAccount } from "../middlewares/requireFinancialAccount.js";
 
 const router = Router();
 
@@ -20,6 +21,7 @@ router.get(
   "/variable-expense/:id",
   authenticate,
   requireArea(AccountabilityArea.FINANCES),
+  requireFinancialAccount,
   validateRequest(getVariableExpenseSchema),
   getOneVariableExpenseController,
 );
@@ -28,6 +30,7 @@ router.get(
   "/variable-expense",
   authenticate,
   requireArea(AccountabilityArea.FINANCES),
+  requireFinancialAccount,
   validateRequest(getVariableExpensesSchema),
   getVariableExpensesController,
 );
@@ -36,6 +39,7 @@ router.post(
   "/variable-expense",
   authenticate,
   requireArea(AccountabilityArea.FINANCES),
+  requireFinancialAccount,
   validateRequest(createVariableExpenseSchema),
   createVariableExpenseController,
 );
@@ -44,6 +48,7 @@ router.patch(
   "/variable-expense/:id",
   authenticate,
   requireArea(AccountabilityArea.FINANCES),
+  requireFinancialAccount,
   validateRequest(updateVariableExpenseSchema),
   updateVariableExpenseController,
 );
@@ -52,6 +57,7 @@ router.delete(
   "/variable-expense/:id",
   authenticate,
   requireArea(AccountabilityArea.FINANCES),
+  requireFinancialAccount,
   validateRequest(deleteVariableExpenseSchema),
   deleteVariableExpenseController,
 );
