@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import { variableExpenseRepository } from "../../../../../src/modules/finance/repositories/variableExpenses.repository";
+import { variableExpenseRepository } from "../../../../../../src/modules/finance/repositories/variableExpenses.repository";
 import { variableExpenseService } from "../../../../../src/modules/finance/services/variableExpenses.service";
 import { Prisma } from "@prisma/client";
 

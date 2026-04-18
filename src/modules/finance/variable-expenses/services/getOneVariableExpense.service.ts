@@ -1,4 +1,3 @@
-import { Prisma } from "@prisma/client";
 import { fetchExpense } from "../helpers/fetchVariableExpense.helper.js";
 
 export async function getOneVariableExpenseService(
