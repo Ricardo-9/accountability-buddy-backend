@@ -11,6 +11,7 @@ const envSchema = z.object({
     .default("development"),
   SUPABASE_URL: z.url(),
   SUPABASE_KEY: z.string(),
+  SUPABASE_SERVICE_ROLE_KEY: z.string()
 });
 
 export const config = envSchema.parse(process.env);
