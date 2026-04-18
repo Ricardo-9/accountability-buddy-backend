@@ -4,6 +4,7 @@ import { Prisma } from "@prisma/client";
 import { deleteVariableExpenseService } from "../../../../../src/modules/finance/variable-expenses/services/deleteVariableExpense.service";
 import { fetchExpense } from "../../../../../src/modules/finance/variable-expenses/helpers/fetchVariableExpense.helper";
 import { AppError } from "../../../../../src/core/errors/AppError";
+
 const mockVariableExpense = {
   id: "expenseId",
   name: "expense",
