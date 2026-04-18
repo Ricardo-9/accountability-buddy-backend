@@ -3,7 +3,7 @@ import { Prisma } from "@prisma/client";
 import { fetchExpense } from "../../../../../src/modules/finance/variable-expenses/helpers/fetchVariableExpense.helper";
 import { getOneVariableExpenseService } from "../../../../../src/modules/finance/variable-expenses/services/getOneVariableExpense.service";
 import { AppError } from "../../../../../src/core/errors/AppError";
-
+import { variableExpenseRepository } from "../../../../../src/modules/finance/variable-expenses/repositories/variableExpenses.repository";
 const mockVariableExpense = {
   id: "expenseId",
   name: "expense",
@@ -52,5 +52,14 @@ describe("get one variable expense service test", () => {
       statusCode: 404,
       message: "variable expense not found",
     });
+  });
+  it("should propagate repository errors", async () => {
+    const error = new Error("Database failed");
+
+    vi.mocked(fetchExpense).mockRejectedValue(error);
+
+    await expect(
+      getOneVariableExpenseService("user-123", "expenseId"),
+    ).rejects.toThrow("Database failed");
   });
 });

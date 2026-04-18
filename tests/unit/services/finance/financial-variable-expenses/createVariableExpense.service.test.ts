@@ -1,7 +1,6 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { Prisma } from "@prisma/client";
 import { createVariableExpenseService } from "../../../../../src/modules/finance/variable-expenses/services/createVariableExpense.service";
-import { AppError } from "../../../../../src/core/errors/AppError";
 import { variableExpenseRepository } from "../../../../../src/modules/finance/variable-expenses/repositories/variableExpenses.repository";
 
 const mockVariableExpense = {
@@ -37,17 +36,13 @@ describe("create variable expense service test", () => {
     expect(result).toEqual(mockVariableExpense);
   });
 
-
   it("should throw INVALID_REFERENCE when category is not found", async () => {
-    const invalidReferenceError = new AppError(
-      "INVALID_REFERENCE",
-      "Category not found",
-      404,
+    const prismaError = new Prisma.PrismaClientKnownRequestError(
+      "Foreign key",
+      { code: "P2003", clientVersion: "test" },
     );
 
-    vi.mocked(variableExpenseRepository.create).mockRejectedValue(
-      invalidReferenceError,
-    );
+    vi.mocked(variableExpenseRepository.create).mockRejectedValue(prismaError);
 
     await expect(
       createVariableExpenseService("userId", {
@@ -57,8 +52,8 @@ describe("create variable expense service test", () => {
       }),
     ).rejects.toMatchObject({
       code: "INVALID_REFERENCE",
+      message: "Category not found",
       statusCode: 404,
     });
   });
-
 });
