@@ -95,7 +95,7 @@ describe("delete category integration test", () => {
 
     const response = await request(app)
       .delete("/finance/categories/3fd12663-f4df-4fcf-a67a-83e3035338ca")
-      .send({ name: "mockCategory" });
+      
 
     expect(response.status).toBe(401);
   });
@@ -105,7 +105,7 @@ describe("delete category integration test", () => {
 
     const response = await request(app)
       .delete("/finance/categories/3fd12663-f4df-4fcf-a67a-83e3035338ca")
-      .send({ name: "mockCategory" });
+      
 
     expect(response.status).toBe(403);
   });
@@ -114,7 +114,7 @@ describe("delete category integration test", () => {
     requireFinancialAccountShouldFail = true;
     const response = await request(app)
       .delete("/finance/categories/3fd12663-f4df-4fcf-a67a-83e3035338ca")
-      .send({ name: "mockCategory" });
+      
     expect(response.status).toBe(404);
     expect(response.body.error.message).toBe("User account not found");
   });
@@ -136,7 +136,7 @@ describe("delete category integration test", () => {
 
     const response = await request(app)
       .delete("/finance/categories/3fd12663-f4df-4fcf-a67a-83e3035338ca")
-      .send({ name: "mockCategory" });
+      
 
     expect(response.status).toBe(500);
   });

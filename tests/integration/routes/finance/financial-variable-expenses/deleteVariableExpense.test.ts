@@ -4,6 +4,9 @@ import app from "../../../../../src/app.js";
 import { AppError } from "../../../../../src/core/errors/AppError.js";
 import { authenticate } from "../../../../../src/middlewares/authMiddleware.js";
 import { Prisma } from "@prisma/client";
+import { deleteVariableExpenseSchema } from "../../../../../src/modules/finance/variable-expenses/schemas/deleteVariableExpense.schema.js";
+import { deleteVariableExpenseService } from "../../../../../src/modules/finance/variable-expenses/services/deleteVariableExpense.service.js";
+import { fetchExpense } from "../../../../../src/modules/finance/variable-expenses/helpers/fetchVariableExpense.helper.js";
 
 const mockExpenseDb = {
   id: "3fd12663-f4df-4fcf-a67a-83e3035338ca",
@@ -11,22 +14,21 @@ const mockExpenseDb = {
   name: "Random Expense",
   amount: new Prisma.Decimal(234.45),
   expenseDate: new Date("2025-04-01T00:00:00.000Z"),
-  updatedAt: new Date("2024-01-01T00:00:00.000Z"),
+  deletedAt: new Date("2024-01-01T00:00:00.000Z"),
 };
 
 const mockExpenseResponse = {
   ...mockExpenseDb,
   amount: "234.45",
   expenseDate: mockExpenseDb.expenseDate.toISOString(),
-  updatedAt: mockExpenseDb.updatedAt.toISOString(),
+  deletedAt: mockExpenseDb.deletedAt.toISOString(),
 };
-
 
 let requireAreaShouldFail = false;
 let requireFinancialAccountShouldFail = false;
 
 vi.mock(
-  "../../../../../src/modules/finance/financial-categories/services/getOneCategory.service.js",
+  "../../../../../src/modules/finance/variable-expenses/services/deleteVariableExpense.service.js",
 );
 
 vi.mock("../../../../../src/middlewares/authMiddleware.js", () => ({
@@ -68,4 +70,86 @@ beforeEach(() => {
 
   requireAreaShouldFail = false;
   requireFinancialAccountShouldFail = false;
+});
+
+describe("delete variable expense integration test", () => {
+  it("should delete variable expense successfully", async () => {
+    vi.mocked(deleteVariableExpenseService).mockResolvedValue(mockExpenseDb);
+
+    const response = await request(app).delete(
+      "/finance/variable-expense/3fd12663-f4df-4fcf-a67a-83e3035338ca",
+    );
+
+    expect(response.body.data).toEqual({
+      variableExpense: mockExpenseResponse,
+    });
+
+    expect(response.status).toBe(200);
+
+    expect(deleteVariableExpenseService).toHaveBeenCalledWith(
+      "user-123",
+      "3fd12663-f4df-4fcf-a67a-83e3035338ca",
+    );
+  });
+  it("should return 400 when id is not uuid", async () => {
+    const response = await request(app).delete("/finance/variable-expense/123");
+
+    expect(response.status).toBe(400);
+  });
+
+  it("should return 401 when user is not authenticated", async () => {
+    vi.mocked(authenticate).mockImplementationOnce(async (_req, _res, next) => {
+      next(new AppError("UNAUTHORIZED", "Invalid or expired token", 401));
+    });
+
+    const response = await request(app).delete(
+      "/finance/variable-expense/3fd12663-f4df-4fcf-a67a-83e3035338ca",
+    );
+
+    expect(response.status).toBe(401);
+  });
+
+  it("should return 403 when user does not have area permission", async () => {
+    requireAreaShouldFail = true;
+
+    const response = await request(app).delete(
+      "/finance/variable-expense/3fd12663-f4df-4fcf-a67a-83e3035338ca",
+    );
+
+    expect(response.status).toBe(403);
+  });
+
+  it("should throw error 404 (NOT_FOUND) if user does not have an account", async () => {
+    requireFinancialAccountShouldFail = true;
+    const response = await request(app).delete(
+      "/finance/variable-expense/3fd12663-f4df-4fcf-a67a-83e3035338ca",
+    );
+    expect(response.status).toBe(404);
+    expect(response.body.error.message).toBe("User account not found");
+  });
+
+  it("should return 404 when variable expense not found", async () => {
+    vi.mocked(deleteVariableExpenseService).mockRejectedValue(
+      new AppError("NOT_FOUND", "variable expense not found", 404),
+    );
+
+    const response = await request(app).delete(
+      "/finance/variable-expense/3fd12663-f4df-4fcf-a67a-83e3035338ca",
+    );
+
+    expect(response.status).toBe(404);
+    expect(response.body.error.message).toBe("variable expense not found");
+  });
+
+  it("should return 500 when database fails", async () => {
+    vi.mocked(deleteVariableExpenseService).mockRejectedValue(
+      new Error("DB error"),
+    );
+
+    const response = await request(app).delete(
+      "/finance/variable-expense/3fd12663-f4df-4fcf-a67a-83e3035338ca",
+    );
+
+    expect(response.status).toBe(500);
+  });
 });
