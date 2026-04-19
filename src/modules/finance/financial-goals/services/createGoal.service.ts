@@ -1,7 +1,8 @@
 import { DurationUnit, InvestorStyle, Prisma } from "@prisma/client";
 import { prisma } from "../../../../lib/prisma.js";
-import { AppError } from "../../../../core/errors/AppError.js";
 import { adjustBalanceWithTx } from "../../shared/helpers/adjustBalanceWithTx.helper.js";
+import { financialGoalsRepository } from "../repositories/financialGoals.repository.js";
+import { ensureCategoryExists } from "../../shared/helpers/ensureCategoryExists.helper.js";
 
 export async function createGoalService(
   userId: string,
@@ -13,42 +14,19 @@ export async function createGoalService(
   style: InvestorStyle,
   categoryId: string | null,
 ) {
-  return await prisma.$transaction(async (tx) => {
-    const decimalTarget = new Prisma.Decimal(target);
-    const decimalAmount = new Prisma.Decimal(initialAmount);
+  return prisma.$transaction(async (tx) => {
+    await ensureCategoryExists(tx, userId, categoryId)
 
-    if (categoryId) {
-      const category = await tx.financialCategory.findFirst({
-        where: { id: categoryId, userId },
-      });
-
-      if (!category) throw new AppError("NOT_FOUND", "Category not found", 404);
-    }
-
-    const goal = await tx.financialGoal.create({
-      data: {
-        userId,
-        name,
-        target: decimalTarget,
-        initialAmount: decimalAmount,
-        durationValue,
-        durationUnit,
-        style,
-        categoryId,
-      },
-      select: {
-        id: true,
-        userId: true,
-        name: true,
-        target: true,
-        initialAmount: true,
-        durationValue: true,
-        durationUnit: true,
-        style: true,
-        categoryId: true,
-        createdAt: true,
-      },
-    });
+    const goal = await financialGoalsRepository.createGoal(tx, {
+      userId,
+      name,
+      target,
+      initialAmount,
+      durationValue,
+      durationUnit,
+      style,
+      categoryId
+    })
 
     const newBalance = await adjustBalanceWithTx({
       tx,
