@@ -1,5 +1,6 @@
-import { AppError } from "../../../../core/errors/AppError.js";
 import { prisma } from "../../../../lib/prisma.js";
+import { ensureCategoryExists } from "../../shared/helpers/ensureCategoryExists.helper.js";
+import { financialGoalsRepository } from "../repositories/financialGoals.repository.js";
 
 export async function getGoalsService(
   userId: string,
@@ -7,41 +8,22 @@ export async function getGoalsService(
   limit = 10,
   cursor?: string,
 ) {
-  if (categoryId) {
-    const category = await prisma.financialCategory.findFirst({
-      where: { id: categoryId, userId },
-      select: { id: true },
-    });
+    await ensureCategoryExists(prisma, userId, categoryId)
 
-    if (!category) throw new AppError("NOT_FOUND", "Category not found", 404);
-  }
-
-  const goals = await prisma.financialGoal.findMany({
-    where: {
+    const goals = await financialGoalsRepository.getGoals(
       userId,
-      deletedAt: null,
-      ...(categoryId && { categoryId }),
-    },
-    select: {
-      id: true,
-      userId: true,
-      categoryId: true,
-      name: true,
-      target: true,
-      initialAmount: true,
-      durationValue: true,
-      durationUnit: true,
-      style: true,
-      createdAt: true,
-      updatedAt: true,
-    },
-    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
-    take: limit + 1,
-    ...(cursor && {
-      skip: 1,
-      cursor: { id: cursor },
-    }),
-  });
+      categoryId,
+      limit,
+      cursor
+    )
 
-  return goals;
+    const hasNextPage = goals.length > limit;
+    const data = hasNextPage ? goals.slice(0, -1) : goals;
+
+    const nextCursor = hasNextPage ? data.at(-1)?.id : null;
+
+    return {
+      data,
+      nextCursor
+    };
 }

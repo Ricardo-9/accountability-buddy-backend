@@ -1,8 +1,8 @@
-import { Prisma } from "@prisma/client";
+import { Prisma, PrismaClient } from "@prisma/client";
 import { AppError } from "../../../../core/errors/AppError.js";
 
 export async function ensureCategoryExists(
-    tx: Prisma.TransactionClient,
+    tx: Prisma.TransactionClient | PrismaClient,
     userId: string,
     categoryId: string | null
 ) {
