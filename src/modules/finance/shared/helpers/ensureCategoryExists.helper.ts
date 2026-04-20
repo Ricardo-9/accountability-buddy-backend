@@ -9,7 +9,7 @@ export async function ensureCategoryExists(
     if (!categoryId) return
 
     const category = await tx.financialCategory.findFirst({
-        where: { id: categoryId, userId },
+        where: { id: categoryId, userId, deletedAt: null },
         select: { id: true }
     })
 
