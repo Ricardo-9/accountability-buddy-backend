@@ -2,6 +2,8 @@ import { DurationUnit, InvestorStyle, Prisma } from "@prisma/client";
 import { prisma } from "../../../../lib/prisma.js";
 import { AppError } from "../../../../core/errors/AppError.js";
 import { adjustBalanceWithTx } from "../../shared/helpers/adjustBalanceWithTx.helper.js";
+import { ensureCategoryExists } from "../../shared/helpers/ensureCategoryExists.helper.js";
+import { financialGoalsRepository } from "../repositories/financialGoals.repository.js";
 
 export async function updateGoalService(
   id: string,
@@ -15,32 +17,17 @@ export async function updateGoalService(
   style?: InvestorStyle,
 ) {
   return await prisma.$transaction(async (tx) => {
-    const existingGoal = await tx.financialGoal.findUnique({
-      where: { id, userId, deletedAt: null },
-      select: {
-        target: true,
-        initialAmount: true,
-      },
-    });
+    if (categoryId !== undefined) await ensureCategoryExists(tx, userId, categoryId)
+
+    const existingGoal = await financialGoalsRepository.getGoalTargetAndAmount(tx, id, userId)
 
     if (!existingGoal)
       throw new AppError("NOT_FOUND", "Financial goal not found", 404);
 
-    if (categoryId) {
-      const category = await tx.financialCategory.findUnique({
-        where: { id: categoryId, userId },
-        select: { id: true },
-      });
-
-      if (!category) throw new AppError("NOT_FOUND", "Category not found", 404);
-    }
-
     const finalTarget =
       target !== undefined ? new Prisma.Decimal(target) : existingGoal.target;
     const finalAmount =
-      initialAmount !== undefined
-        ? new Prisma.Decimal(initialAmount)
-        : existingGoal.initialAmount;
+      initialAmount !== undefined ? new Prisma.Decimal(initialAmount) : existingGoal.initialAmount;
 
     if (finalAmount.gt(finalTarget))
       throw new AppError(
@@ -48,18 +35,18 @@ export async function updateGoalService(
         "Initial amount cannot be greater than target",
       );
 
-    const updatedGoal = await tx.financialGoal.update({
-      where: { id, userId },
-      data: {
-        ...(categoryId !== undefined && { categoryId }),
-        ...(name !== undefined && { name }),
-        ...(target !== undefined && { target: finalTarget }),
-        ...(initialAmount !== undefined && { initialAmount: finalAmount }),
-        ...(durationValue !== undefined && { durationValue }),
-        ...(durationUnit !== undefined && { durationUnit }),
-        ...(style !== undefined && { style }),
-      },
-    });
+    const updatedGoal = await financialGoalsRepository.updateGoal(
+      tx,
+      id,
+      userId,
+      finalTarget,
+      finalAmount,
+      categoryId,
+      name,
+      durationValue,
+      durationUnit,
+      style
+    )
 
     let updatedBalance;
 

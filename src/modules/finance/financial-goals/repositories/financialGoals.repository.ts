@@ -68,5 +68,45 @@ export const financialGoalsRepository = {
                 cursor: { id: cursor }
             })
         })
+    },
+
+    async getGoalTargetAndAmount(
+        tx: Prisma.TransactionClient,
+        goalId: string,
+        userId: string
+    ) {
+        return await tx.financialGoal.findUnique({
+            where: { id: goalId, userId, deletedAt: null },
+            select: {
+                target: true,
+                initialAmount: true
+            }
+        })
+    },
+
+    async updateGoal(
+        tx: Prisma.TransactionClient,
+        goalId: string,
+        userId: string,
+        target: Prisma.Decimal,
+        initialAmount: Prisma.Decimal,
+        categoryId?: string | null,
+        name?: string,
+        durationValue?: number,
+        durationUnit?: DurationUnit,
+        style?: InvestorStyle,
+    ) {
+        return await tx.financialGoal.update({
+            where: { id: goalId, userId, deletedAt: null },
+            data: {
+                target,
+                initialAmount,
+                ...(categoryId !== undefined && { categoryId }),
+                ...(name !== undefined && { name }),
+                ...(durationValue !== undefined && { durationValue }),
+                ...(durationUnit !== undefined && { durationUnit }),
+                ...(style !== undefined && { style }),
+            }
+        })
     }
 }
