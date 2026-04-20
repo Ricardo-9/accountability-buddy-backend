@@ -19,7 +19,7 @@ export async function updateGoalService(
   return await prisma.$transaction(async (tx) => {
     if (categoryId !== undefined) await ensureCategoryExists(tx, userId, categoryId)
 
-    const existingGoal = await financialGoalsRepository.getGoalTargetAndAmount(tx, id, userId)
+    const existingGoal = await financialGoalsRepository.getUniqueGoal(tx, id, userId, { target: true, initialAmount: true })
 
     if (!existingGoal)
       throw new AppError("NOT_FOUND", "Financial goal not found", 404);

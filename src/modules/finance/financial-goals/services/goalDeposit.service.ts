@@ -1,7 +1,7 @@
-import { Prisma } from "@prisma/client";
 import { AppError } from "../../../../core/errors/AppError.js";
 import { prisma } from "../../../../lib/prisma.js";
 import { adjustBalanceWithTx } from "../../shared/helpers/adjustBalanceWithTx.helper.js";
+import { financialGoalsRepository } from "../repositories/financialGoals.repository.js";
 
 export async function goalDepositService(
   id: string,
@@ -9,21 +9,11 @@ export async function goalDepositService(
   amount: number,
 ) {
   return await prisma.$transaction(async (tx) => {
-    const decimalAmount = new Prisma.Decimal(amount);
-
-    const goal = await tx.financialGoal.findUnique({
-      where: { id, userId, deletedAt: null },
-      select: { id: true },
-    });
+    const goal = await financialGoalsRepository.getUniqueGoal(tx, id, userId, { id: true })
 
     if (!goal) throw new AppError("NOT_FOUND", "Financial goal not found", 404);
 
-    const deposit = await tx.goalDeposit.create({
-      data: {
-        goalId: id,
-        amount: decimalAmount,
-      },
-    });
+    const deposit = await financialGoalsRepository.createDeposit(tx, id, amount)
 
     const updatedBalance = await adjustBalanceWithTx({
       tx,
@@ -33,21 +23,13 @@ export async function goalDepositService(
       reason: "GOAL_DEPOSIT",
     });
 
-    const lastSnapshot = await tx.goalProgressSnapshot.findFirst({
-      where: { goalId: id },
-      orderBy: { createdAt: "desc" },
-    });
+    const latestSnapshot = await financialGoalsRepository.getLatestSnapshot(tx, id)
 
-    const newTotal = lastSnapshot
-      ? lastSnapshot.totalDeposited.plus(decimalAmount)
-      : decimalAmount;
+    const newTotal = latestSnapshot
+      ? latestSnapshot.totalDeposited.plus(deposit.amount)
+      : deposit.amount;
 
-    await tx.goalProgressSnapshot.create({
-      data: {
-        goalId: id,
-        totalDeposited: newTotal,
-      },
-    });
+    await financialGoalsRepository.createSnapshot(tx, id, newTotal)
 
     return {
       deposit,

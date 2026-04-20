@@ -70,17 +70,15 @@ export const financialGoalsRepository = {
         })
     },
 
-    async getGoalTargetAndAmount(
+    async getUniqueGoal<T extends Prisma.FinancialGoalSelect>(
         tx: Prisma.TransactionClient,
         goalId: string,
-        userId: string
+        userId: string,
+        select: T
     ) {
         return await tx.financialGoal.findUnique({
             where: { id: goalId, userId, deletedAt: null },
-            select: {
-                target: true,
-                initialAmount: true
-            }
+            select
         })
     },
 
@@ -106,6 +104,49 @@ export const financialGoalsRepository = {
                 ...(durationValue !== undefined && { durationValue }),
                 ...(durationUnit !== undefined && { durationUnit }),
                 ...(style !== undefined && { style }),
+            }
+        })
+    },
+
+    async createDeposit(
+        tx: Prisma.TransactionClient,
+        goalId: string,
+        amount: number
+    ) {
+        return await tx.goalDeposit.create({
+            data: {
+                goalId,
+                amount: new Prisma.Decimal(amount)
+            },
+            select: {
+                id: true,
+                goalId: true,
+                amount: true,
+                createdAt: true
+            }
+        })
+    },
+
+    async getLatestSnapshot(
+        tx: Prisma.TransactionClient,
+        goalId: string
+    ) {
+        return await tx.goalProgressSnapshot.findFirst({
+            where: { goalId },
+            orderBy: { createdAt: "desc" },
+            select: { totalDeposited: true }
+        })
+    },
+
+    async createSnapshot(
+        tx: Prisma.TransactionClient,
+        goalId: string,
+        totalDeposited: Prisma.Decimal
+    ) {
+        await tx.goalProgressSnapshot.create({
+            data: {
+                goalId,
+                totalDeposited
             }
         })
     }
