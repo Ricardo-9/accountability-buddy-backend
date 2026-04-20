@@ -1,21 +1,15 @@
 import { AppError } from "../../../../core/errors/AppError.js";
 import { prisma } from "../../../../lib/prisma.js";
 import { adjustBalanceWithTx } from "../../shared/helpers/adjustBalanceWithTx.helper.js";
+import { financialGoalsRepository } from "../repositories/financialGoals.repository.js";
 
 export async function deleteGoalService(id: string, userId: string) {
   return await prisma.$transaction(async (tx) => {
-    const goal = await tx.financialGoal.findUnique({
-      where: { id, userId, deletedAt: null },
-      select: { initialAmount: true },
-    });
+    const goal = await financialGoalsRepository.getUniqueGoal(tx, id, userId, { initialAmount: true })
 
     if (!goal) throw new AppError("NOT_FOUND", "Financial goal not found", 404);
 
-    const deposit = await tx.goalProgressSnapshot.findFirst({
-      where: { goalId: id },
-      orderBy: { createdAt: "desc" },
-      select: { totalDeposited: true },
-    });
+    const deposit = await financialGoalsRepository.getLatestSnapshot(tx, id)
 
     const refundedAmount = goal.initialAmount.plus(
       deposit?.totalDeposited ?? 0,
@@ -29,12 +23,7 @@ export async function deleteGoalService(id: string, userId: string) {
       reason: "GOAL_DELETED",
     });
 
-    await tx.financialGoal.update({
-      where: { id, userId, deletedAt: null },
-      data: {
-        deletedAt: new Date(),
-      },
-    });
+    await financialGoalsRepository.deleteGoal(tx, id, userId)
 
     return {
       refundedAmount,

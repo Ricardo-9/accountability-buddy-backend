@@ -108,6 +108,19 @@ export const financialGoalsRepository = {
         })
     },
 
+    async deleteGoal(
+        tx: Prisma.TransactionClient,
+        goalId: string,
+        userId: string,
+    ) {
+        await tx.financialGoal.update({
+            where: { id: goalId, userId, deletedAt: null },
+            data: {
+                deletedAt: new Date()
+            }
+        })
+    },
+
     async createDeposit(
         tx: Prisma.TransactionClient,
         goalId: string,
