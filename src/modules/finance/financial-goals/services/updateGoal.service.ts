@@ -35,17 +35,21 @@ export async function updateGoalService(
         "Initial amount cannot be greater than target",
       );
 
+    const data = {
+      target: finalTarget,
+      initialAmount: finalAmount,
+      ...(categoryId !== undefined && { categoryId }),
+      ...(name !== undefined && { name }),
+      ...(durationValue !== undefined && { durationValue }),
+      ...(durationUnit !== undefined && { durationUnit }),
+      ...(style !== undefined && { style })
+    }
+
     const updatedGoal = await financialGoalsRepository.updateGoal(
       tx,
       id,
       userId,
-      finalTarget,
-      finalAmount,
-      categoryId,
-      name,
-      durationValue,
-      durationUnit,
-      style
+      data
     )
 
     let updatedBalance;

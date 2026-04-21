@@ -1,6 +1,16 @@
 import { Prisma, DurationUnit, InvestorStyle } from "@prisma/client";
 import { prisma } from "../../../../lib/prisma.js";
 
+type UpdateGoalData = {
+    target: Prisma.Decimal,
+    initialAmount: Prisma.Decimal,
+    categoryId?: string | null,
+    name?: string,
+    durationValue?: number,
+    durationUnit?: DurationUnit,
+    style?: InvestorStyle
+}
+
 export const financialGoalsRepository = {
     async createGoal(tx: Prisma.TransactionClient, data: {
         userId: string,
@@ -86,24 +96,18 @@ export const financialGoalsRepository = {
         tx: Prisma.TransactionClient,
         goalId: string,
         userId: string,
-        target: Prisma.Decimal,
-        initialAmount: Prisma.Decimal,
-        categoryId?: string | null,
-        name?: string,
-        durationValue?: number,
-        durationUnit?: DurationUnit,
-        style?: InvestorStyle,
+        data: UpdateGoalData
     ) {
         return await tx.financialGoal.update({
             where: { id: goalId, userId, deletedAt: null },
             data: {
-                target,
-                initialAmount,
-                ...(categoryId !== undefined && { categoryId }),
-                ...(name !== undefined && { name }),
-                ...(durationValue !== undefined && { durationValue }),
-                ...(durationUnit !== undefined && { durationUnit }),
-                ...(style !== undefined && { style }),
+                target: data.target,
+                initialAmount: data.initialAmount,
+                ...(data.categoryId !== undefined && { categoryId: data.categoryId }),
+                ...(data.name !== undefined && { name: data.name }),
+                ...(data.durationValue !== undefined && { durationValue: data.durationValue }),
+                ...(data.durationUnit !== undefined && { durationUnit: data.durationUnit }),
+                ...(data.style !== undefined && { style: data.style }),
             }
         })
     },
