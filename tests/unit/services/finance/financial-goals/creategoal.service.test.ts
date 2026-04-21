@@ -1,33 +1,34 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { prisma } from "../../../../../src/lib/prisma";
-import { adjustBalanceWithTx } from "../../../../../src/modules/finance/helpers/adjustBalanceWithTx.helper";
-import { createGoalService } from "../../../../../src/modules/finance/services/creategoal.service";
+import { adjustBalanceWithTx } from "../../../../../src/modules/finance/shared/helpers/adjustBalanceWithTx.helper";
+import { createGoalService } from "../../../../../src/modules/finance/financial-goals/services/createGoal.service";
 import {
   DurationUnit,
   FinanceAccount,
   InvestorStyle,
   Prisma,
 } from "@prisma/client";
+import { financialGoalsRepository } from "../../../../../src/modules/finance/financial-goals/repositories/financialGoals.repository";
+import { ensureCategoryExists } from "../../../../../src/modules/finance/shared/helpers/ensureCategoryExists.helper";
+import { prisma } from "../../../../../src/lib/prisma";
 
 vi.mock("../../../../../src/lib/prisma", () => ({
   prisma: {
     $transaction: vi.fn(),
   },
 }));
+
+vi.mock("../../../../../src/modules/finance/financial-goals/repositories/financialGoals.repository")
+
 vi.mock(
-  "../../../../../src/modules/finance/helpers/adjustBalanceWithTx.helper",
+  "../../../../../src/modules/finance/shared/helpers/adjustBalanceWithTx.helper",
 );
 
+vi.mock("../../../../../src/modules/finance/shared/helpers/ensureCategoryExists.helper")
+
 const txMock = {
-  financeAccount: {
-    findUnique: vi.fn(),
-  },
-  financialCategory: {
-    findFirst: vi.fn(),
-  },
   financialGoal: {
     create: vi.fn(),
-  },
+  }
 };
 
 const adjustBalanceWithTxMock = vi.mocked(adjustBalanceWithTx);
@@ -51,15 +52,14 @@ describe("Create financial goal service test", () => {
     vi.mocked(prisma.$transaction).mockImplementation(async (fn) =>
       fn(txMock as any),
     );
-  });
-
-  it("should create goal with category and return goal data and new balance", async () => {
-    txMock.financeAccount.findUnique.mockResolvedValue({ userId: "userId" });
-    txMock.financialCategory.findFirst.mockResolvedValue({ id: "categoryId" });
-    txMock.financialGoal.create.mockResolvedValue(mockGoal);
+    vi.mocked(ensureCategoryExists).mockResolvedValue(undefined)
     adjustBalanceWithTxMock.mockResolvedValue({
       balance: new Prisma.Decimal(100),
     } as unknown as FinanceAccount);
+  });
+
+  it("should create goal with category and return goal data and new balance", async () => {
+    vi.mocked(financialGoalsRepository.createGoal).mockResolvedValue(mockGoal)
 
     const result = await createGoalService(
       "userId",
@@ -72,6 +72,8 @@ describe("Create financial goal service test", () => {
       "categoryId",
     );
 
+    expect(prisma.$transaction).toHaveBeenCalledWith(expect.any(Function))
+    expect(ensureCategoryExists).toHaveBeenCalledWith(txMock, "userId", "categoryId")
     expect(result).toEqual({
       goal: mockGoal,
       newBalance: new Prisma.Decimal(100),
@@ -79,14 +81,7 @@ describe("Create financial goal service test", () => {
   });
 
   it("should create goal without category and return goal data and new balance", async () => {
-    txMock.financeAccount.findUnique.mockResolvedValue({ userId: "userId" });
-    txMock.financialGoal.create.mockResolvedValue({
-      ...mockGoal,
-      categoryId: null,
-    });
-    adjustBalanceWithTxMock.mockResolvedValue({
-      balance: new Prisma.Decimal(100),
-    } as unknown as FinanceAccount);
+    vi.mocked(financialGoalsRepository.createGoal).mockResolvedValue({ ...mockGoal, categoryId: null })
 
     const result = await createGoalService(
       "userId",
@@ -99,42 +94,16 @@ describe("Create financial goal service test", () => {
       null,
     );
 
-    expect(txMock.financialCategory.findFirst).not.toHaveBeenCalled();
+    expect(prisma.$transaction).toHaveBeenCalledWith(expect.any(Function))
+    expect(ensureCategoryExists).toHaveBeenCalledWith(txMock, "userId", null)
     expect(result).toEqual({
       goal: { ...mockGoal, categoryId: null },
       newBalance: new Prisma.Decimal(100),
     });
   });
 
-  it("should throw an AppError when the provided category is not valid", async () => {
-    txMock.financeAccount.findUnique.mockResolvedValue({ userId: "userId" });
-    txMock.financialCategory.findFirst.mockResolvedValue(null);
-
-    await expect(
-      createGoalService(
-        "userId",
-        "goalName",
-        1000,
-        100,
-        12,
-        "MONTHS",
-        "LOW",
-        "invalidCategoryId",
-      ),
-    ).rejects.toMatchObject({
-      code: "NOT_FOUND",
-      statusCode: 404,
-      message: "Category not found",
-    });
-  });
-
-  it("should pass Decimal values to financialGoal.create", async () => {
-    txMock.financeAccount.findUnique.mockResolvedValue({ userId: "userId" });
-    txMock.financialCategory.findFirst.mockResolvedValue({ id: "categoryId" });
-    txMock.financialGoal.create.mockResolvedValue(mockGoal);
-    adjustBalanceWithTxMock.mockResolvedValue({
-      balance: new Prisma.Decimal(100),
-    } as unknown as FinanceAccount);
+  it("should call repository with correct params", async () => {
+    vi.mocked(financialGoalsRepository.createGoal).mockResolvedValue(mockGoal)
 
     await createGoalService(
       "userId",
@@ -147,23 +116,22 @@ describe("Create financial goal service test", () => {
       "categoryId",
     );
 
-    expect(txMock.financialGoal.create).toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: expect.objectContaining({
-          target: new Prisma.Decimal(1000),
-          initialAmount: new Prisma.Decimal(100),
-        }),
-      }),
-    );
-  });
+    expect(financialGoalsRepository.createGoal).toHaveBeenCalledWith(
+      txMock, {
+        userId: "userId",
+        name: "goalName",
+        target: 1000,
+        initialAmount: 100,
+        durationValue: 12,
+        durationUnit: "MONTHS",
+        style: "LOW",
+        categoryId: "categoryId"
+      }
+    )
+  })
 
   it("should call adjustBalanceWithTx with correct params", async () => {
-    txMock.financeAccount.findUnique.mockResolvedValue({ userId: "userId" });
-    txMock.financialCategory.findFirst.mockResolvedValue({ id: "categoryId" });
-    txMock.financialGoal.create.mockResolvedValue(mockGoal);
-    adjustBalanceWithTxMock.mockResolvedValue({
-      balance: new Prisma.Decimal(100),
-    } as unknown as FinanceAccount);
+    vi.mocked(financialGoalsRepository.createGoal).mockResolvedValue(mockGoal)
 
     await createGoalService(
       "userId",
@@ -185,48 +153,8 @@ describe("Create financial goal service test", () => {
     });
   });
 
-  it("should select the expected fields on goal creation", async () => {
-    txMock.financeAccount.findUnique.mockResolvedValue({ userId: "userId" });
-    txMock.financialCategory.findFirst.mockResolvedValue({ id: "categoryId" });
-    txMock.financialGoal.create.mockResolvedValue(mockGoal);
-    adjustBalanceWithTxMock.mockResolvedValue({
-      balance: new Prisma.Decimal(100),
-    } as unknown as FinanceAccount);
-
-    await createGoalService(
-      "userId",
-      "goalName",
-      1000,
-      100,
-      12,
-      "MONTHS",
-      "LOW",
-      "categoryId",
-    );
-
-    expect(txMock.financialGoal.create).toHaveBeenCalledWith(
-      expect.objectContaining({
-        select: {
-          id: true,
-          userId: true,
-          name: true,
-          target: true,
-          initialAmount: true,
-          durationValue: true,
-          durationUnit: true,
-          style: true,
-          categoryId: true,
-          createdAt: true,
-        },
-      }),
-    );
-  });
-
   it("should propagate error from adjustBalanceWithTx", async () => {
-    txMock.financeAccount.findUnique.mockResolvedValue({ userId: "userId" });
-    txMock.financialCategory.findFirst.mockResolvedValue({ id: "categoryId" });
-    txMock.financialGoal.create.mockResolvedValue(mockGoal);
-
+    vi.mocked(financialGoalsRepository.createGoal).mockResolvedValue(mockGoal)
     adjustBalanceWithTxMock.mockRejectedValue(
       new Error("Adjust Balance Error"),
     );
@@ -244,4 +172,23 @@ describe("Create financial goal service test", () => {
       ),
     ).rejects.toThrow("Adjust Balance Error");
   });
-});
+
+  it("should propagate error from ensureCategoryExists", async () => {
+    vi.mocked(ensureCategoryExists).mockRejectedValue(
+      new Error("Ensure Category Exists Error")
+    )
+
+    await expect(
+      createGoalService(
+        "userId",
+        "goalName",
+        1000,
+        100,
+        12,
+        "MONTHS",
+        "LOW",
+        "categoryId",
+      ),
+    ).rejects.toThrow("Ensure Category Exists Error");
+  })
+}); 
