@@ -3,8 +3,10 @@ import { authMiddlewareTests } from "../../../shared/authMiddlewareTests";
 import { prisma } from "../../../../../src/lib/prisma";
 import request from "supertest";
 import app from "../../../../../src/app";
-import { adjustBalanceWithTx } from "../../../../../src/modules/finance/helpers/adjustBalanceWithTx.helper";
+import { adjustBalanceWithTx } from "../../../../../src/modules/finance/shared/helpers/adjustBalanceWithTx.helper";
 import { Prisma } from "@prisma/client";
+import { financialGoalsRepository } from "../../../../../src/modules/finance/financial-goals/repositories/financialGoals.repository";
+import { AppError } from "../../../../../src/core/errors/AppError";
 
 vi.mock("jose", async (importOriginal) => {
   const original = await importOriginal<typeof import("jose")>();
@@ -21,11 +23,10 @@ vi.mock("jose", async (importOriginal) => {
   };
 });
 
+vi.mock("../../../../../src/modules/finance/financial-goals/repositories/financialGoals.repository")
+
 vi.mock("../../../../../src/lib/prisma", () => ({
   prisma: {
-    financeAccount: {
-      findUnique: vi.fn(),
-    },
     userArea: {
       findFirst: vi.fn(),
     },
@@ -34,11 +35,21 @@ vi.mock("../../../../../src/lib/prisma", () => ({
 }));
 
 vi.mock(
-  "../../../../../src/modules/finance/helpers/adjustBalanceWithTx.helper",
+  "../../../../../src/modules/finance/shared/helpers/adjustBalanceWithTx.helper",
   () => ({
     adjustBalanceWithTx: vi.fn(),
   }),
 );
+let userHaveAccount: boolean
+
+vi.mock("../../../../../src/modules/finance/middlewares/requireFinancialAccount", () => ({
+  requireFinancialAccount: vi.fn((_req: any, _res: any, next: any) => {
+    if (!userHaveAccount) {
+      return next(new AppError("NOT_FOUND", "User account not found", 404))
+    }
+    next()
+  })
+}))
 
 const mockTx = {
   financialGoal: {
@@ -61,25 +72,22 @@ describe("DELETE /goals/:id", () => {
         .mocked(prisma.$transaction)
         .mockImplementation(async (fn: any) => fn(mockTx)));
     vi.mocked(prisma.userArea.findFirst).mockResolvedValue({ userId } as any);
-    vi.mocked(prisma.financeAccount.findUnique).mockResolvedValue({
-      id: "acc-id",
-    } as any);
+    userHaveAccount = true
   });
 
   authMiddlewareTests("delete", `/finance/goals/${goalId}`, "FINANCES");
 
   describe("Happy path", () => {
     it("should return 200, delete goal and refund amount to balance", async () => {
-      mockTx.financialGoal.findUnique.mockResolvedValue({
-        initialAmount: new Prisma.Decimal(100),
-      });
-      mockTx.goalProgressSnapshot.findFirst.mockResolvedValue({
-        totalDeposited: new Prisma.Decimal(1000),
-      });
+      vi.mocked(financialGoalsRepository.getUniqueGoal).mockResolvedValue({
+        initialAmount: new Prisma.Decimal(100)
+      })
+      vi.mocked(financialGoalsRepository.getLatestSnapshot).mockResolvedValue({
+        totalDeposited: new Prisma.Decimal(1000)
+      })
       vi.mocked(adjustBalanceWithTx).mockResolvedValue({
         balance: new Prisma.Decimal(2000),
       } as any);
-
       const response = await request(app)
         .delete(`/finance/goals/${goalId}`)
         .set("Authorization", `Bearer ${validToken}`);
@@ -89,10 +97,10 @@ describe("DELETE /goals/:id", () => {
     });
 
     it("should refund only initial amount when no deposits exist", async () => {
-      mockTx.financialGoal.findUnique.mockResolvedValue({
-        initialAmount: new Prisma.Decimal(100),
-      });
-      mockTx.goalProgressSnapshot.findFirst.mockResolvedValue(null);
+      vi.mocked(financialGoalsRepository.getUniqueGoal).mockResolvedValue({
+        initialAmount: new Prisma.Decimal(100)
+      })
+      vi.mocked(financialGoalsRepository.getLatestSnapshot).mockResolvedValue(null)
       vi.mocked(adjustBalanceWithTx).mockResolvedValue({
         balance: new Prisma.Decimal(2000),
       } as any);
@@ -108,7 +116,7 @@ describe("DELETE /goals/:id", () => {
 
   describe("API validations", () => {
     it("should throw 404 if financial account does not exist", async () => {
-      vi.mocked(prisma.financeAccount.findUnique).mockResolvedValue(null);
+      userHaveAccount = false
 
       const response = await request(app)
         .delete(`/finance/goals/${goalId}`)
@@ -120,7 +128,7 @@ describe("DELETE /goals/:id", () => {
     });
 
     it("should throw 404 when goal does not exist", async () => {
-      mockTx.financialGoal.findUnique.mockResolvedValue(null);
+      vi.mocked(financialGoalsRepository.getUniqueGoal).mockResolvedValue(null)
 
       const response = await request(app)
         .delete(`/finance/goals/${goalId}`)
@@ -129,6 +137,16 @@ describe("DELETE /goals/:id", () => {
       expect(response.status).toBe(404);
       expect(response.body.error.message).toBe("Financial goal not found");
     });
+
+    it("should throw 500 for server errors", async () => {
+      vi.mocked(financialGoalsRepository.getUniqueGoal).mockRejectedValue(new Error("Db error"))
+
+      const response = await request(app)
+        .delete(`/finance/goals/${goalId}`)
+        .set("Authorization", `Bearer ${validToken}`);
+
+      expect(response.status).toBe(500)
+    })
   });
 
   describe("Zod validations", () => {

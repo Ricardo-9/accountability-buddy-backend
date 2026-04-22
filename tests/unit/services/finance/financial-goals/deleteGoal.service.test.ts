@@ -54,11 +54,13 @@ describe("Delete goal service test", () => {
     expect(financialGoalsRepository.getUniqueGoal).toHaveBeenCalledWith(mockTx, goalId, userId, { initialAmount: true })
     expect(financialGoalsRepository.getLatestSnapshot).toHaveBeenCalledWith(mockTx, goalId)
     expect(adjustBalanceWithTx).toHaveBeenCalledWith(
-      expect.objectContaining({
+      {
+        tx: mockTx,
+        userId,
         amount: 1100,
         type: "INCREMENT",
         reason: "GOAL_DELETED",
-      }),
+      }
     );
     expect(financialGoalsRepository.deleteGoal).toHaveBeenCalledWith(mockTx, goalId, userId)
 
