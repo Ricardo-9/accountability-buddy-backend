@@ -180,7 +180,20 @@ describe("Financial goals repository test", () => {
                 data: expect.objectContaining({
                     target: new Prisma.Decimal(1000),
                     initialAmount: new Prisma.Decimal(100)
-                })
+                }),
+                select: {
+                id: true,
+                name: true,
+                target: true,
+                durationValue: true,
+                durationUnit: true,
+                style: true,
+                initialAmount: true,
+                createdAt: true,
+                updatedAt: true,
+                userId: true,
+                categoryId: true,
+            }
             })
         })
 

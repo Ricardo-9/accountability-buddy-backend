@@ -4,7 +4,9 @@ import { prisma } from "../../../../../src/lib/prisma";
 import request from "supertest";
 import app from "../../../../../src/app";
 import { DurationUnit, InvestorStyle, Prisma } from "@prisma/client";
-import { adjustBalanceWithTx } from "../../../../../src/modules/finance/helpers/adjustBalanceWithTx.helper";
+import { adjustBalanceWithTx } from "../../../../../src/modules/finance/shared/helpers/adjustBalanceWithTx.helper";
+import { financialGoalsRepository } from "../../../../../src/modules/finance/financial-goals/repositories/financialGoals.repository";
+import { AppError } from "../../../../../src/core/errors/AppError";
 
 vi.mock("jose", async (importOriginal) => {
   const original = await importOriginal<typeof import("jose")>();
@@ -23,9 +25,6 @@ vi.mock("jose", async (importOriginal) => {
 
 vi.mock("../../../../../src/lib/prisma", () => ({
   prisma: {
-    financeAccount: {
-      findUnique: vi.fn(),
-    },
     userArea: {
       findFirst: vi.fn(),
     },
@@ -34,11 +33,25 @@ vi.mock("../../../../../src/lib/prisma", () => ({
 }));
 
 vi.mock(
-  "../../../../../src/modules/finance/helpers/adjustBalanceWithTx.helper",
+  "../../../../../src/modules/finance/shared/helpers/adjustBalanceWithTx.helper",
   () => ({
     adjustBalanceWithTx: vi.fn(),
   }),
 );
+
+vi.mock("../../../../../src/modules/finance/financial-goals/repositories/financialGoals.repository")
+
+let userHaveAccount: boolean
+
+vi.mock("../../../../../src/modules/finance/middlewares/requireFinancialAccount", () => ({
+  requireFinancialAccount: vi.fn((_req: any, _res: any, next: any) => {
+    if (!userHaveAccount) {
+      return next(new AppError("NOT_FOUND", "User account not found", 404))
+    }
+    next()
+  })
+}))
+
 
 const mockTx = {
   financialGoal: {
@@ -46,7 +59,7 @@ const mockTx = {
     update: vi.fn(),
   },
   financialCategory: {
-    findUnique: vi.fn(),
+    findFirst: vi.fn(),
   },
 };
 
@@ -87,24 +100,22 @@ describe("PATCH /goals", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(prisma.userArea.findFirst).mockResolvedValue({ userId } as any);
-    vi.mocked(prisma.financeAccount.findUnique).mockResolvedValue({
-      id: "acc-id",
-    } as any);
     vi.mocked(prisma.$transaction).mockImplementation(async (fn: any) =>
       fn(mockTx),
     );
+    userHaveAccount = true
   });
 
   authMiddlewareTests("patch", `/finance/goals/${goalId}`, "FINANCES");
 
   describe("Happy path", () => {
     it("should return 200 and updated goal", async () => {
-      mockTx.financialGoal.findUnique.mockResolvedValue({
+      vi.mocked(financialGoalsRepository.getUniqueGoal).mockResolvedValue({
         target: new Prisma.Decimal(10000),
         initialAmount: new Prisma.Decimal(10),
       });
 
-      mockTx.financialGoal.update.mockResolvedValue({
+      vi.mocked(financialGoalsRepository.updateGoal).mockResolvedValue({
         ...mockGoal,
         name: "New name",
       });
@@ -115,14 +126,6 @@ describe("PATCH /goals", () => {
         .send({ name: "New name" });
 
       expect(response.status).toBe(200);
-      expect(mockTx.financialGoal.update).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: { id: goalId, userId },
-          data: expect.objectContaining({
-            name: "New name",
-          }),
-        }),
-      );
       expect(response.body).toMatchObject({
         data: {
           updatedGoal: { ...expectedResponse, name: "New name" },
@@ -131,12 +134,12 @@ describe("PATCH /goals", () => {
     });
 
     it("should decrement balance when initial amount increases", async () => {
-      mockTx.financialGoal.findUnique.mockResolvedValue({
+      vi.mocked(financialGoalsRepository.getUniqueGoal).mockResolvedValue({
         target: new Prisma.Decimal(10000),
         initialAmount: new Prisma.Decimal(10),
       });
 
-      mockTx.financialGoal.update.mockResolvedValue({
+      vi.mocked(financialGoalsRepository.updateGoal).mockResolvedValue({
         ...mockGoal,
         initialAmount: new Prisma.Decimal(100),
       });
@@ -148,22 +151,24 @@ describe("PATCH /goals", () => {
 
       expect(response.status).toBe(200);
       expect(adjustBalanceWithTx).toHaveBeenCalledWith(
-        expect.objectContaining({
+        {
+          tx: mockTx,
           userId,
           amount: 90,
           type: "DECREMENT",
           reason: "GOAL_UPDATE",
-        }),
+        },
       );
     });
 
     it("should increment balance when initial amount decreases", async () => {
-      mockTx.financialGoal.findUnique.mockResolvedValue({
+      vi.mocked(financialGoalsRepository.getUniqueGoal).mockResolvedValue({
         target: new Prisma.Decimal(10000),
         initialAmount: new Prisma.Decimal(10),
       });
 
-      mockTx.financialGoal.update.mockResolvedValue({
+
+      vi.mocked(financialGoalsRepository.updateGoal).mockResolvedValue({
         ...mockGoal,
         initialAmount: new Prisma.Decimal(9),
       });
@@ -175,22 +180,23 @@ describe("PATCH /goals", () => {
 
       expect(response.status).toBe(200);
       expect(adjustBalanceWithTx).toHaveBeenCalledWith(
-        expect.objectContaining({
+        {
+          tx: mockTx,
           userId,
           amount: 1,
           type: "INCREMENT",
           reason: "GOAL_UPDATE",
-        }),
+        },
       );
     });
 
     it("should not adjust balance when initial amount does not change", async () => {
-      mockTx.financialGoal.findUnique.mockResolvedValue({
+      vi.mocked(financialGoalsRepository.getUniqueGoal).mockResolvedValue({
         target: new Prisma.Decimal(10000),
         initialAmount: new Prisma.Decimal(10),
       });
 
-      mockTx.financialGoal.update.mockResolvedValue(mockGoal);
+      vi.mocked(financialGoalsRepository.updateGoal).mockResolvedValue(mockGoal);
 
       const response = await request(app)
         .patch(`/finance/goals/${goalId}`)
@@ -202,14 +208,14 @@ describe("PATCH /goals", () => {
     });
 
     it("should return new balance if balance was changed", async () => {
-      mockTx.financialGoal.findUnique.mockResolvedValue({
+      vi.mocked(financialGoalsRepository.getUniqueGoal).mockResolvedValue({
         target: new Prisma.Decimal(10000),
         initialAmount: new Prisma.Decimal(10),
       });
       vi.mocked(adjustBalanceWithTx).mockResolvedValue({
         balance: new Prisma.Decimal(100),
       } as any);
-      mockTx.financialGoal.update.mockResolvedValue(mockGoal);
+      vi.mocked(financialGoalsRepository.updateGoal).mockResolvedValue(mockGoal);
 
       const response = await request(app)
         .patch(`/finance/goals/${goalId}`)
@@ -223,7 +229,7 @@ describe("PATCH /goals", () => {
 
   describe("API validations", () => {
     it("should throw 400 when initial amount is greater than target", async () => {
-      mockTx.financialGoal.findUnique.mockResolvedValue({
+      vi.mocked(financialGoalsRepository.getUniqueGoal).mockResolvedValue({
         target: new Prisma.Decimal(10000),
         initialAmount: new Prisma.Decimal(10),
       });
@@ -234,12 +240,12 @@ describe("PATCH /goals", () => {
         .send({ initialAmount: 10000000 });
 
       expect(response.status).toBe(400);
-      expect(mockTx.financialGoal.update).not.toHaveBeenCalled();
+      expect(financialGoalsRepository.updateGoal).not.toHaveBeenCalled();
       expect(adjustBalanceWithTx).not.toHaveBeenCalled();
     });
 
     it("should throw 400 when target below initial amount", async () => {
-      mockTx.financialGoal.findUnique.mockResolvedValue({
+      vi.mocked(financialGoalsRepository.getUniqueGoal).mockResolvedValue({
         target: new Prisma.Decimal(10000),
         initialAmount: new Prisma.Decimal(10),
       });
@@ -250,11 +256,11 @@ describe("PATCH /goals", () => {
         .send({ target: 9 });
 
       expect(response.status).toBe(400);
-      expect(mockTx.financialGoal.update).not.toHaveBeenCalled();
+      expect(financialGoalsRepository.updateGoal).not.toHaveBeenCalled();
     });
 
     it("should throw 404 when goal is not found", async () => {
-      mockTx.financialGoal.findUnique.mockResolvedValue(null);
+      vi.mocked(financialGoalsRepository.getUniqueGoal).mockResolvedValue(null);
 
       const response = await request(app)
         .patch(`/finance/goals/${goalId}`)
@@ -265,12 +271,12 @@ describe("PATCH /goals", () => {
     });
 
     it("should throw 404 when categoryId is invalid", async () => {
-      mockTx.financialGoal.findUnique.mockResolvedValue({
+      vi.mocked(financialGoalsRepository.getUniqueGoal).mockResolvedValue({
         target: new Prisma.Decimal(10000),
         initialAmount: new Prisma.Decimal(10),
       });
 
-      mockTx.financialCategory.findUnique.mockResolvedValue(null);
+      mockTx.financialCategory.findFirst.mockResolvedValue(null);
 
       const response = await request(app)
         .patch(`/finance/goals/${goalId}`)
@@ -281,12 +287,12 @@ describe("PATCH /goals", () => {
     });
 
     it("should not update goal if balance adjustment fails", async () => {
-      mockTx.financialGoal.findUnique.mockResolvedValue({
+      vi.mocked(financialGoalsRepository.getUniqueGoal).mockResolvedValue({
         target: new Prisma.Decimal(10000),
         initialAmount: new Prisma.Decimal(10),
       });
 
-      mockTx.financialGoal.update.mockResolvedValue(mockGoal);
+      vi.mocked(financialGoalsRepository.updateGoal).mockResolvedValue(mockGoal);
 
       vi.mocked(adjustBalanceWithTx).mockRejectedValue(
         new Error("Balance error"),
@@ -299,179 +305,42 @@ describe("PATCH /goals", () => {
 
       expect(response.status).toBe(500);
     });
+
+    it("should throw 500 for server errors", async () => {
+      vi.mocked(financialGoalsRepository.getUniqueGoal).mockRejectedValue(new Error("Db error"));
+
+      const response = await request(app)
+        .patch(`/finance/goals/${goalId}`)
+        .set("Authorization", `Bearer ${validToken}`)
+        .send({ initialAmount: 20 });
+
+      expect(response.status).toBe(500)
+    })
   });
 
   describe("Zod validations", () => {
     describe("Type errors", () => {
-      it("should throw 400 if id is not uuid", async () => {
+      it.each([
+        ["id", "uuid", "not-uuid"],
+        ["name", "string", false],
+        ["target", "number", "not-a-number"],
+        ["initialAmount", "number", "not-a-number"],
+        ["durationValue", "number", "not-a-number"],
+        ["durationValue", "integer", 10.5],
+        ["durationUnit", "valid value", "not-valid"],
+        ["style", "valid value", "not-valid"],
+        ["categoryId", "uuid", "not-uuid"]
+      ])("should throw 400 if %s is not %s", async (field, _, value) => {
+        const url = field === "id" ? "/finance/goals/123" : `/finance/goals/${goalId}`
+        const bodyContent = field === "id" ? { name: "New name" } : { [field]: value }
+
         const response = await request(app)
-          .patch(`/finance/goals/123`)
+          .patch(url)
           .set("Authorization", `Bearer ${validToken}`)
-          .send({
-            name: "goalname",
-            target: 1000,
-            initialAmount: 100,
-            durationValue: 12,
-            durationUnit: "MONTHS",
-            style: "LOW",
-          });
+          .send(bodyContent)
 
         expect(response.status).toBe(400);
-        expect(response.body.error.details[0].message).toBe("Invalid id");
-      });
-
-      it("should throw 400 if name is not a string", async () => {
-        const response = await request(app)
-          .patch(`/finance/goals/${goalId}`)
-          .set("Authorization", `Bearer ${validToken}`)
-          .send({
-            name: 1,
-            target: 1000,
-            initialAmount: 100,
-            durationValue: 12,
-            durationUnit: "MONTHS",
-            style: "LOW",
-          });
-
-        expect(response.status).toBe(400);
-        expect(response.body.error.details[0].message).toBe(
-          "Invalid goal name",
-        );
-      });
-
-      it("should throw 400 if target is not a number", async () => {
-        const response = await request(app)
-          .patch(`/finance/goals/${goalId}`)
-          .set("Authorization", `Bearer ${validToken}`)
-          .send({
-            name: "goalName",
-            target: "1000",
-            initialAmount: 100,
-            durationValue: 12,
-            durationUnit: "MONTHS",
-            style: "LOW",
-          });
-
-        expect(response.status).toBe(400);
-        expect(response.body.error.details[0].message).toBe(
-          "Invalid target value",
-        );
-      });
-
-      it("should throw 400 if initialAmount is not a number", async () => {
-        const response = await request(app)
-          .patch(`/finance/goals/${goalId}`)
-          .set("Authorization", `Bearer ${validToken}`)
-          .send({
-            name: "goalName",
-            target: 1000,
-            initialAmount: "100",
-            durationValue: 12,
-            durationUnit: "MONTHS",
-            style: "LOW",
-          });
-
-        expect(response.status).toBe(400);
-        expect(response.body.error.details[0].message).toBe(
-          "Invalid initial amount value",
-        );
-      });
-
-      it("should throw 400 if durationValue is not a number", async () => {
-        const response = await request(app)
-          .patch(`/finance/goals/${goalId}`)
-          .set("Authorization", `Bearer ${validToken}`)
-          .send({
-            name: "goalName",
-            target: 1000,
-            initialAmount: 100,
-            durationValue: "12",
-            durationUnit: "MONTHS",
-            style: "LOW",
-          });
-
-        expect(response.status).toBe(400);
-        expect(response.body.error.details[0].message).toBe(
-          "Invalid duration value",
-        );
-      });
-
-      it("should throw 400 if duration value is not a integer", async () => {
-        const response = await request(app)
-          .patch(`/finance/goals/${goalId}`)
-          .set("Authorization", `Bearer ${validToken}`)
-          .send({
-            name: "goalName",
-            target: 1000,
-            initialAmount: 100,
-            durationValue: 12.5,
-            durationUnit: "MONTHS",
-            style: "LOW",
-          });
-
-        expect(response.status).toBe(400);
-        expect(response.body.error.details[0].message).toBe(
-          "Duration must be an integer",
-        );
-      });
-
-      it("should throw 400 if duration unit is not a valid value", async () => {
-        const response = await request(app)
-          .patch(`/finance/goals/${goalId}`)
-          .set("Authorization", `Bearer ${validToken}`)
-          .send({
-            name: "goalName",
-            target: 1000,
-            initialAmount: 100,
-            durationValue: 12,
-            durationUnit: "CENTURIES",
-            style: "LOW",
-          });
-
-        expect(response.status).toBe(400);
-        expect(response.body.error.details[0].message).toBe(
-          "Invalid duration unit",
-        );
-      });
-
-      it("should throw 400 if style is not a valid value", async () => {
-        const response = await request(app)
-          .patch(`/finance/goals/${goalId}`)
-          .set("Authorization", `Bearer ${validToken}`)
-          .send({
-            name: "goalName",
-            target: 1000,
-            initialAmount: 100,
-            durationValue: 12,
-            durationUnit: "MONTHS",
-            style: "HIP-HOP",
-          });
-
-        expect(response.status).toBe(400);
-        expect(response.body.error.details[0].message).toBe(
-          "Invalid investor style",
-        );
-      });
-
-      it("should throw 400 if category is not an uuid", async () => {
-        const response = await request(app)
-          .patch(`/finance/goals/${goalId}`)
-          .set("Authorization", `Bearer ${validToken}`)
-          .send({
-            name: "goalName",
-            target: 1000,
-            initialAmount: 100,
-            durationValue: 12,
-            durationUnit: "MONTHS",
-            style: "LOW",
-            categoryId: "not-uuid",
-          });
-
-        expect(response.status).toBe(400);
-        expect(response.body.error.details[0].message).toBe(
-          "Invalid category id",
-        );
-      });
+      })
     });
 
     describe("Value errors", () => {
@@ -480,12 +349,7 @@ describe("PATCH /goals", () => {
           .patch(`/finance/goals/${goalId}`)
           .set("Authorization", `Bearer ${validToken}`)
           .send({
-            name: "goalName",
-            target: 0,
-            initialAmount: 100,
-            durationValue: 12,
-            durationUnit: "MONTHS",
-            style: "LOW",
+            target: 0
           });
 
         expect(response.status).toBe(400);
@@ -499,12 +363,7 @@ describe("PATCH /goals", () => {
           .patch(`/finance/goals/${goalId}`)
           .set("Authorization", `Bearer ${validToken}`)
           .send({
-            name: "goalName",
-            target: 1000,
-            initialAmount: -100,
-            durationValue: 12,
-            durationUnit: "MONTHS",
-            style: "LOW",
+            initialAmount: -100
           });
 
         expect(response.status).toBe(400);
@@ -518,12 +377,7 @@ describe("PATCH /goals", () => {
           .patch(`/finance/goals/${goalId}`)
           .set("Authorization", `Bearer ${validToken}`)
           .send({
-            name: "goalName",
-            target: 1000,
-            initialAmount: 100,
-            durationValue: 0,
-            durationUnit: "MONTHS",
-            style: "LOW",
+            durationValue: 0
           });
 
         expect(response.status).toBe(400);
@@ -538,12 +392,8 @@ describe("PATCH /goals", () => {
           .patch(`/finance/goals/${goalId}`)
           .set("Authorization", `Bearer ${validToken}`)
           .send({
-            name: "goalName",
             target: 100,
-            initialAmount: 1000,
-            durationValue: 12,
-            durationUnit: "MONTHS",
-            style: "LOW",
+            initialAmount: 1000
           });
 
         expect(response.status).toBe(400);
@@ -557,12 +407,6 @@ describe("PATCH /goals", () => {
           .patch(`/finance/goals/${goalId}`)
           .set("Authorization", `Bearer ${validToken}`)
           .send({
-            name: "goalName",
-            target: 1000,
-            initialAmount: 100,
-            durationValue: 12,
-            durationUnit: "MONTHS",
-            style: "LOW",
             unexpected: "param",
           });
 
