@@ -108,6 +108,19 @@ export const financialGoalsRepository = {
                 ...(data.durationValue !== undefined && { durationValue: data.durationValue }),
                 ...(data.durationUnit !== undefined && { durationUnit: data.durationUnit }),
                 ...(data.style !== undefined && { style: data.style }),
+            },
+            select: {
+                id: true,
+                name: true,
+                target: true,
+                durationValue: true,
+                durationUnit: true,
+                style: true,
+                initialAmount: true,
+                createdAt: true,
+                updatedAt: true,
+                userId: true,
+                categoryId: true,
             }
         })
     },
