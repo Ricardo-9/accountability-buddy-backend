@@ -41,7 +41,7 @@
  *                              example: 7d1effd5-3185-432b-bb39-8b6aa1ef2791
  *      responses:
  *          200:
- *              description: Variable expense successfully registered
+ *              description: Variable Expense registered
  *              content:
  *                  application/json:
  *                      schema:
@@ -50,59 +50,52 @@
  *                              success:
  *                                  type: boolean
  *                                  example: true
+ *                              message:
+ *                                  type: string
+ *                                  example: Variable Expense registered
  *                              data:
  *                                  type: object
  *                                  properties:
- *                                      id:
- *                                          type: string
- *                                          format: uuid
- *                                          example: 3fd12663-f4df-4fcf-a67a-83e3035338ca
- *                                      userId:
- *                                          type: string
- *                                          format: uuid
- *                                          example: 07c7db0b-8c87-4bc6-853b-1327afa6b262
- *                                      categoryId:
- *                                          type: string
- *                                          format: uuid
- *                                          nullable: true
- *                                          example: null
- *                                      name:
- *                                          type: string
- *                                          example: Dentist appointment
- *                                      amount:
- *                                          type: string
- *                                          description: Decimal value serialized as string
- *                                          example: "234.45"
- *                                      expenseDate:
- *                                          type: string
- *                                          format: date-time
- *                                          example: 2025-04-01T00:00:00.000Z
- *                                      createdAt:
- *                                          type: string
- *                                          format: date-time
- *                                          example: 2025-04-01T12:00:00.000Z
- *                                      updatedAt:
- *                                          type: string
- *                                          format: date-time
- *                                          example: 2025-04-01T12:00:00.000Z
- *              message:
- *                  type: string
- *                  example: Variable Expense registered
+ *                                      variableExpense:
+ *                                          type: object
+ *                                          properties:
+ *                                              id:
+ *                                                  type: string
+ *                                                  format: uuid
+ *                                              name:
+ *                                                  type: string
+ *                                              amount:
+ *                                                  type: string
+ *                                                  example: "234.45"
+ *                                              expenseDate:
+ *                                                  type: string
+ *                                                  format: date-time
+ *                                              updatedAt:
+ *                                                  type: string
+ *                                                  format: date-time
+ *                                              category:
+ *                                                  nullable: true
+ *                                                  type: object
+ *                                                  properties:
+ *                                                      id:
+ *                                                          type: string
+ *                                                          format: uuid
+ *                                                      name:
+ *                                                          type: string
  *          400:
  *              description: Invalid data
  *          401:
- *              description: Missing or invalid token
+ *              description: Unauthorized
  *          403:
- *              description: User does not have access to the FINANCES area
+ *              description: Forbidden
  *          404:
  *              description: Category not found
  *          422:
- *              description: Insufficient balance to register expense
- *          429:
- *              description: Too many requests
+ *              description: Insufficient balance
  *          500:
  *              description: Internal server error
  */
+
 
 /**
  * @swagger
@@ -115,28 +108,32 @@
  *      parameters:
  *          - in: query
  *            name: startDate
- *            required: false
  *            schema:
  *              type: string
  *              format: date
- *              example: 2025-01-01
  *          - in: query
  *            name: endDate
- *            required: false
  *            schema:
  *              type: string
  *              format: date
- *              example: 2025-12-31
  *          - in: query
  *            name: categoryId
- *            required: false
  *            schema:
  *              type: string
  *              format: uuid
- *              example: 7d1effd5-3185-432b-bb39-8b6aa1ef2791
+ *          - in: query
+ *            name: limit
+ *            schema:
+ *              type: number
+ *              example: 10
+ *          - in: query
+ *            name: cursor
+ *            schema:
+ *              type: string
+ *              format: uuid
  *      responses:
  *          200:
- *              description: Variable expenses retrieved successfully
+ *              description: Variable expenses retrieved
  *              content:
  *                  application/json:
  *                      schema:
@@ -144,55 +141,50 @@
  *                          properties:
  *                              success:
  *                                  type: boolean
- *                                  example: true
  *                              data:
- *                                  type: array
- *                                  items:
- *                                      type: object
- *                                      properties:
- *                                          id:
- *                                              type: string
- *                                              format: uuid
- *                                              example: 3fd12663-f4df-4fcf-a67a-83e3035338ca
- *                                          userId:
- *                                              type: string
- *                                              format: uuid
- *                                              example: 07c7db0b-8c87-4bc6-853b-1327afa6b262
- *                                          categoryId:
- *                                              type: string
- *                                              format: uuid
- *                                              nullable: true
- *                                              example: null
- *                                          name:
- *                                              type: string
- *                                              example: Dentist appointment
- *                                          amount:
- *                                              type: string
- *                                              description: Decimal value serialized as string
- *                                              example: "234.45"
- *                                          expenseDate:
- *                                              type: string
- *                                              format: date-time
- *                                              example: 2025-04-01T00:00:00.000Z
- *                                          createdAt:
- *                                              type: string
- *                                              format: date-time
- *                                              example: 2025-04-01T12:00:00.000Z
- *                                          updatedAt:
- *                                              type: string
- *                                              format: date-time
- *                                              example: 2025-04-01T12:00:00.000Z
+ *                                  type: object
+ *                                  properties:
+ *                                      variableExpenses:
+ *                                          type: array
+ *                                          items:
+ *                                              type: object
+ *                                              properties:
+ *                                                  id:
+ *                                                      type: string
+ *                                                      format: uuid
+ *                                                  name:
+ *                                                      type: string
+ *                                                  amount:
+ *                                                      type: string
+ *                                                  expenseDate:
+ *                                                      type: string
+ *                                                      format: date-time
+ *                                                  updatedAt:
+ *                                                      type: string
+ *                                                      format: date-time
+ *                                                  category:
+ *                                                      nullable: true
+ *                                                      type: object
+ *                                                      properties:
+ *                                                          id:
+ *                                                              type: string
+ *                                                              format: uuid
+ *                                                          name:
+ *                                                              type: string
+ *                                      nextCursor:
+ *                                          type: string
+ *                                          nullable: true
+ *                                          format: uuid
  *          400:
- *              description: Invalid data
+ *              description: Invalid query params
  *          401:
- *              description: Missing or invalid token
+ *              description: Unauthorized
  *          403:
- *              description: User does not have access to the FINANCES area
- *          429:
- *              description: Too many requests
+ *              description: Forbidden
  *          500:
  *              description: Internal server error
  */
+
 
 /**
  * @swagger
@@ -206,14 +198,12 @@
  *          - in: path
  *            name: id
  *            required: true
- *            description: Variable expense id (uuid)
  *            schema:
  *              type: string
  *              format: uuid
- *              example: 3fd12663-f4df-4fcf-a67a-83e3035338ca
  *      responses:
  *          200:
- *              description: Variable expense retrieved successfully
+ *              description: Variable expense retrieved
  *              content:
  *                  application/json:
  *                      schema:
@@ -221,61 +211,48 @@
  *                          properties:
  *                              success:
  *                                  type: boolean
- *                                  example: true
  *                              data:
  *                                  type: object
  *                                  properties:
- *                                      id:
- *                                          type: string
- *                                          format: uuid
- *                                          example: 3fd12663-f4df-4fcf-a67a-83e3035338ca
- *                                      userId:
- *                                          type: string
- *                                          format: uuid
- *                                          example: 07c7db0b-8c87-4bc6-853b-1327afa6b262
- *                                      categoryId:
- *                                          type: string
- *                                          format: uuid
- *                                          nullable: true
- *                                          example: null
- *                                      name:
- *                                          type: string
- *                                          example: Dentist appointment
- *                                      amount:
- *                                          type: string
- *                                          description: Decimal value serialized as string
- *                                          example: "234.45"
- *                                      expenseDate:
- *                                          type: string
- *                                          format: date-time
- *                                          example: 2025-04-01T00:00:00.000Z
- *                                      createdAt:
- *                                          type: string
- *                                          format: date-time
- *                                          example: 2025-04-01T12:00:00.000Z
- *                                      updatedAt:
- *                                          type: string
- *                                          format: date-time
- *                                          example: 2025-04-01T12:00:00.000Z
+ *                                      variableExpense:
+ *                                          type: object
+ *                                          properties:
+ *                                              id:
+ *                                                  type: string
+ *                                              name:
+ *                                                  type: string
+ *                                              amount:
+ *                                                  type: string
+ *                                              expenseDate:
+ *                                                  type: string
+ *                                              updatedAt:
+ *                                                  type: string
+ *                                              category:
+ *                                                  nullable: true
+ *                                                  type: object
+ *                                                  properties:
+ *                                                      id:
+ *                                                          type: string
+ *                                                      name:
+ *                                                          type: string
  *          400:
- *              description: Invalid data
+ *              description: Invalid id
  *          401:
- *              description: Missing or invalid token
+ *              description: Unauthorized
  *          403:
- *              description: User does not have access to the FINANCES area
+ *              description: Forbidden
  *          404:
  *              description: Variable expense not found
- *          429:
- *              description: Too many requests
  *          500:
  *              description: Internal server error
  */
+
 
 /**
  * @swagger
  * /finance/variable-expense/{id}:
  *  patch:
- *      summary: Update a variable expense
+ *      summary: Update variable expense
  *      tags: [Variable Expenses]
  *      security:
  *          - bearerAuth: []
@@ -283,11 +260,9 @@
  *          - in: path
  *            name: id
  *            required: true
- *            description: Variable expense id (uuid)
  *            schema:
  *              type: string
  *              format: uuid
- *              example: 3fd12663-f4df-4fcf-a67a-83e3035338ca
  *      requestBody:
  *          required: true
  *          content:
@@ -297,22 +272,18 @@
  *                      properties:
  *                          name:
  *                              type: string
- *                              example: Updated expense name
  *                          amount:
  *                              type: number
- *                              example: 300.00
  *                          expenseDate:
  *                              type: string
  *                              format: date
- *                              example: 2025-04-15
  *                          categoryId:
  *                              type: string
  *                              format: uuid
  *                              nullable: true
- *                              example: 7d1effd5-3185-432b-bb39-8b6aa1ef2791
  *      responses:
  *          200:
- *              description: Variable expense updated successfully
+ *              description: sucessfuly updated
  *              content:
  *                  application/json:
  *                      schema:
@@ -320,57 +291,47 @@
  *                          properties:
  *                              success:
  *                                  type: boolean
- *                                  example: true
+ *                              message:
+ *                                  type: string
+ *                                  example: sucessfuly updated
  *                              data:
  *                                  type: object
  *                                  properties:
- *                                      id:
- *                                          type: string
- *                                          format: uuid
- *                                          example: 3fd12663-f4df-4fcf-a67a-83e3035338ca
- *                                      userId:
- *                                          type: string
- *                                          format: uuid
- *                                          example: 07c7db0b-8c87-4bc6-853b-1327afa6b262
- *                                      categoryId:
- *                                          type: string
- *                                          format: uuid
- *                                          nullable: true
- *                                          example: 7d1effd5-3185-432b-bb39-8b6aa1ef2791
- *                                      name:
- *                                          type: string
- *                                          example: Updated expense name
- *                                      amount:
- *                                          type: string
- *                                          description: Decimal value serialized as string
- *                                          example: "300.00"
- *                                      expenseDate:
- *                                          type: string
- *                                          format: date-time
- *                                          example: 2025-04-15T00:00:00.000Z
- *                                      createdAt:
- *                                          type: string
- *                                          format: date-time
- *                                          example: 2025-04-01T12:00:00.000Z
- *                                      updatedAt:
- *                                          type: string
- *                                          format: date-time
- *                                          example: 2025-04-15T10:30:00.000Z
+ *                                      variableExpense:
+ *                                          type: object
+ *                                          properties:
+ *                                              id:
+ *                                                  type: string
+ *                                              name:
+ *                                                  type: string
+ *                                              amount:
+ *                                                  type: string
+ *                                              expenseDate:
+ *                                                  type: string
+ *                                              updatedAt:
+ *                                                  type: string
+ *                                              category:
+ *                                                  nullable: true
+ *                                                  type: object
+ *                                                  properties:
+ *                                                      id:
+ *                                                          type: string
+ *                                                      name:
+ *                                                          type: string
  *          400:
  *              description: Invalid data
  *          401:
- *              description: Missing or invalid token
+ *              description: Unauthorized
  *          403:
- *              description: User does not have access to the FINANCES area
+ *              description: Forbidden
  *          404:
- *              description: Variable expense or category not found
+ *              description: Expense or category not found
  *          422:
- *              description: Insufficient balance to update expense
- *          429:
- *              description: Too many requests
+ *              description: Insufficient balance
  *          500:
  *              description: Internal server error
  */
+
 
 /**
  * @swagger
@@ -384,14 +345,12 @@
  *          - in: path
  *            name: id
  *            required: true
- *            description: Variable expense id (uuid)
  *            schema:
  *              type: string
  *              format: uuid
- *              example: 3fd12663-f4df-4fcf-a67a-83e3035338ca
  *      responses:
  *          200:
- *              description: Variable expense successfully deleted and amount refunded to balance
+ *              description: sucessfuly deleted
  *              content:
  *                  application/json:
  *                      schema:
@@ -399,52 +358,41 @@
  *                          properties:
  *                              success:
  *                                  type: boolean
- *                                  example: true
+ *                              message:
+ *                                  type: string
+ *                                  example: sucessfuly deleted
  *                              data:
  *                                  type: object
  *                                  properties:
- *                                      id:
- *                                          type: string
- *                                          format: uuid
- *                                          example: 3fd12663-f4df-4fcf-a67a-83e3035338ca
- *                                      userId:
- *                                          type: string
- *                                          format: uuid
- *                                          example: 07c7db0b-8c87-4bc6-853b-1327afa6b262
- *                                      categoryId:
- *                                          type: string
- *                                          format: uuid
- *                                          nullable: true
- *                                          example: null
- *                                      name:
- *                                          type: string
- *                                          example: Dentist appointment
- *                                      amount:
- *                                          type: string
- *                                          description: Decimal value serialized as string
- *                                          example: "234.45"
- *                                      expenseDate:
- *                                          type: string
- *                                          format: date-time
- *                                          example: 2025-04-01T00:00:00.000Z
- *                                      createdAt:
- *                                          type: string
- *                                          format: date-time
- *                                          example: 2025-04-01T12:00:00.000Z
- *                                      updatedAt:
- *                                          type: string
- *                                          format: date-time
- *                                          example: 2025-04-01T12:00:00.000Z
+ *                                      variableExpense:
+ *                                          type: object
+ *                                          properties:
+ *                                              id:
+ *                                                  type: string
+ *                                              name:
+ *                                                  type: string
+ *                                              amount:
+ *                                                  type: string
+ *                                              expenseDate:
+ *                                                  type: string
+ *                                              deletedAt:
+ *                                                  type: string
+ *                                              category:
+ *                                                  nullable: true
+ *                                                  type: object
+ *                                                  properties:
+ *                                                      id:
+ *                                                          type: string
+ *                                                      name:
+ *                                                          type: string
  *          400:
- *              description: Invalid data
+ *              description: Invalid id
  *          401:
- *              description: Missing or invalid token
+ *              description: Unauthorized
  *          403:
- *              description: User does not have access to the FINANCES area
+ *              description: Forbidden
  *          404:
  *              description: Variable expense not found
- *          429:
- *              description: Too many requests
  *          500:
  *              description: Internal server error
  */
