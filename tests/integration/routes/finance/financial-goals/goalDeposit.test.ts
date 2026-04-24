@@ -3,9 +3,10 @@ import { authMiddlewareTests } from "../../../shared/authMiddlewareTests";
 import { prisma } from "../../../../../src/lib/prisma";
 import request from "supertest";
 import app from "../../../../../src/app";
-import { adjustBalanceWithTx } from "../../../../../src/modules/finance/helpers/adjustBalanceWithTx.helper";
+import { adjustBalanceWithTx } from "../../../../../src/modules/finance/shared/helpers/adjustBalanceWithTx.helper";
 import { Prisma } from "@prisma/client";
 import { AppError } from "../../../../../src/core/errors/AppError";
+import { financialGoalsRepository } from "../../../../../src/modules/finance/financial-goals/repositories/financialGoals.repository";
 
 vi.mock("jose", async (importOriginal) => {
   const original = await importOriginal<typeof import("jose")>();
@@ -35,11 +36,24 @@ vi.mock("../../../../../src/lib/prisma", () => ({
 }));
 
 vi.mock(
-  "../../../../../src/modules/finance/helpers/adjustBalanceWithTx.helper",
+  "../../../../../src/modules/finance/shared/helpers/adjustBalanceWithTx.helper",
   () => ({
     adjustBalanceWithTx: vi.fn(),
   }),
 );
+
+vi.mock("../../../../../src/modules/finance/financial-goals/repositories/financialGoals.repository")
+
+let userHaveAccount: boolean
+
+vi.mock("../../../../../src/modules/finance/middlewares/requireFinancialAccount", () => ({
+  requireFinancialAccount: vi.fn((_req: any, _res: any, next: any) => {
+    if (!userHaveAccount) {
+      return next(new AppError("NOT_FOUND", "User account not found", 404))
+    }
+    next()
+  })
+}))
 
 const mockTx = {
   financialGoal: {
@@ -79,21 +93,19 @@ describe("POST /goals/deposit", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(prisma.userArea.findFirst).mockResolvedValue({ userId } as any);
-    vi.mocked(prisma.financeAccount.findUnique).mockResolvedValue({
-      id: "acc-id",
-    } as any);
     vi.mocked(prisma.$transaction).mockImplementation(async (fn: any) =>
       fn(mockTx),
     );
+    userHaveAccount = true
   });
 
   authMiddlewareTests("post", `/finance/goals/deposit/${goalId}`, "FINANCES");
 
   describe("Happy path", () => {
     it("should return 200, goal deposit and new balance", async () => {
-      mockTx.financialGoal.findUnique.mockResolvedValue({ id: goalId });
-      mockTx.goalDeposit.create.mockResolvedValue(mockDeposit);
-      mockTx.goalProgressSnapshot.findFirst.mockResolvedValue(null);
+      vi.mocked(financialGoalsRepository.getUniqueGoal).mockResolvedValue({ id: goalId })
+      vi.mocked(financialGoalsRepository.createDeposit).mockResolvedValue(mockDeposit)
+      vi.mocked(financialGoalsRepository.getLatestSnapshot).mockResolvedValue(null)
       vi.mocked(adjustBalanceWithTx).mockResolvedValue({
         balance: new Prisma.Decimal(2000),
       } as any);
@@ -113,9 +125,9 @@ describe("POST /goals/deposit", () => {
     });
 
     it("should accumulate total deposited from last snapshot", async () => {
-      mockTx.financialGoal.findUnique.mockResolvedValue({ id: goalId });
-      mockTx.goalDeposit.create.mockResolvedValue(mockDeposit);
-      mockTx.goalProgressSnapshot.findFirst.mockResolvedValue({
+      vi.mocked(financialGoalsRepository.getUniqueGoal).mockResolvedValue({ id: goalId })
+      vi.mocked(financialGoalsRepository.createDeposit).mockResolvedValue(mockDeposit)
+      vi.mocked(financialGoalsRepository.getLatestSnapshot).mockResolvedValue({
         totalDeposited: new Prisma.Decimal(100),
       });
       vi.mocked(adjustBalanceWithTx).mockResolvedValue({
@@ -128,18 +140,17 @@ describe("POST /goals/deposit", () => {
         .send({ amount: 1000 });
 
       expect(response.status).toBe(200);
-      expect(mockTx.goalProgressSnapshot.create).toHaveBeenCalledWith({
-        data: {
-          goalId,
-          totalDeposited: new Prisma.Decimal(1100),
-        },
-      });
+      expect(financialGoalsRepository.createSnapshot).toHaveBeenCalledWith(
+        mockTx,
+        goalId,
+        new Prisma.Decimal(1100)
+      );
     });
   });
 
   describe("API validations", () => {
     it("should throw 404 if financial account does not exist", async () => {
-      vi.mocked(prisma.financeAccount.findUnique).mockResolvedValue(null);
+      userHaveAccount = false
 
       const response = await request(app)
         .post(`/finance/goals/deposit/${goalId}`)
@@ -151,7 +162,7 @@ describe("POST /goals/deposit", () => {
     });
 
     it("should throw 404 if financial goal does not exist", async () => {
-      mockTx.financialGoal.findUnique.mockResolvedValue(null);
+      vi.mocked(financialGoalsRepository.getUniqueGoal).mockResolvedValue(null);
 
       const response = await request(app)
         .post(`/finance/goals/deposit/${goalId}`)
@@ -163,7 +174,7 @@ describe("POST /goals/deposit", () => {
     });
 
     it("should return 422 if insufficient funds", async () => {
-      mockTx.financialGoal.findUnique.mockResolvedValue({ id: goalId });
+      vi.mocked(financialGoalsRepository.getUniqueGoal).mockResolvedValue({ id: goalId });
 
       vi.mocked(adjustBalanceWithTx).mockRejectedValue(
         new AppError("INSUFFICIENT_FUNDS", "Insufficient balance", 422),
@@ -179,17 +190,7 @@ describe("POST /goals/deposit", () => {
     });
 
     it("should throw 500 if internal errors occurs", async () => {
-      mockTx.financialGoal.findUnique.mockResolvedValue({ id: goalId });
-      mockTx.goalDeposit.create.mockResolvedValue(mockDeposit);
-      mockTx.goalProgressSnapshot.findFirst.mockResolvedValue({
-        totalDeposited: new Prisma.Decimal(100),
-      });
-      vi.mocked(adjustBalanceWithTx).mockResolvedValue({
-        balance: new Prisma.Decimal(2000),
-      } as any);
-      mockTx.goalProgressSnapshot.create.mockRejectedValue(
-        new Error("Db error"),
-      );
+      vi.mocked(financialGoalsRepository.getUniqueGoal).mockRejectedValue(new Error("Db error"))
 
       const response = await request(app)
         .post(`/finance/goals/deposit/${goalId}`)

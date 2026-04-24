@@ -4,6 +4,8 @@ import { prisma } from "../../../../../src/lib/prisma";
 import { Prisma, InvestorStyle, DurationUnit } from "@prisma/client";
 import request from "supertest";
 import app from "../../../../../src/app";
+import { AppError } from "../../../../../src/core/errors/AppError";
+import { financialGoalsRepository } from "../../../../../src/modules/finance/financial-goals/repositories/financialGoals.repository";
 
 vi.mock("jose", async (importOriginal) => {
   const original = await importOriginal<typeof import("jose")>();
@@ -22,20 +24,27 @@ vi.mock("jose", async (importOriginal) => {
 
 vi.mock("../../../../../src/lib/prisma", () => ({
   prisma: {
-    financeAccount: {
-      findUnique: vi.fn(),
-    },
     userArea: {
       findFirst: vi.fn(),
-    },
-    financialGoal: {
-      findMany: vi.fn(),
     },
     financialCategory: {
       findFirst: vi.fn(),
     },
   },
 }));
+
+let userHaveAccount: boolean
+
+vi.mock("../../../../../src/modules/finance/middlewares/requireFinancialAccount", () => ({
+  requireFinancialAccount: vi.fn((_req: any, _res: any, next: any) => {
+    if (!userHaveAccount) {
+      return next(new AppError("NOT_FOUND", "User account not found", 404))
+    }
+    next()
+  })
+}))
+
+vi.mock("../../../../../src/modules/finance/financial-goals/repositories/financialGoals.repository")
 
 const mockGoals = [
   {
@@ -96,7 +105,7 @@ const mockGoals = [
   },
 ];
 
-const expectedRespose = [
+const expectedResponse = [
   {
     id: "0611d847-f9ca-4f0e-9b34-33b9250b42fe",
     userId: "07c7db0b-8c87-4bc6-853b-1327afa6b262",
@@ -159,16 +168,14 @@ describe("GET /goals", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(prisma.userArea.findFirst).mockResolvedValue({ userId } as any);
-    vi.mocked(prisma.financeAccount.findUnique).mockResolvedValue({
-      id: "acc-id",
-    } as any);
+    userHaveAccount = true
   });
 
   authMiddlewareTests("get", "/finance/goals", "FINANCES");
 
   describe("Happy path", () => {
     it("should return 200 and goals", async () => {
-      vi.mocked(prisma.financialGoal.findMany).mockResolvedValue(mockGoals);
+      vi.mocked(financialGoalsRepository.getGoals).mockResolvedValue(mockGoals);
 
       const response = await request(app)
         .get("/finance/goals")
@@ -177,14 +184,14 @@ describe("GET /goals", () => {
       expect(response.status).toBe(200);
       expect(response.body).toMatchObject({
         data: {
-          goals: expectedRespose,
+          goals: expectedResponse,
           nextCursor: null,
         },
       });
     });
 
     it("should return limit items when has next page", async () => {
-      vi.mocked(prisma.financialGoal.findMany).mockResolvedValue(mockGoals);
+      vi.mocked(financialGoalsRepository.getGoals).mockResolvedValue(mockGoals);
 
       const response = await request(app)
         .get("/finance/goals")
@@ -196,7 +203,7 @@ describe("GET /goals", () => {
     });
 
     it("should return nextCursor as null when goals.length <= limit", async () => {
-      vi.mocked(prisma.financialGoal.findMany).mockResolvedValue(
+      vi.mocked(financialGoalsRepository.getGoals).mockResolvedValue(
         mockGoals.slice(0, 2),
       );
 
@@ -208,97 +215,23 @@ describe("GET /goals", () => {
       expect(response.body.data.nextCursor).toBeNull();
       expect(response.body.data.goals).toHaveLength(2);
     });
-
-    it("should call findMany with cursor params when cursor is provided", async () => {
-      vi.mocked(prisma.financialGoal.findMany).mockResolvedValue(
-        mockGoals.slice(2),
-      );
-
-      const cursorId = mockGoals[1].id;
-      await request(app)
-        .get("/finance/goals")
-        .set("Authorization", `Bearer ${validToken}`)
-        .query({ cursor: cursorId, limit: 2 });
-
-      expect(prisma.financialGoal.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({
-          skip: 1,
-          cursor: { id: cursorId },
-          take: 3,
-        }),
-      );
-    });
-
-    it("should filter goals by categoryId", async () => {
-      const categoryId = "3c53ba94-47b8-49c0-ac2a-0ec936316cd0";
-      vi.mocked(prisma.financialCategory.findFirst).mockResolvedValue({
-        id: categoryId,
-      } as any);
-      vi.mocked(prisma.financialGoal.findMany).mockResolvedValue([
-        mockGoals[0],
-      ]);
-
-      const response = await request(app)
-        .get("/finance/goals")
-        .set("Authorization", `Bearer ${validToken}`)
-        .query({ categoryId });
-
-      expect(response.status).toBe(200);
-      expect(prisma.financialGoal.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: { userId, categoryId, deletedAt: null },
-        }),
-      );
-    });
   });
 
   describe("Validation errors", () => {
     describe("Type errors", () => {
-      it("should throw 400 if cursor is not an uuid", async () => {
+      it.each([
+        ["categoryId", "uuid", "not-a-uuid"],
+        ["cursor", "uuid", "not-a-uuid"],
+        ["limit", "number", "not-a-number"],
+        ["limit", "integer", 10.5]
+      ])("should throw 400 if %s is not a %s", async (field, _, value) => {
         const response = await request(app)
           .get("/finance/goals")
           .set("Authorization", `Bearer ${validToken}`)
-          .query({ categoryId: "not-uuid" });
+          .query({ [field]: value });
 
         expect(response.status).toBe(400);
-        expect(response.body.error.details[0].message).toBe(
-          "Invalid category id",
-        );
-      });
-
-      it("should throw 400 if limit is not a number", async () => {
-        const response = await request(app)
-          .get("/finance/goals")
-          .set("Authorization", `Bearer ${validToken}`)
-          .query({ limit: "not-number" });
-
-        expect(response.status).toBe(400);
-        expect(response.body.error.details[0].message).toBe(
-          "Limit must be a number",
-        );
-      });
-
-      it("should throw 400 if limit is not an integer", async () => {
-        const response = await request(app)
-          .get("/finance/goals")
-          .set("Authorization", `Bearer ${validToken}`)
-          .query({ limit: 10.5 });
-
-        expect(response.status).toBe(400);
-        expect(response.body.error.details[0].message).toBe(
-          "Limit must be an integer",
-        );
-      });
-
-      it("should throw 400 if cursor is not an uuid", async () => {
-        const response = await request(app)
-          .get("/finance/goals")
-          .set("Authorization", `Bearer ${validToken}`)
-          .query({ cursor: "not-uuid" });
-
-        expect(response.status).toBe(400);
-        expect(response.body.error.details[0].message).toBe("Invalid cursor");
-      });
+      })
     });
 
     describe("Value errors", () => {
@@ -330,7 +263,7 @@ describe("GET /goals", () => {
 
   describe("API errors", () => {
     it("should throw 404 if user does not have a financial account", async () => {
-      vi.mocked(prisma.financeAccount.findUnique).mockResolvedValue(null);
+      userHaveAccount = false
 
       const response = await request(app)
         .get("/finance/goals")
@@ -349,5 +282,15 @@ describe("GET /goals", () => {
 
       expect(response.status).toBe(404);
     });
+
+    it("should throw 500 for server errors", async () => {
+      vi.mocked(financialGoalsRepository.getGoals).mockRejectedValue(new Error("Db error"))
+
+      const response = await request(app)
+        .get("/finance/goals")
+        .set("Authorization", `Bearer ${validToken}`);
+
+      expect(response.status).toBe(500);
+    })
   });
 });

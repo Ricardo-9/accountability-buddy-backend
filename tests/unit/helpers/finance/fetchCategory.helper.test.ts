@@ -1,7 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import { financialCategoriesRepository } from "../../../src/modules/finance/financial-categories/repositories/financialCategories.repository";
-import { fetchCategory } from "../../../src/modules/finance/financial-categories/helpers/fetchCategory.helper";
-import { AppError } from "../../../src/core/errors/AppError";
+import { financialCategoriesRepository } from "../../../../src/modules/finance/financial-categories/repositories/financialCategories.repository";
+import { fetchCategory } from "../../../../src/modules/finance/financial-categories/helpers/fetchCategory.helper";
+import { AppError } from "../../../../src/core/errors/AppError";
 
 vi.mock(
   "../../../src/modules/finance/financial-categories/repositories/financialCategories.repository",

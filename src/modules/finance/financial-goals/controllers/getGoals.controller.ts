@@ -12,12 +12,7 @@ export async function getGoalsController(
   const { categoryId, limit, cursor } = req.query as unknown as GetGoalsSchema;
 
   try {
-    const goals = await getGoalsService(userId, categoryId, limit, cursor);
-
-    const hasNextPage = goals.length > limit;
-    const data = hasNextPage ? goals.slice(0, -1) : goals;
-
-    const nextCursor = hasNextPage ? data.at(-1)?.id : null;
+    const { data, nextCursor } = await getGoalsService(userId, categoryId, limit, cursor);
 
     return successResponse(res, {
       goals: data,

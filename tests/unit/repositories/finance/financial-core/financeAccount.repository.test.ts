@@ -3,7 +3,6 @@ import { prisma } from "../../../../../src/lib/prisma";
 import { financeAccountRepository } from "../../../../../src/modules/finance/financial-core/repositories/financeAccount.repository";
 import { Prisma } from "@prisma/client";
 import { DEFAULT_FINANCIAL_CATEGORIES } from "../../../../../src/modules/finance/consts/defaultFinancialCategories";
-import { FinanceBalanceHistory } from "@prisma/client";
 
 vi.mock("../../../../../src/lib/prisma", () => ({
     prisma: {
