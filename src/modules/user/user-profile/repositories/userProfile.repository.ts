@@ -1,4 +1,6 @@
+import { AppError } from "../../../../core/errors/AppError.js";
 import { prisma } from "../../../../lib/prisma.js";
+import { supabaseAdmin } from "../../../../lib/supabaseAdmin.js";
 import { UpdateProfile } from "../schemas/updateProfile.schema.js";
 
 export const userProfileRepository = {
@@ -21,6 +23,16 @@ export const userProfileRepository = {
   },
 
   async delete(userId: string) {
+    const { error: banError } = await supabaseAdmin.auth.admin.updateUserById(userId, {
+      ban_duration: "876000h"
+    })
+
+    if (banError) throw new AppError(
+      "DELETE_ERROR",
+      "Failed to deactivate account",
+      502
+    )
+
     await prisma.userProfile.update({
       where: { id: userId },
       data: { deletedAt: new Date(), status: "DELETED" },
