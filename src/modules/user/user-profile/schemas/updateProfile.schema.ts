@@ -22,4 +22,4 @@ export const updateProfileSchema = z.object({
   body: updateProfileBodySchema,
 });
 
-export type UpdateProfile = z.infer<typeof updateProfileBodySchema>;
+export type UpdateProfileBodyType = z.infer<typeof updateProfileBodySchema>;
