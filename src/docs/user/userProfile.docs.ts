@@ -26,45 +26,31 @@
  *                                  example: true
  *                              data:
  *                                  type: object
- *                                  required:
- *                                      - id
- *                                      - createdAt
- *                                      - status
  *                                  properties:
- *                                      id:
- *                                          type: string
- *                                          format: uuid
- *                                          example: bc2d0f53-5041-46e8-a14c-267875a49f0c
- *                                      fullName:
- *                                          type: string
- *                                          example: User Name
- *                                          nullable: true
- *                                      birthDate:
- *                                          type: string
- *                                          format: date
- *                                          example: "2004-05-11"
- *                                          nullable: true
- *                                      phone:
- *                                          type: string
- *                                          example: "+5588999998888"
- *                                          nullable: true
- *                                      createdAt:
- *                                          type: string
- *                                          format: date-time
- *                                          example: "2020-04-10T12:00:00Z"
- *                                      updatedAt:
- *                                          type: string
- *                                          format: date-time
- *                                          example: "2026-08-11T12:00:00Z"
- *                                          nullable: true
- *                                      deletedAt:
- *                                          type: string
- *                                          format: date-time
- *                                          nullable: true
- *                                      status:
- *                                          type: string
- *                                          example: active
- *                                          enum: [active, deleted]
+ *                                      profile:
+ *                                          type: object
+ *                                          properties:
+ *                                              id:
+ *                                                  type: string
+ *                                                  format: uuid
+ *                                                  example: bc2d0f53-5041-46e8-a14c-267875a49f0c
+ *                                              fullName:
+ *                                                  type: string
+ *                                                  example: Ricardo Rocha
+ *                                                  nullable: true
+ *                                              birthDate:
+ *                                                  type: string
+ *                                                  format: date
+ *                                                  example: "2004-05-11"
+ *                                                  nullable: true
+ *                                              phone:
+ *                                                  type: string
+ *                                                  example: "+5588999998888"
+ *                                                  nullable: true
+ *                                              status:
+ *                                                  type: string
+ *                                                  enum: [ACTIVE, DELETED]
+ *                                                  example: ACTIVE
  *          401:
  *              description: Missing or invalid token
  *          404:
@@ -74,6 +60,8 @@
  *          500:
  *              description: Internal server error
  */
+
+
 /**
  * @swagger
  * /user/me:
@@ -118,50 +106,36 @@
  *                                  example: true
  *                              message:
  *                                  type: string
- *                                  example: Profile updated
+ *                                  example: User profile sucessfully updated
  *                              data:
  *                                  type: object
- *                                  required:
- *                                      - id
- *                                      - createdAt
- *                                      - status
  *                                  properties:
- *                                      id:
- *                                          type: string
- *                                          format: uuid
- *                                          example: bc2d0f53-5041-46e8-a14c-267875a49f0c
- *                                      fullName:
- *                                          type: string
- *                                          example: "Ricardo Souza"
- *                                          nullable: true
- *                                      birthDate:
- *                                          type: string
- *                                          format: date
- *                                          example: "2004-05-11"
- *                                          nullable: true
- *                                      phone:
- *                                          type: string
- *                                          example: "+5588999998888"
- *                                          nullable: true
- *                                      createdAt:
- *                                          type: string
- *                                          format: date-time
- *                                          example: "2020-04-10T12:00:00Z"
- *                                      updatedAt:
- *                                          type: string
- *                                          format: date-time
- *                                          example: "2026-08-11T12:00:00Z"
- *                                          nullable: true
- *                                      deletedAt:
- *                                          type: string
- *                                          format: date-time
- *                                          nullable: true
- *                                      status:
- *                                          type: string
- *                                          example: active
- *                                          enum: [active, deleted]
+ *                                      profile:
+ *                                          type: object
+ *                                          properties:
+ *                                              id:
+ *                                                  type: string
+ *                                                  format: uuid
+ *                                                  example: bc2d0f53-5041-46e8-a14c-267875a49f0c
+ *                                              fullName:
+ *                                                  type: string
+ *                                                  example: "Ricardo Souza"
+ *                                                  nullable: true
+ *                                              birthDate:
+ *                                                  type: string
+ *                                                  format: date
+ *                                                  example: "2004-05-11"
+ *                                                  nullable: true
+ *                                              phone:
+ *                                                  type: string
+ *                                                  example: "+5588999998888"
+ *                                                  nullable: true
+ *                                              status:
+ *                                                  type: string
+ *                                                  enum: [ACTIVE, DELETED]
+ *                                                  example: ACTIVE
  *          400:
- *              description: Invalid data or no fields provided
+ *              description: Invalid data
  *          401:
  *              description: Missing or invalid token
  *          404:
@@ -171,6 +145,7 @@
  *          500:
  *              description: Internal server error
  */
+
 
 /**
  * @swagger
@@ -193,15 +168,40 @@
  *                                  example: true
  *                              message:
  *                                  type: string
- *                                  example: Profile deleted
+ *                                  example: User profile sucessfully deleted
  *                              data:
  *                                  type: object
- *                                  nullable: true
- *                                  example: null
+ *                                  properties:
+ *                                      profile:
+ *                                          type: object
+ *                                          properties:
+ *                                              id:
+ *                                                  type: string
+ *                                                  format: uuid
+ *                                                  example: bc2d0f53-5041-46e8-a14c-267875a49f0c
+ *                                              fullName:
+ *                                                  type: string
+ *                                                  example: Ricardo Rocha
+ *                                                  nullable: true
+ *                                              birthDate:
+ *                                                  type: string
+ *                                                  format: date
+ *                                                  example: "2004-05-11"
+ *                                                  nullable: true
+ *                                              phone:
+ *                                                  type: string
+ *                                                  example: "+5588999998888"
+ *                                                  nullable: true
+ *                                              status:
+ *                                                  type: string
+ *                                                  enum: [ACTIVE, DELETED]
+ *                                                  example: DELETED
  *          401:
  *              description: Missing or invalid token
  *          404:
  *              description: Profile not found
+ *          502:
+ *              description: Failed to deactivate account in authentication system
  *          429:
  *              description: Too many requests
  *          500:
