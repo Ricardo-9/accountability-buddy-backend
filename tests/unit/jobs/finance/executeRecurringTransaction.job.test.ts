@@ -1,8 +1,8 @@
 import nodeCron from "node-cron";
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { executeRecurringTransactionJob } from "../../../../src/modules/finance/jobs/executeRecurringTransaction.job";
-import { recurringTransactionRepository } from "../../../../src/modules/finance/repositories/recurringTransaction.repository";
-import { executeRecurringTransactionService } from "../../../../src/modules/finance/services/executeRecurringTransaction.service";
+import { executeRecurringTransactionJob } from "../../../../src/modules/finance/recurring-transactions/jobs/executeRecurringTransaction.job";
+import { recurringTransactionRepository } from "../../../../src/modules/finance/recurring-transactions/repositories/recurringTransaction.repository";
+import { executeRecurringTransactionService } from "../../../../src/modules/finance/recurring-transactions/services/executeRecurringTransaction.service";
 
 vi.mock("node-cron", () => ({
   default: {
@@ -11,10 +11,10 @@ vi.mock("node-cron", () => ({
 }));
 
 vi.mock(
-  "../../../../src/modules/finance/repositories/recurringTransaction.repository",
+  "../../../../src/modules/finance/recurring-transactions/repositories/recurringTransaction.repository",
 );
 vi.mock(
-  "../../../../src/modules/finance/services/executeRecurringTransaction.service",
+  "../../../../src/modules/finance/recurring-transactions/services/executeRecurringTransaction.service",
 );
 
 describe("Execute recurring transaction job test", () => {
