@@ -1,29 +1,35 @@
-
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { deleteProfileService } from "../../../../../src/modules/user/user-profile/services/deleteProfile.service";
 import { fetchActiveProfile } from "../../../../../src/modules/user/user-profile/helpers/fetchActiveProfile.helper";
 import { userProfileRepository } from "../../../../../src/modules/user/user-profile/repositories/userProfile.repository";
+import { supabaseAdmin } from "../../../../../src/lib/supabaseAdmin";
 import { AppError } from "../../../../../src/core/errors/AppError";
 
 const mockUserProfile = {
   id: "user-123",
   fullName: "João Silva",
-  email: "joao@email.com",
-  phone: "+5588999887766",
   birthDate: new Date("1990-01-15"),
+  phone: "+5588999887766",
   status: "ACTIVE" as const,
-  deletedAt: null,
-  createdAt: new Date(),
-  updatedAt: new Date(),
 };
 
 vi.mock(
- "../../../../../src/modules/user/user-profile/helpers/fetchActiveProfile.helper",
+  "../../../../../src/modules/user/user-profile/helpers/fetchActiveProfile.helper",
 );
 
 vi.mock(
- "../../../../../src/modules/user/user-profile/repositories/userProfile.repository",
+  "../../../../../src/modules/user/user-profile/repositories/userProfile.repository",
 );
+
+vi.mock("../../../../../src/lib/supabaseAdmin", () => ({
+  supabaseAdmin: {
+    auth: {
+      admin: {
+        updateUserById: vi.fn(),
+      },
+    },
+  },
+}));
 
 describe("deleteProfileService", () => {
   beforeEach(() => {
@@ -33,10 +39,20 @@ describe("deleteProfileService", () => {
   it("should successfully delete user profile", async () => {
     vi.mocked(fetchActiveProfile).mockResolvedValue(mockUserProfile);
 
-    await deleteProfileService("user-123");
+    vi.mocked(userProfileRepository.softDelete).mockResolvedValue(
+      mockUserProfile,
+    );
 
-    expect(fetchActiveProfile).toHaveBeenCalledWith("user-123");
-    expect(userProfileRepository.delete).toHaveBeenCalledWith("user-123");
+    vi.mocked(
+      supabaseAdmin.auth.admin.updateUserById,
+    ).mockResolvedValue({
+      data: { user: null },
+      error: null,
+    } as any);
+
+    const result = await deleteProfileService("user-123");
+
+    expect(result).toEqual(mockUserProfile);
   });
 
   it("should throw NOT_FOUND when user profile does not exist", async () => {
@@ -51,28 +67,52 @@ describe("deleteProfileService", () => {
     await expect(deleteProfileService("user-999")).rejects.toMatchObject({
       code: "NOT_FOUND",
       statusCode: 404,
-      message: "User profile not found",
     });
-
   });
 
-  it("should throw DELETE_ERROR when Supabase ban fails", async () => {
-    const deleteError = new AppError(
-      "DELETE_ERROR",
-      "Failed to deactivate account",
-      502,
+  it("should rollback when supabase ban fails", async () => {
+    vi.mocked(fetchActiveProfile).mockResolvedValue(mockUserProfile);
+
+    vi.mocked(userProfileRepository.softDelete).mockResolvedValue(
+      mockUserProfile,
     );
 
-    vi.mocked(fetchActiveProfile).mockResolvedValue(mockUserProfile);
-    vi.mocked(userProfileRepository.delete).mockRejectedValue(deleteError);
+    vi.mocked(
+      supabaseAdmin.auth.admin.updateUserById,
+    ).mockResolvedValue({
+      data: { user: null },
+      error: { message: "fail" },
+    } as any);
+
+    vi.mocked(userProfileRepository.reactivate).mockResolvedValue(
+      mockUserProfile,
+    );
 
     await expect(deleteProfileService("user-123")).rejects.toMatchObject({
       code: "DELETE_ERROR",
       statusCode: 502,
-      message: "Failed to deactivate account",
     });
 
-    expect(fetchActiveProfile).toHaveBeenCalledWith("user-123");
-    expect(userProfileRepository.delete).toHaveBeenCalledWith("user-123");
+    expect(userProfileRepository.reactivate).toHaveBeenCalledWith("user-123");
+  });
+
+  it("should rollback when unexpected error occurs", async () => {
+    vi.mocked(fetchActiveProfile).mockResolvedValue(mockUserProfile);
+
+    vi.mocked(userProfileRepository.softDelete).mockResolvedValue(
+      mockUserProfile,
+    );
+
+    vi.mocked(
+      supabaseAdmin.auth.admin.updateUserById,
+    ).mockRejectedValue(new Error("unexpected"));
+
+    vi.mocked(userProfileRepository.reactivate).mockResolvedValue(
+      mockUserProfile,
+    );
+
+    await expect(deleteProfileService("user-123")).rejects.toThrow();
+
+    expect(userProfileRepository.reactivate).toHaveBeenCalledWith("user-123");
   });
 });
