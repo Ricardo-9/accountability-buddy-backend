@@ -14,6 +14,11 @@ const mockUserProfile = {
   status: "DELETED" as ProfileStatus,
 };
 
+const mockUserProfileResponse = {
+  ...mockUserProfile,
+  birthDate: mockUserProfile.birthDate.toISOString(),
+};
+
 vi.mock(
   "../../../../src/modules/user/user-profile/services/deleteProfile.service",
 );
@@ -36,15 +41,16 @@ describe("delete profile integration test", () => {
     const response = await request(app).delete("/user/me");
 
     expect(response.body.data).toEqual({
-      profile: {
-        ...mockUserProfile,
-        birthDate: new Date("1990-01-15").toISOString(),
-      },
+      profile: mockUserProfileResponse,
     });
+
+    expect(response.body.message).toBe(
+      "User profile sucessfully deleted",
+    );
 
     expect(response.status).toBe(200);
 
-    expect(response.body.error).toBeUndefined();
+    expect(deleteProfileService).toHaveBeenCalledWith("user-123");
   });
 
   it("should return 401 when user is not authenticated", async () => {
@@ -68,8 +74,27 @@ describe("delete profile integration test", () => {
     expect(response.body.error.message).toBe("profile not found");
   });
 
-  it("should return 500 when database fails", async () => {
-    vi.mocked(deleteProfileService).mockRejectedValue(new Error("DB error"));
+  it("should return 502 when supabase deletion fails", async () => {
+    vi.mocked(deleteProfileService).mockRejectedValue(
+      new AppError(
+        "DELETE_ERROR",
+        "Failed to deactivate account in authentication system",
+        502,
+      ),
+    );
+
+    const response = await request(app).delete("/user/me");
+
+    expect(response.status).toBe(502);
+    expect(response.body.error.message).toBe(
+      "Failed to deactivate account in authentication system",
+    );
+  });
+
+  it("should return 500 when unexpected error happens", async () => {
+    vi.mocked(deleteProfileService).mockRejectedValue(
+      new Error("Unexpected error"),
+    );
 
     const response = await request(app).delete("/user/me");
 
