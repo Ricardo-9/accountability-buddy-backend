@@ -2,16 +2,18 @@ import { Router } from "express";
 import { authenticate } from "../../../middlewares/authMiddleware.js";
 import { validateRequest } from "../../../middlewares/validateRequest.js";
 import { requireArea } from "../../../middlewares/requireArea.js";
-
 import { AccountabilityArea } from "@prisma/client";
-
-import { variableExpenseController } from "./controllers/variableExpense.controller.js";
-
 import { createVariableExpenseSchema } from "./schemas/createVariableExpense.schema.js";
 import { getVariableExpenseSchema } from "./schemas/getVariableExpenseById.schema.js";
 import { getVariableExpensesSchema } from "./schemas/getVariableExpenses.schema.js";
 import { updateVariableExpenseSchema } from "./schemas/updateVariableExpense.schema.js";
-import { deleteByIdSchema } from "../financial-categories/schemas/deletebyid.schema.js";
+import { deleteVariableExpenseSchema } from "./schemas/deleteVariableExpense.schema.js";
+import { deleteVariableExpenseController } from "./controllers/deleteVariableExpense.controller.js";
+import { updateVariableExpenseController } from "./controllers/updateVariableExpense.controller.js";
+import { createVariableExpenseController } from "./controllers/createVariableExpense.controller.js";
+import { getVariableExpensesController } from "./controllers/getVariableExpenses.controller.js";
+import { getOneVariableExpenseController } from "./controllers/getOneVariableExpense.controller.js";
+import { requireFinancialAccount } from "../middlewares/requireFinancialAccount.js";
 
 const router = Router();
 
@@ -19,40 +21,45 @@ router.get(
   "/variable-expense/:id",
   authenticate,
   requireArea(AccountabilityArea.FINANCES),
+  requireFinancialAccount,
   validateRequest(getVariableExpenseSchema),
-  variableExpenseController.getVariableExpense,
+  getOneVariableExpenseController,
 );
 
 router.get(
   "/variable-expense",
   authenticate,
   requireArea(AccountabilityArea.FINANCES),
+  requireFinancialAccount,
   validateRequest(getVariableExpensesSchema),
-  variableExpenseController.getVariableExpenses,
+  getVariableExpensesController,
 );
 
 router.post(
   "/variable-expense",
   authenticate,
   requireArea(AccountabilityArea.FINANCES),
+  requireFinancialAccount,
   validateRequest(createVariableExpenseSchema),
-  variableExpenseController.createVariableExpense,
+  createVariableExpenseController,
 );
 
 router.patch(
   "/variable-expense/:id",
   authenticate,
   requireArea(AccountabilityArea.FINANCES),
+  requireFinancialAccount,
   validateRequest(updateVariableExpenseSchema),
-  variableExpenseController.updateVariableExpense,
+  updateVariableExpenseController,
 );
 
 router.delete(
   "/variable-expense/:id",
   authenticate,
   requireArea(AccountabilityArea.FINANCES),
-  validateRequest(deleteByIdSchema),
-  variableExpenseController.deleteVariableExpense,
+  requireFinancialAccount,
+  validateRequest(deleteVariableExpenseSchema),
+  deleteVariableExpenseController,
 );
 
 export { router as variableExpenseRoutes };

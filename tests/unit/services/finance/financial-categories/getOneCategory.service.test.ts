@@ -2,7 +2,7 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 import { getOneCategoryService } from "../../../../../src/modules/finance/financial-categories/services/getOneCategory.service";
 import { financialCategoriesRepository } from "../../../../../src/modules/finance/financial-categories/repositories/financialCategories.repository";
 import { AppError } from "../../../../../src/core/errors/AppError";
-
+import {fetchCategory} from "../../../../../src/modules/finance/financial-categories/helpers/fetchCategory.helper"
 const mockCategory = {
   id: "categoryId",
   name: "MOCKCATEGORY",

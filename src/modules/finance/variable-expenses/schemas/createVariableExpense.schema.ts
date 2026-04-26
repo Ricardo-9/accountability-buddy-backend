@@ -11,7 +11,7 @@ export const createVariableExpenseSchema = z.object({
       .nullable(),
     name: z
       .string({ error: "name for variable expense must be a string" })
-      .min(1, { error: "The name of variable expense is required" })
+      .min(2, { error: "The minimum number of characters is 2" })
       .max(120, { error: "The maximum number of characters is 120" }),
     amount: z.coerce
       .number({
