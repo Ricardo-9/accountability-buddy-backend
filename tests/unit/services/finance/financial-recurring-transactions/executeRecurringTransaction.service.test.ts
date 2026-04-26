@@ -1,22 +1,22 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { executeRecurringTransactionService } from "../../../../../src/modules/finance/services/executeRecurringTransaction.service";
-import { adjustBalanceWithTx } from "../../../../../src/modules/finance/helpers/adjustBalanceWithTx.helper";
-import { recurringTransactionRepository } from "../../../../../src/modules/finance/repositories/recurringTransaction.repository";
-import { financeAccountRepository } from "../../../../../src/modules/finance/repositories/financeAccount.repository";
+import { executeRecurringTransactionService } from "../../../../../src/modules/finance/recurring-transactions/services/executeRecurringTransaction.service";
+import { adjustBalanceWithTx } from "../../../../../src/modules/finance/shared/helpers/adjustBalanceWithTx.helper";
+import { recurringTransactionRepository } from "../../../../../src/modules/finance/recurring-transactions/repositories/recurringTransaction.repository";
+import { financeAccountRepository } from "../../../../../src/modules/finance/financial-core/repositories/financeAccount.repository";
 import { Prisma } from "@prisma/client";
-import { calculateNextOccurrence } from "../../../../../src/modules/finance/helpers/calculateNextOccurrence.helper";
+import { calculateNextOccurrence } from "../../../../../src/modules/finance/shared/helpers/calculateNextOccurrence.helper";
 
 vi.mock(
-  "../../../../../src/modules/finance/helpers/adjustBalanceWithTx.helper",
+  "../../../../../src/modules/finance/shared/helpers/adjustBalanceWithTx.helper",
 );
 vi.mock(
-  "../../../../../src/modules/finance/repositories/recurringTransaction.repository",
+  "../../../../../src/modules/finance/recurring-transactions/repositories/recurringTransaction.repository",
 );
 vi.mock(
-  "../../../../../src/modules/finance/repositories/financeAccount.repository",
+  "../../../../../src/modules/finance/financial-core/repositories/financeAccount.repository",
 );
 vi.mock(
-  "../../../../../src/modules/finance/helpers/calculateNextOccurrence.helper",
+  "../../../../../src/modules/finance/shared/helpers/calculateNextOccurrence.helper",
 );
 
 vi.mock("../../../../../src/lib/prisma", () => ({
