@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { successResponse } from "../../../../shared/utils/apiResponse.js";
 import { getOneCategoryService } from "../services/getOneCategory.service.js";
-import { GetCategoriesSchemaType } from "../schemas/getCategories.schema.js";
 import { GetByIdSchemaType } from "../schemas/getOneCategory.schema.js";
 
 export async function getOneCategoryController(

@@ -33,6 +33,8 @@ describe("delete category service test", () => {
 
     expect(fetchCategory).toHaveBeenCalledWith("userId", "categoryId");
 
+    expect(financialCategoriesRepository.delete).toHaveBeenCalledWith("userId","categoryId")
+
     expect(result).toEqual({
       id: "categoryId",
       name: "MOCKCATEGORY",
