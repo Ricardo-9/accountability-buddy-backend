@@ -82,5 +82,16 @@ export const recurringTransactionRepository = {
         nextOccurrence: true,
       }
     })
+  },
+
+  async deleteRecurringTransaction(
+    tx: Prisma.TransactionClient | PrismaClient,
+    userId: string,
+    id: string
+  ) {
+    return await tx.recurringTransaction.updateMany({
+      where: { id, userId, deletedAt: null },
+      data: { deletedAt: new Date() }
+    })
   }
 };
