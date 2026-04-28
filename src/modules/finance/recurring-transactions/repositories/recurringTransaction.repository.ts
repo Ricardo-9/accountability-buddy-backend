@@ -1,5 +1,16 @@
-import { Prisma } from "@prisma/client";
+import { Prisma, RecurrenceUnit, TransactionType } from "@prisma/client";
 import { PrismaClient } from "@prisma/client/extension";
+
+type CreateRecurringTransactionDTO = {
+  type: TransactionType;
+  name: string;
+  amount: number;
+  recurrenceValue: number;
+  recurrenceUnit: RecurrenceUnit;
+  nextOccurrence: Date;
+  categoryId: string | null;
+  dayOfMonth: number | null;
+}
 
 export const recurringTransactionRepository = {
   async findById(tx: Prisma.TransactionClient, id: string) {
@@ -45,4 +56,31 @@ export const recurringTransactionRepository = {
       data,
     });
   },
+
+  async createRecurringTransaction(
+    tx: Prisma.TransactionClient | PrismaClient,
+    userId: string,
+    data: CreateRecurringTransactionDTO
+  ) {
+    return await tx.recurringTransaction.create({
+      data: {
+        userId,
+        ...data,
+        amount: new Prisma.Decimal(data.amount)
+      },
+      select: {
+        id: true,
+        userId: true,
+        categoryId: true,
+        type: true,
+        name: true,
+        amount: true,
+        recurrenceValue: true,
+        recurrenceUnit: true,
+        dayOfMonth: true,
+        createdAt: true,
+        nextOccurrence: true,
+      }
+    })
+  }
 };
