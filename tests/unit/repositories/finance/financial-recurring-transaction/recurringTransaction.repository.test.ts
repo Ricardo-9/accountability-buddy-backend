@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { Prisma } from "@prisma/client";
+import { Prisma, RecurrenceUnit, TransactionType } from "@prisma/client";
 import { recurringTransactionRepository } from "../../../../../src/modules/finance/recurring-transactions/repositories/recurringTransaction.repository"
 vi.mock("../../../../../src/lib/prisma", () => ({
     prisma: {
@@ -13,7 +13,9 @@ const mockTx = {
     recurringTransaction: {
         findUnique: vi.fn(),
         findMany: vi.fn(),
-        update: vi.fn()
+        update: vi.fn(),
+        create: vi.fn(),
+        updateMany: vi.fn()
     },
     recurringTransactionExecution: {
         create: vi.fn()
@@ -75,6 +77,55 @@ describe("Recurring transaction repository test", () => {
             expect(mockTx.recurringTransaction.update).toHaveBeenCalledWith({
                 where: { id: "id" },
                 data
+            })
+        })
+    })
+
+    describe("createRecurringTransaction", () => {
+        it("should call transaction with correct params", async () => {
+            const data = {
+                type: TransactionType.INCOME,
+                name: "Transaction name",
+                amount: 2000,
+                recurrenceValue: 1,
+                recurrenceUnit: RecurrenceUnit.MONTH,
+                nextOccurrence: new Date(),
+                categoryId: null,
+                dayOfMonth: null
+            }
+
+            await recurringTransactionRepository.createRecurringTransaction(mockTx, "userId", data)
+
+            expect(mockTx.recurringTransaction.create).toHaveBeenCalledWith({
+                data: {
+                    userId: "userId",
+                    ...data,
+                    amount: new Prisma.Decimal(data.amount)
+                },
+                select: {
+                    id: true,
+                    userId: true,
+                    categoryId: true,
+                    type: true,
+                    name: true,
+                    amount: true,
+                    recurrenceValue: true,
+                    recurrenceUnit: true,
+                    dayOfMonth: true,
+                    createdAt: true,
+                    nextOccurrence: true,
+                }
+            })
+        })
+    })
+
+    describe("deleteRecurringTransaction", () => {
+        it("should call transaction with correct params", async () => {
+            await recurringTransactionRepository.deleteRecurringTransaction(mockTx, "userId", "goalId")
+
+            expect(mockTx.recurringTransaction.updateMany).toHaveBeenCalledWith({
+                where: { id: "goalId", userId: "userId", deletedAt: null },
+                data: { deletedAt: expect.any(Date) }
             })
         })
     })
