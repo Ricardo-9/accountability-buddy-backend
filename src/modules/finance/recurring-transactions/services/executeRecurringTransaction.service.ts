@@ -6,6 +6,7 @@ import { financeAccountRepository } from "../../financial-core/repositories/fina
 import { Prisma } from "@prisma/client";
 
 export async function executeRecurringTransactionService(
+  userId: string,
   transactionId: string,
 ) {
   const now = new Date();
@@ -13,6 +14,7 @@ export async function executeRecurringTransactionService(
   return await prisma.$transaction(async (tx) => {
     const transaction = await recurringTransactionRepository.findById(
       tx,
+      userId,
       transactionId,
     );
 

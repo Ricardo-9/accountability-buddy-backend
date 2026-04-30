@@ -61,14 +61,17 @@ export const recurringTransactionRepository = {
     });
   },
 
-  async findPendingTransactions(prisma: PrismaClient) {
+  async findPendingTransactions(tx: Tx) {
     const now = new Date();
-    return await prisma.recurringTransaction.findMany({
+    return await tx.recurringTransaction.findMany({
       where: {
         nextOccurrence: { lte: now },
         deletedAt: null,
       },
-      select: { id: true },
+      select: { 
+        id: true, 
+        userId: true 
+      },
     });
   },
 
