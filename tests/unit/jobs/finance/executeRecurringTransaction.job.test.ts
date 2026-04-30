@@ -35,15 +35,15 @@ describe("Execute recurring transaction job test", () => {
 
     vi.mocked(
       recurringTransactionRepository.findPendingTransactions,
-    ).mockResolvedValue([{ id: "1" }, { id: "2" }]);
+    ).mockResolvedValue([{ userId: "userId", id: "1" }, { userId: "userId", id: "2" }]);
 
     executeRecurringTransactionJob();
 
     await fakeCallback();
 
     expect(executeRecurringTransactionService).toHaveBeenCalledTimes(2);
-    expect(executeRecurringTransactionService).toHaveBeenCalledWith("1");
-    expect(executeRecurringTransactionService).toHaveBeenCalledWith("2");
+    expect(executeRecurringTransactionService).toHaveBeenCalledWith("userId", "1");
+    expect(executeRecurringTransactionService).toHaveBeenCalledWith("userId", "2");
     expect(nodeCron.schedule).toHaveBeenCalledWith(
       "* * * * *",
       expect.any(Function),

@@ -54,7 +54,10 @@ describe("Recurring transaction repository test", () => {
           nextOccurrence: { lte: expect.any(Date) },
           deletedAt: null,
         },
-        select: { id: true },
+        select: {
+          id: true,
+          userId: true
+        },
       });
     });
   });

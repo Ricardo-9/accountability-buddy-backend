@@ -51,7 +51,7 @@ describe("Execute recurring transaction service test", () => {
       new Date(now.getTime() + 10000),
     );
 
-    await executeRecurringTransactionService("transactionId");
+    await executeRecurringTransactionService("userId", "transactionId");
 
     expect(adjustBalanceWithTx).toHaveBeenCalledWith({
       tx: expect.anything(),
@@ -79,7 +79,7 @@ describe("Execute recurring transaction service test", () => {
   it("should do nothing if transaction does not exist", async () => {
     vi.mocked(recurringTransactionRepository.findById).mockResolvedValue(null);
 
-    await executeRecurringTransactionService("transactionId");
+    await executeRecurringTransactionService("userId", "transactionId");
 
     expect(adjustBalanceWithTx).not.toHaveBeenCalled();
     expect(
@@ -101,7 +101,7 @@ describe("Execute recurring transaction service test", () => {
       .mockImplementationOnce(() => new Date(now.getTime() - 5000))
       .mockImplementationOnce(() => new Date(now.getTime() + 10000));
 
-    await executeRecurringTransactionService("transactionId");
+    await executeRecurringTransactionService("userId", "transactionId");
 
     expect(
       recurringTransactionRepository.createTransactionExecution,
@@ -119,7 +119,7 @@ describe("Execute recurring transaction service test", () => {
       new Date(now.getTime() + 10000),
     );
 
-    await executeRecurringTransactionService("transactionId");
+    await executeRecurringTransactionService("userId", "transactionId");
 
     const call = vi.mocked(
       recurringTransactionRepository.createTransactionExecution,
@@ -140,7 +140,7 @@ describe("Execute recurring transaction service test", () => {
       new Date(now.getTime() + 10000),
     );
 
-    await executeRecurringTransactionService("transactionId");
+    await executeRecurringTransactionService("userId", "transactionId");
 
     const call = vi.mocked(
       recurringTransactionRepository.createTransactionExecution,
