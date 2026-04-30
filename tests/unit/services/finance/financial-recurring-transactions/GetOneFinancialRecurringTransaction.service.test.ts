@@ -1,89 +1,54 @@
-import { describe, expect, it, beforeEach, vi } from "vitest";
-import { prisma } from "../../../../../src/lib/prisma";
-import { getOneRecurringTransactionService } from "../../../../../src/modules/finance/services/getonerecurringtransaction.service";
-import { Prisma } from "@prisma/client";
+import { describe, expect, it, vi, beforeEach } from "vitest";
+import { getOneRecurringTransactionService } from "../../../../../src/modules/finance/recurring-transactions/services/getOneRecurringTransaction.service";
+import { recurringTransactionRepository } from "../../../../../src/modules/finance/recurring-transactions/repositories/recurringTransaction.repository";
 
-vi.mock("../../../../../src/lib/prisma", () => ({
-  prisma: {
-    recurringTransaction: {
-      findUnique: vi.fn(),
-    },
-  },
-}));
-
-const mockRecurringTransaction = {
-  id: "rec-123",
-  userId: "user-456",
-  categoryId: "cat-789",
-  type: "EXPENSE" as const,
-  name: "Netflix Subscription",
-  amount: new Prisma.Decimal(49.9),
-  recurrenceValue: 1,
-  recurrenceUnit: "MONTH" as const,
-  dayOfMonth: 15,
-  createdAt: new Date("2026-01-15"),
-  nextOccurrence: new Date("2026-05-15"),
-  lastExecutedAt: null,
-  updatedAt: new Date("2026-01-15"),
-  deletedAt: null,
+const mockRecurring = {
+  id: "recurringId",
+  name: "Netflix",
+  amount: 39.9,
 };
 
-describe("Get one recurring transaction", () => {
-  beforeEach(() => vi.clearAllMocks());
+vi.mock(
+  "../../../../../src/modules/finance/recurring-transactions/repositories/recurringTransaction.repository",
+);
 
-  it("should return the recurring transaction when it exists and belongs to user", async () => {
-    vi.mocked(prisma.recurringTransaction.findUnique).mockResolvedValue(
-      mockRecurringTransaction,
+describe("get one recurring transaction service test", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("should return recurring transaction", async () => {
+    vi.mocked(recurringTransactionRepository.findById).mockResolvedValue(
+      mockRecurring as any,
     );
 
     const result = await getOneRecurringTransactionService(
-      "user-456",
-      "rec-123",
+      "user-123",
+      "recurringId",
     );
 
-    expect(result).toEqual(mockRecurringTransaction);
-    expect(prisma.recurringTransaction.findUnique).toHaveBeenCalledWith({
-      where: { userId: "user-456", id: "rec-123", deletedAt: null },
-      select: {
-        id: true,
-        userId: true,
-        categoryId: true,
-        type: true,
-        name: true,
-        amount: true,
-        recurrenceValue: true,
-        recurrenceUnit: true,
-        dayOfMonth: true,
-        createdAt: true,
-        nextOccurrence: true,
-      },
+    expect(result).toEqual(mockRecurring);
+  });
+
+  it("should throw NOT_FOUND when not exists", async () => {
+    vi.mocked(recurringTransactionRepository.findById).mockResolvedValue(null);
+
+    await expect(
+      getOneRecurringTransactionService("user-123", "recurringId"),
+    ).rejects.toMatchObject({
+      code: "NOT_FOUND",
+      statusCode: 404,
+      message: "Recurring transaction not found",
     });
   });
 
-  it("should return null when it does not exists", async () => {
-    vi.mocked(prisma.recurringTransaction.findUnique).mockResolvedValue(null);
-
-    const result = await getOneRecurringTransactionService(
-      "user-456",
-      "non-existent-id",
+  it("should propagate repository errors", async () => {
+    vi.mocked(recurringTransactionRepository.findById).mockRejectedValue(
+      new Error("Database failed"),
     );
 
-    expect(result).toEqual(null);
-    expect(prisma.recurringTransaction.findUnique).toHaveBeenCalledWith({
-      where: { userId: "user-456", id: "non-existent-id", deletedAt: null },
-      select: {
-        id: true,
-        userId: true,
-        categoryId: true,
-        type: true,
-        name: true,
-        amount: true,
-        recurrenceValue: true,
-        recurrenceUnit: true,
-        dayOfMonth: true,
-        createdAt: true,
-        nextOccurrence: true,
-      },
-    });
+    await expect(
+      getOneRecurringTransactionService("user-123", "recurringId"),
+    ).rejects.toThrow("Database failed");
   });
 });

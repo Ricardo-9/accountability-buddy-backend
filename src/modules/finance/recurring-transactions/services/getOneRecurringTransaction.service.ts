@@ -1,23 +1,20 @@
 import { prisma } from "../../../../lib/prisma.js";
+import { recurringTransactionRepository } from "../repositories/recurringTransaction.repository.js";
+import { AppError } from "../../../../core/errors/AppError.js";
 
 export async function getOneRecurringTransactionService(
   userId: string,
   id: string,
 ) {
-  return await prisma.recurringTransaction.findUnique({
-    where: { userId, id, deletedAt: null },
-    select: {
-      id: true,
-      userId: true,
-      categoryId: true,
-      type: true,
-      name: true,
-      amount: true,
-      recurrenceValue: true,
-      recurrenceUnit: true,
-      dayOfMonth: true,
-      createdAt: true,
-      nextOccurrence: true,
-    },
-  });
+  const recurring = await recurringTransactionRepository.findById(
+    prisma,
+    userId, 
+    id,
+  );
+
+  if (!recurring) {
+    throw new AppError("NOT_FOUND", "Recurring transaction not found", 404);
+  }
+
+  return recurring; 
 }
