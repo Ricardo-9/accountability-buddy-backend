@@ -1,20 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { prisma } from "../../../../../src/lib/prisma";
-import { deleteRecurringTransactionService } from "../../../../../src/modules/finance/services/deleterecurringtransaction.service";
+import { deleteRecurringTransactionService } from "../../../../../src/modules/finance/recurring-transactions/services/deleteRecurringTransaction.service";
+import { recurringTransactionRepository } from "../../../../../src/modules/finance/recurring-transactions/repositories/recurringTransaction.repository";
 
-vi.mock("../../../../../src/lib/prisma", () => ({
-  prisma: {
-    recurringTransaction: {
-      updateMany: vi.fn(),
-    },
-  },
-}));
+vi.mock("../../../../../src/modules/finance/recurring-transactions/repositories/recurringTransaction.repository")
 
 describe("Delete recurring transaction service test", () => {
   beforeEach(() => vi.clearAllMocks());
 
   it("should delete a recurring transaction by id", async () => {
-    vi.mocked(prisma.recurringTransaction.updateMany).mockResolvedValue({
+    vi.mocked(recurringTransactionRepository.deleteRecurringTransaction).mockResolvedValue({
       count: 1,
     });
 
@@ -23,15 +17,12 @@ describe("Delete recurring transaction service test", () => {
       "userId",
     );
 
-    expect(prisma.recurringTransaction.updateMany).toHaveBeenCalledWith({
-      where: { id: "transactionId", userId: "userId", deletedAt: null },
-      data: { deletedAt: expect.any(Date) },
-    });
+    expect(recurringTransactionRepository.deleteRecurringTransaction).toHaveBeenCalledWith(expect.anything(), "userId", "transactionId")
     expect(result).toBeUndefined();
   });
 
   it("should throw error if transaction does not exist", async () => {
-    vi.mocked(prisma.recurringTransaction.updateMany).mockResolvedValue({
+    vi.mocked(recurringTransactionRepository.deleteRecurringTransaction).mockResolvedValue({
       count: 0,
     });
 
