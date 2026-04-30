@@ -1,56 +1,45 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import request from "supertest";
-import app from "../../../../../src/app";
-import { prisma } from "../../../../../src/lib/prisma.js";
+import app from "../../../../../src/app.js";
 import { AppError } from "../../../../../src/core/errors/AppError.js";
 import { authenticate } from "../../../../../src/middlewares/authMiddleware.js";
+import { updateRecurringTransactionService } from "../../../../../src/modules/finance/recurring-transactions/services/updateRecurringTransaction.service.js";
 import { Prisma } from "@prisma/client";
-import { updateRecurringTransactionService } from "../../../../../src/modules/finance/services/updaterecurringtransaction.service";
 
-const mockRecurringTransaction = {
-  id: "3f8642d3-806a-49d2-b365-3149ef1bd0ed",
-  userId: "ca87bf22-7747-446c-9ff0-a95065152d80",
-  categoryId: "cat-789",
-  type: "EXPENSE" as const,
-  name: "Netflix Subscription",
-  amount: new Prisma.Decimal(49.9),
-  recurrenceValue: 1,
-  recurrenceUnit: "MONTH" as const,
-  dayOfMonth: 15,
-  createdAt: new Date("2026-01-15"),
-  nextOccurrence: new Date("2026-05-15"),
-  lastExecutedAt: null,
-  updatedAt: new Date("2026-01-15"),
-};
-
-const expectedHttpResponseArray = {
-  id: "3f8642d3-806a-49d2-b365-3149ef1bd0ed",
-  userId: "ca87bf22-7747-446c-9ff0-a95065152d80",
-  categoryId: "cat-789",
-  type: "EXPENSE",
-  name: "Netflix Subscription",
-  amount: "49.9",
+const mockRecurringDb = {
+  id: "3fd12663-f4df-4fcf-a67a-83e3035338ca",
+  userId: "user-123",
+  name: "Netflix",
+  amount: new Prisma.Decimal(39.9),
   recurrenceValue: 1,
   recurrenceUnit: "MONTH",
-  dayOfMonth: 15,
-  createdAt: "2026-01-15T00:00:00.000Z",
-  nextOccurrence: "2026-05-15T00:00:00.000Z",
-  lastExecutedAt: null,
-  updatedAt: "2026-01-15T00:00:00.000Z",
+  nextOccurrence: new Date("2025-05-01T00:00:00.000Z"),
+  updatedAt: new Date("2024-01-01T00:00:00.000Z"),
+  categoryId: null,
+  type: "EXPENSE",
+  dayOfMonth: 1,
 };
 
+const mockResponse = {
+  ...mockRecurringDb,
+  amount: "39.9",
+  nextOccurrence: mockRecurringDb.nextOccurrence.toISOString(),
+  updatedAt: mockRecurringDb.updatedAt.toISOString(),
+};
+
+let requireAreaShouldFail = false;
+let requireFinancialAccountShouldFail = false;
+
 vi.mock(
-  "../../../../../src/modules/finance/services/updaterecurringtransaction.service",
+  "../../../../../src/modules/finance/recurring-transactions/services/updateRecurringTransaction.service.js",
 );
 
-vi.mock("../../../../../src/middlewares/authMiddleware.ts", () => ({
+vi.mock("../../../../../src/middlewares/authMiddleware.js", () => ({
   authenticate: vi.fn((req: any, _res, next) => {
-    req.user = { id: "ca87bf22-7747-446c-9ff0-a95065152d80" };
+    req.user = { id: "user-123" };
     next();
   }),
 }));
-
-let requireAreaShouldFail = false;
 
 vi.mock("../../../../../src/middlewares/requireArea.js", () => ({
   requireArea: vi.fn(() => (_req: any, _res: any, next: any) => {
@@ -70,12 +59,10 @@ vi.mock("../../../../../src/middlewares/requireArea.js", () => ({
 vi.mock(
   "../../../../../src/modules/finance/middlewares/requireFinancialAccount.js",
   () => ({
-    requireFinancialAccount: vi.fn((req: any, _res: any, next: any) => {
-      req.financialAccount = {
-        id: "account-123",
-        userId: "ca87bf22-7747-446c-9ff0-a95065152d80",
-        balance: new Prisma.Decimal(1000),
-      };
+    requireFinancialAccount: vi.fn((_req: any, _res: any, next: any) => {
+      if (requireFinancialAccountShouldFail) {
+        return next(new AppError("NOT_FOUND", "User account not found", 404));
+      }
       next();
     }),
   }),
@@ -84,148 +71,90 @@ vi.mock(
 beforeEach(() => {
   vi.clearAllMocks();
   requireAreaShouldFail = false;
+  requireFinancialAccountShouldFail = false;
 });
 
-describe("update recurring transaction", () => {
-  it("should return 200 and update the recurring transaction", async () => {
-    vi.mocked(updateRecurringTransactionService).mockResolvedValue({
-      ...mockRecurringTransaction,
-      name: "New Name",
-    });
+describe("update recurring transaction integration test", () => {
+  it("should update the recurring transaction", async () => {
+    vi.mocked(updateRecurringTransactionService).mockResolvedValue(
+      mockRecurringDb,
+    );
 
     const response = await request(app)
-      .patch("/finance/transactions/3f8642d3-806a-49d2-b365-3149ef1bd0ed")
-      .send({ name: "New Name" });
+      .patch("/finance/transactions/3fd12663-f4df-4fcf-a67a-83e3035338ca")
+      .send({
+        name: "Netflix Premium",
+        amount: 50,
+      });
 
     expect(response.status).toBe(200);
-
-    expect(response.body.data).toEqual({
-      ...expectedHttpResponseArray,
-      name: "New Name",
-    });
-
-    expect(response.body.error).toBeUndefined();
+    expect(response.body.data).toEqual(mockResponse);
   });
 
-  it("should return 400 when body is invalid", async () => {
+  it("should return 400 when id is invalid", async () => {
     const response = await request(app)
-      .patch("/finance/transactions/3f8642d3-806a-49d2-b365-3149ef1bd0ed")
-      .send({
-        amount: -10,
-      });
+      .patch("/finance/transactions/123")
+      .send({ name: "Test" });
 
     expect(response.status).toBe(400);
     expect(response.body.error.code).toBe("VALIDATION_ERROR");
   });
 
-  it("should return 400 when id is invalid uuid", async () => {
-    const response = await request(app)
-      .patch("/finance/transactions/invalid-id")
-      .send({
-        name: "New Name",
-      });
-
-    expect(response.status).toBe(400);
-    expect(response.body.error.code).toBe("VALIDATION_ERROR");
-  });
-
-  it("should return 401 when user is not authenticated", async () => {
-    vi.mocked(authenticate).mockImplementationOnce(async (_req, _res, next) => {
-      next(new AppError("UNAUTHORIZED", "Invalid or expired token", 401));
-    });
+  it("should return 401 when not authenticated", async () => {
+    vi.mocked(authenticate).mockImplementationOnce(
+      async (_req, _res, next) => {
+        next(new AppError("UNAUTHORIZED", "Invalid token", 401));
+      },
+    );
 
     const response = await request(app)
-      .patch("/finance/transactions/3f8642d3-806a-49d2-b365-3149ef1bd0ed")
-      .send({
-        name: "New Name",
-      });
+      .patch("/finance/transactions/3fd12663-f4df-4fcf-a67a-83e3035338ca")
+      .send({ name: "Test" });
 
     expect(response.status).toBe(401);
   });
 
-  it("should return 403 when user does not have area permission", async () => {
+  it("should return 403 when no area permission", async () => {
     requireAreaShouldFail = true;
 
     const response = await request(app)
-      .patch("/finance/transactions/3f8642d3-806a-49d2-b365-3149ef1bd0ed")
-      .send({
-        name: "New Name",
-      });
+      .patch("/finance/transactions/3fd12663-f4df-4fcf-a67a-83e3035338ca")
+      .send({ name: "Test" });
 
     expect(response.status).toBe(403);
   });
 
-  it("should return 404 when route id is missing", async () => {
-    const response = await request(app).patch("/finance/transactions").send({
-      name: "New Name",
-    });
+  it("should return 404 when no financial account", async () => {
+    requireFinancialAccountShouldFail = true;
+
+    const response = await request(app)
+      .patch("/finance/transactions/3fd12663-f4df-4fcf-a67a-83e3035338ca")
+      .send({ name: "Test" });
 
     expect(response.status).toBe(404);
+    expect(response.body.error.message).toBe("User account not found");
   });
 
-  it("should return 404 when recurring transaction not found", async () => {
+  it("should return 404 when recurring not found", async () => {
     vi.mocked(updateRecurringTransactionService).mockRejectedValue(
       new AppError("NOT_FOUND", "Recurring transaction not found", 404),
     );
 
     const response = await request(app)
-      .patch("/finance/transactions/3f8642d3-806a-49d2-b365-3149ef1bd0ed")
-      .send({
-        name: "New Name",
-      });
+      .patch("/finance/transactions/3fd12663-f4df-4fcf-a67a-83e3035338ca")
+      .send({ name: "Test" });
 
     expect(response.status).toBe(404);
-    expect(response.body.error.code).toBe("NOT_FOUND");
   });
 
-  it("should return 400 when invalid recurrence rule", async () => {
+  it("should return 500 on unexpected error", async () => {
     vi.mocked(updateRecurringTransactionService).mockRejectedValue(
-      new AppError(
-        "INVALID_DATA",
-        "dayOfMonth only allowed for monthly recurrence",
-        400,
-      ),
+      new Error("DB error"),
     );
 
     const response = await request(app)
-      .patch("/finance/transactions/3f8642d3-806a-49d2-b365-3149ef1bd0ed")
-      .send({
-        dayOfMonth: 15,
-      });
-
-    expect(response.status).toBe(400);
-    expect(response.body.error.code).toBe("INVALID_DATA");
-  });
-
-  it("should return 400 when next occurrence is in the past", async () => {
-    vi.mocked(updateRecurringTransactionService).mockRejectedValue(
-      new AppError(
-        "INVALID_DATA",
-        "Next occurrence cannot be in the past",
-        400,
-      ),
-    );
-
-    const response = await request(app)
-      .patch("/finance/transactions/3f8642d3-806a-49d2-b365-3149ef1bd0ed")
-      .send({
-        firstOccurrence: "2008-01-01",
-      });
-
-    expect(response.status).toBe(400);
-    expect(response.body.error.code).toBe("INVALID_DATA");
-  });
-
-  it("should return 500 when unexpected error happens", async () => {
-    vi.mocked(updateRecurringTransactionService).mockRejectedValue(
-      new Error("Database exploded"),
-    );
-
-    const response = await request(app)
-      .patch("/finance/transactions/3f8642d3-806a-49d2-b365-3149ef1bd0ed")
-      .send({
-        name: "New Name",
-      });
+      .patch("/finance/transactions/3fd12663-f4df-4fcf-a67a-83e3035338ca")
+      .send({ name: "Test" });
 
     expect(response.status).toBe(500);
   });

@@ -8,11 +8,11 @@ export async function updateRecurringTransactionController(
   res: Response,
   next: NextFunction,
 ) {
-  const userId = req.user!.id;
-  const { id } = req.params as unknown as updateRecurringTransactionIdType;
-  const data = req.body;
-
   try {
+    const userId = req.user!.id;
+    const { id } = req.params as unknown as updateRecurringTransactionIdType;
+    const data = req.body;
+
     const transaction = await updateRecurringTransactionService(
       id,
       userId,

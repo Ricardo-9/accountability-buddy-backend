@@ -8,16 +8,18 @@ export async function getOneRecurringTransactionController(
   res: Response,
   next: NextFunction,
 ) {
-  const userId = req.user!.id;
-  const { id } = req.params as unknown as getOneRecurringTransactionType;
-
   try {
+    const userId = req.user!.id;
+    const { id } = req.params as unknown as getOneRecurringTransactionType;
+
     const recurringTransaction = await getOneRecurringTransactionService(
       userId,
       id,
     );
 
-    return successResponse(res, recurringTransaction);
+    return successResponse(res, {
+      recurringTransaction, 
+    });
   } catch (err) {
     next(err);
   }
