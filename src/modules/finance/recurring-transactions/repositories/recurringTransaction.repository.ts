@@ -1,5 +1,8 @@
 import { Prisma, RecurrenceUnit, TransactionType } from "@prisma/client";
 import { PrismaClient } from "@prisma/client/extension";
+import { updateRecurringTransactionBodyType } from "../schemas/updateRecurringTransaction.schema.js";
+
+type Tx = Prisma.TransactionClient | PrismaClient;
 
 type CreateRecurringTransactionDTO = {
   type: TransactionType;
@@ -10,12 +13,51 @@ type CreateRecurringTransactionDTO = {
   nextOccurrence: Date;
   categoryId: string | null;
   dayOfMonth: number | null;
-}
+};
 
 export const recurringTransactionRepository = {
-  async findById(tx: Prisma.TransactionClient, id: string) {
-    return await tx.recurringTransaction.findUnique({
-      where: { id, deletedAt: null },
+  async findById(tx: Tx, userId: string, id: string) {
+    return await tx.recurringTransaction.findFirst({
+      where: { id, userId, deletedAt: null },
+    });
+  },
+
+  async updateRecurringTransaction(
+    tx: Tx,
+    id: string,
+    userId: string,
+    data: updateRecurringTransactionBodyType & { nextOccurrence: Date },
+  ) {
+    const result = await tx.recurringTransaction.updateMany({
+      where: { id, userId, deletedAt: null },
+      data: {
+        ...data,
+        amount:
+          data.amount !== undefined
+            ? new Prisma.Decimal(data.amount)
+            : undefined,
+      },
+    });
+
+    if (result.count === 0) {
+      return null;
+    }
+
+    return await tx.recurringTransaction.findFirst({
+      where: { id, userId },
+      select: {
+        id: true,
+        userId: true,
+        categoryId: true,
+        type: true,
+        name: true,
+        amount: true,
+        recurrenceValue: true,
+        recurrenceUnit: true,
+        dayOfMonth: true,
+        nextOccurrence: true,
+        updatedAt: true,
+      },
     });
   },
 
@@ -60,13 +102,13 @@ export const recurringTransactionRepository = {
   async createRecurringTransaction(
     tx: Prisma.TransactionClient | PrismaClient,
     userId: string,
-    data: CreateRecurringTransactionDTO
+    data: CreateRecurringTransactionDTO,
   ) {
     return await tx.recurringTransaction.create({
       data: {
         userId,
         ...data,
-        amount: new Prisma.Decimal(data.amount)
+        amount: new Prisma.Decimal(data.amount),
       },
       select: {
         id: true,
@@ -80,18 +122,7 @@ export const recurringTransactionRepository = {
         dayOfMonth: true,
         createdAt: true,
         nextOccurrence: true,
-      }
-    })
+      },
+    });
   },
-
-  async deleteRecurringTransaction(
-    tx: Prisma.TransactionClient | PrismaClient,
-    userId: string,
-    id: string
-  ) {
-    return await tx.recurringTransaction.updateMany({
-      where: { id, userId, deletedAt: null },
-      data: { deletedAt: new Date() }
-    })
-  }
 };

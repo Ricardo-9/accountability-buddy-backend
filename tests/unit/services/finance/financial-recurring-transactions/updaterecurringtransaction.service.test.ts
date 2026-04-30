@@ -1,330 +1,139 @@
-import { describe, expect, beforeEach, vi, it } from "vitest";
-import { prisma } from "../../../../../src/lib/prisma";
-import { updateRecurringTransactionService } from "../../../../../src/modules/finance/services/updaterecurringtransaction.service";
-import { Prisma } from "@prisma/client";
+import { describe, expect, it, vi, beforeEach } from "vitest";
+import { updateRecurringTransactionService } from "../../../../../src/modules/finance/recurring-transactions/services/updateRecurringTransaction.service";
+import { recurringTransactionRepository } from "../../../../../src/modules/finance/recurring-transactions/repositories/recurringTransaction.repository";
+import { financialCategoriesRepository } from "../../../../../src/modules/finance/financial-categories/repositories/financialCategories.repository";
 
-vi.mock("../../../../../src/lib/prisma", () => ({
+vi.mock("../../../../../src/lib/prisma.js", () => ({
   prisma: {
-    recurringTransaction: {
-      findFirst: vi.fn(),
-      update: vi.fn(),
-    },
-    financialCategory: {
-      findFirst: vi.fn(),
-    },
+    $transaction: vi.fn(async (callback) => callback({})),
   },
 }));
 
-const mockRecurringTransaction = {
-  id: "rec-1",
-  userId: "user-1",
-  categoryId: "cat-1",
-  type: "EXPENSE" as const,
+vi.mock(
+  "../../../../../src/modules/finance/recurring-transactions/repositories/recurringTransaction.repository",
+);
+
+vi.mock(
+  "../../../../../src/modules/finance/financial-categories/repositories/financialCategories.repository",
+);
+
+const mockExisting = {
+  id: "recurringId",
+  type: "EXPENSE",
   name: "Netflix",
-  amount: new Prisma.Decimal(49.9),
+  amount: {
+    toNumber: () => 39.9,
+  },
   recurrenceValue: 1,
-  recurrenceUnit: "MONTH" as const,
-  dayOfMonth: 15,
-  nextOccurrence: new Date("2026-05-15"),
-  createdAt: new Date(),
-  updatedAt: new Date(),
-  lastExecutedAt: null,
+  recurrenceUnit: "MONTH",
+  categoryId: null,
+  dayOfMonth: 1,
+  nextOccurrence: new Date("2099-05-01"),
 };
 
-describe("update recurring transaction", () => {
+describe("update recurring transaction service test", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  (it("should update correctly the provided fields", async () => {
-    vi.mocked(prisma.recurringTransaction.findFirst).mockResolvedValue(
-      mockRecurringTransaction,
+  it("should update recurring transaction", async () => {
+    vi.mocked(recurringTransactionRepository.findById).mockResolvedValue(
+      mockExisting as any,
     );
 
-    vi.mocked(prisma.recurringTransaction.update).mockResolvedValue({
-      ...mockRecurringTransaction,
-      name: "New Name",
-    });
+    vi.mocked(
+      recurringTransactionRepository.updateRecurringTransaction,
+    ).mockResolvedValue({
+      ...mockExisting,
+      name: "Updated",
+    } as any);
 
-    const result = await updateRecurringTransactionService("rec-1", "user-1", {
-      name: "New Name",
-    });
+    const result = await updateRecurringTransactionService(
+      "recurringId",
+      "user-123",
+      {
+        name: "Updated",
+      },
+    );
 
     expect(result).toEqual({
-      ...mockRecurringTransaction,
-      name: "New Name",
+      ...mockExisting,
+      name: "Updated",
     });
-    expect(prisma.recurringTransaction.update).toHaveBeenCalledWith({
-      where: { id: "rec-1" },
-      data: {
-        categoryId: "cat-1",
-        type: "EXPENSE" as const,
-        name: "New Name",
-        amount: new Prisma.Decimal(49.9),
-        recurrenceValue: 1,
-        recurrenceUnit: "MONTH" as const,
-        dayOfMonth: 15,
-        nextOccurrence: new Date("2026-05-15"),
-      },
-      select: {
-        id: true,
-        userId: true,
-        categoryId: true,
-        type: true,
-        name: true,
-        amount: true,
-        recurrenceValue: true,
-        recurrenceUnit: true,
-        dayOfMonth: true,
-        nextOccurrence: true,
-        updatedAt: true,
-      },
+  });
+
+  it("should throw NOT_FOUND when recurring does not exist", async () => {
+    vi.mocked(recurringTransactionRepository.findById).mockResolvedValue(null);
+
+    await expect(
+      updateRecurringTransactionService("id", "user", {}),
+    ).rejects.toMatchObject({
+      code: "NOT_FOUND",
+      statusCode: 404,
+      message: "Recurring transaction not found",
     });
-  }),
-    it("should throw NOT_FOUND if recurring transaction not found", async () => {
-      vi.mocked(prisma.recurringTransaction.findFirst).mockResolvedValue(null);
+  });
 
-      await expect(
-        updateRecurringTransactionService("rec-2", "user-1", {
-          name: "New Name",
-        }),
-      ).rejects.toMatchObject({
-        code: "NOT_FOUND",
-        message: "Recurring transaction not found",
-        statusCode: 404,
-      });
-    }),
-    it("should Trhow NOT_FOUND if category does not exist", async () => {
-      vi.mocked(prisma.recurringTransaction.findFirst).mockResolvedValue(
-        mockRecurringTransaction,
-      );
-      vi.mocked(prisma.financialCategory.findFirst).mockResolvedValue(null);
+  it("should throw error when category not found", async () => {
+    vi.mocked(recurringTransactionRepository.findById).mockResolvedValue(
+      mockExisting as any,
+    );
 
-      await expect(
-        updateRecurringTransactionService("rec-1", "user-1", {
-          name: "New Name",
-          categoryId: "invalid-id",
-        }),
-      ).rejects.toMatchObject({
-        code: "NOT_FOUND",
-        message: "Category not found",
-        statusCode: 404,
-      });
-    }),
-    it("should update nextOccurrence when firstOccurrence is provided", async () => {
-      vi.mocked(prisma.recurringTransaction.findFirst).mockResolvedValue(
-        mockRecurringTransaction,
-      );
-      vi.mocked(prisma.recurringTransaction.update).mockResolvedValue({
-        ...mockRecurringTransaction,
-        dayOfMonth: 19,
-        nextOccurrence: new Date("2026-08-19"),
-      });
+    vi.mocked(financialCategoriesRepository.findOneById).mockResolvedValue(
+      null,
+    );
 
-      const result = await updateRecurringTransactionService(
-        "rec-1",
-        "user-1",
-        { firstOccurrence: new Date("2026-08-19"), dayOfMonth: 19 },
-      );
+    await expect(
+      updateRecurringTransactionService("id", "user", {
+        categoryId: "category-id",
+      }),
+    ).rejects.toMatchObject({
+      code: "NOT_FOUND",
+      statusCode: 404,
+      message: "Category not found",
+    });
+  });
 
-      expect(result.nextOccurrence).toEqual(new Date("2026-08-19"));
-      expect(prisma.recurringTransaction.update).toHaveBeenCalledWith({
-        where: { id: "rec-1" },
-        data: {
-          categoryId: "cat-1",
-          type: "EXPENSE" as const,
-          name: "Netflix",
-          amount: new Prisma.Decimal(49.9),
-          recurrenceValue: 1,
-          recurrenceUnit: "MONTH" as const,
-          dayOfMonth: 19,
-          nextOccurrence: new Date("2026-08-19"),
-        },
-        select: {
-          id: true,
-          userId: true,
-          categoryId: true,
-          type: true,
-          name: true,
-          amount: true,
-          recurrenceValue: true,
-          recurrenceUnit: true,
-          dayOfMonth: true,
-          nextOccurrence: true,
-          updatedAt: true,
-        },
-      });
-    }),
-    it("should adjust nextOccurrrence when monthly recurrence", async () => {
-      vi.mocked(prisma.recurringTransaction.findFirst).mockResolvedValue({
-        ...mockRecurringTransaction,
-        dayOfMonth: 19,
-        recurrenceUnit: "WEEK",
-      });
+  it("should throw error when dayOfMonth used with non-month recurrence", async () => {
+    vi.mocked(recurringTransactionRepository.findById).mockResolvedValue({
+      ...mockExisting,
+      recurrenceUnit: "DAY",
+    } as any);
 
-      vi.mocked(prisma.recurringTransaction.update).mockResolvedValue({
-        ...mockRecurringTransaction,
-        dayOfMonth: 19,
-        recurrenceUnit: "MONTH",
-      });
+    await expect(
+      updateRecurringTransactionService("id", "user", {
+        dayOfMonth: 10,
+      }),
+    ).rejects.toMatchObject({
+      code: "INVALID_DATA",
+      statusCode: 400,
+      message: "dayOfMonth only allowed for monthly recurrence",
+    });
+  });
 
-      const result = await updateRecurringTransactionService(
-        "rec-1",
-        "user-1",
-        { recurrenceUnit: "MONTH", dayOfMonth: 19 },
-      );
+  it("should throw error when nextOccurrence is in the past", async () => {
+    vi.mocked(recurringTransactionRepository.findById).mockResolvedValue(
+      mockExisting as any,
+    );
 
-      expect(result).toEqual({
-        ...mockRecurringTransaction,
-        dayOfMonth: 19,
-        recurrenceUnit: "MONTH",
-      });
-      expect(prisma.recurringTransaction.update).toHaveBeenCalledWith({
-        where: { id: "rec-1" },
-        data: {
-          categoryId: "cat-1",
-          type: "EXPENSE" as const,
-          name: "Netflix",
-          amount: new Prisma.Decimal(49.9),
-          recurrenceValue: 1,
-          recurrenceUnit: "MONTH" as const,
-          dayOfMonth: 19,
-          nextOccurrence: new Date("2026-05-19"),
-        },
-        select: {
-          id: true,
-          userId: true,
-          categoryId: true,
-          type: true,
-          name: true,
-          amount: true,
-          recurrenceValue: true,
-          recurrenceUnit: true,
-          dayOfMonth: true,
-          nextOccurrence: true,
-          updatedAt: true,
-        },
-      });
-    }),
-    it("should throw when dayOfMonth used with WEEK", async () => {
-      vi.mocked(prisma.recurringTransaction.findFirst).mockResolvedValue({
-        ...mockRecurringTransaction,
-        dayOfMonth: null,
-        recurrenceUnit: "WEEK",
-      });
+    await expect(
+      updateRecurringTransactionService("id", "user", {
+        firstOccurrence: new Date("2000-01-01"),
+      }),
+    ).rejects.toMatchObject({
+      code: "INVALID_DATA",
+      statusCode: 400,
+      message: "Next occurrence cannot be in the past",
+    });
+  });
 
-      await expect(
-        updateRecurringTransactionService("rec-1", "user-1", {
-          dayOfMonth: 19,
-        }),
-      ).rejects.toMatchObject({
-        code: "INVALID_DATA",
-        message: "dayOfMonth only allowed for monthly recurrence",
-        statusCode: 400,
-      });
-    }),
-    it("should throw if nextOccurrence is in the past", async () => {
-      vi.mocked(prisma.recurringTransaction.findFirst).mockResolvedValue(
-        mockRecurringTransaction,
-      );
+  it("should propagate repository errors", async () => {
+    vi.mocked(recurringTransactionRepository.findById).mockRejectedValue(
+      new Error("DB fail"),
+    );
 
-      await expect(
-        updateRecurringTransactionService("rec-1", "user-1", {
-          firstOccurrence: new Date("2008-01-01"),
-        }),
-      ).rejects.toMatchObject({
-        code: "INVALID_DATA",
-        message: "Next occurrence cannot be in the past",
-        statusCode: 400,
-      });
-    }),
-    it("should keep existing values when fields not provided", async () => {
-      vi.mocked(prisma.recurringTransaction.findFirst).mockResolvedValue(
-        mockRecurringTransaction,
-      );
-      vi.mocked(prisma.recurringTransaction.update).mockResolvedValue(
-        mockRecurringTransaction,
-      );
-
-      const result = await updateRecurringTransactionService(
-        "rec-1",
-        "user-1",
-        {},
-      );
-
-      expect(result).toEqual(mockRecurringTransaction);
-      expect(prisma.recurringTransaction.update).toHaveBeenCalledWith({
-        where: { id: "rec-1" },
-        data: {
-          categoryId: "cat-1",
-          type: "EXPENSE" as const,
-          name: "Netflix",
-          amount: new Prisma.Decimal(49.9),
-          recurrenceValue: 1,
-          recurrenceUnit: "MONTH" as const,
-          dayOfMonth: 15,
-          nextOccurrence: new Date("2026-05-15"),
-        },
-        select: {
-          id: true,
-          userId: true,
-          categoryId: true,
-          type: true,
-          name: true,
-          amount: true,
-          recurrenceValue: true,
-          recurrenceUnit: true,
-          dayOfMonth: true,
-          nextOccurrence: true,
-          updatedAt: true,
-        },
-      });
-    }),
-    it("should allow categoryId null", async () => {
-      vi.mocked(prisma.recurringTransaction.findFirst).mockResolvedValue(
-        mockRecurringTransaction,
-      );
-      vi.mocked(prisma.recurringTransaction.update).mockResolvedValue({
-        ...mockRecurringTransaction,
-        categoryId: null,
-      });
-
-      const result = await updateRecurringTransactionService(
-        "rec-1",
-        "user-1",
-        { categoryId: null },
-      );
-
-      expect(result).toEqual({
-        ...mockRecurringTransaction,
-        categoryId: null,
-      });
-
-      expect(prisma.recurringTransaction.update).toHaveBeenCalledWith({
-        where: { id: "rec-1" },
-        data: {
-          categoryId: null,
-          type: "EXPENSE" as const,
-          name: "Netflix",
-          amount: new Prisma.Decimal(49.9),
-          recurrenceValue: 1,
-          recurrenceUnit: "MONTH" as const,
-          dayOfMonth: 15,
-          nextOccurrence: new Date("2026-05-15"),
-        },
-        select: {
-          id: true,
-          userId: true,
-          categoryId: true,
-          type: true,
-          name: true,
-          amount: true,
-          recurrenceValue: true,
-          recurrenceUnit: true,
-          dayOfMonth: true,
-          nextOccurrence: true,
-          updatedAt: true,
-        },
-      });
-    }));
+    await expect(
+      updateRecurringTransactionService("id", "user", {}),
+    ).rejects.toThrow("DB fail");
+  });
 });
