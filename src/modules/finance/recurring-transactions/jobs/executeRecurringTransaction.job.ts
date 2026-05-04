@@ -12,7 +12,7 @@ export function executeRecurringTransactionJob() {
 
     for (const transaction of transactions) {
       try {
-        await executeRecurringTransactionService(transaction.id);
+        await executeRecurringTransactionService(transaction.userId, transaction.id);
       } catch (err) {
         console.error(`[Error processing transaction ${transaction.id}]`, err);
       }

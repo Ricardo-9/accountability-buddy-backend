@@ -3,6 +3,8 @@ import { authMiddlewareTests } from "../../../shared/authMiddlewareTests";
 import { prisma } from "../../../../../src/lib/prisma";
 import request from "supertest";
 import app from "../../../../../src/app";
+import { AppError } from "../../../../../src/core/errors/AppError";
+import { recurringTransactionRepository } from "../../../../../src/modules/finance/recurring-transactions/repositories/recurringTransaction.repository";
 
 vi.mock("jose", async (importOriginal) => {
   const original = await importOriginal<typeof import("jose")>();
@@ -18,11 +20,22 @@ vi.mock("jose", async (importOriginal) => {
 
 vi.mock("../../../../../src/lib/prisma", () => ({
   prisma: {
-    userArea: { findFirst: vi.fn() },
-    recurringTransaction: { updateMany: vi.fn() },
-    financeAccount: { findUnique: vi.fn() },
+    userArea: { findFirst: vi.fn() }
   },
 }));
+
+vi.mock("../../../../../src/modules/finance/recurring-transactions/repositories/recurringTransaction.repository")
+
+let userHaveAccount: boolean
+
+vi.mock("../../../../../src/modules/finance/middlewares/requireFinancialAccount", () => ({
+  requireFinancialAccount: vi.fn((_req: any, _res: any, next: any) => {
+    if (!userHaveAccount) {
+      return next(new AppError("NOT_FOUND", "User account not found", 404))
+    }
+    next()
+  })
+}))
 
 const validToken = "validToken";
 
@@ -31,12 +44,10 @@ const transactionId = "83793157-f162-490c-b503-ea5983ab04b7";
 describe("DELETE /transactions/:id", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(prisma.financeAccount.findUnique).mockResolvedValue({
-      id: "accId",
-    } as any);
     vi.mocked(prisma.userArea.findFirst).mockResolvedValue({
       userId: "userId",
     } as any);
+    userHaveAccount = true
   });
 
   authMiddlewareTests(
@@ -46,7 +57,7 @@ describe("DELETE /transactions/:id", () => {
   );
 
   it("should return 200 and delete the recurring transaction", async () => {
-    vi.mocked(prisma.recurringTransaction.updateMany).mockResolvedValue({
+    vi.mocked(recurringTransactionRepository.deleteRecurringTransaction).mockResolvedValue({
       count: 1,
     });
 
@@ -58,7 +69,7 @@ describe("DELETE /transactions/:id", () => {
   });
 
   it("should return 404 if recurring transaction is not found", async () => {
-    vi.mocked(prisma.recurringTransaction.updateMany).mockResolvedValue({
+    vi.mocked(recurringTransactionRepository.deleteRecurringTransaction).mockResolvedValue({
       count: 0,
     });
 
@@ -74,7 +85,7 @@ describe("DELETE /transactions/:id", () => {
   });
 
   it("should throw 404 if user account is not found", async () => {
-    vi.mocked(prisma.financeAccount.findUnique).mockResolvedValue(null);
+    userHaveAccount = false
 
     const response = await request(app)
       .delete(`/finance/transactions/${transactionId}`)
@@ -97,7 +108,7 @@ describe("DELETE /transactions/:id", () => {
   });
 
   it("should throw 500 if db fails", async () => {
-    vi.mocked(prisma.recurringTransaction.updateMany).mockRejectedValue(
+    vi.mocked(recurringTransactionRepository.deleteRecurringTransaction).mockRejectedValue(
       new Error("Db error"),
     );
 

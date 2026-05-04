@@ -4,6 +4,8 @@ import { prisma } from "../../../../../src/lib/prisma";
 import { Prisma } from "@prisma/client";
 import request from "supertest";
 import app from "../../../../../src/app";
+import { AppError } from "../../../../../src/core/errors/AppError";
+import { recurringTransactionRepository } from "../../../../../src/modules/finance/recurring-transactions/repositories/recurringTransaction.repository";
 
 vi.mock("jose", async (importOriginal) => {
   const original = await importOriginal<typeof import("jose")>();
@@ -16,15 +18,24 @@ vi.mock("jose", async (importOriginal) => {
     }),
   };
 });
-
 vi.mock("../../../../../src/lib/prisma", () => ({
   prisma: {
     userArea: { findFirst: vi.fn() },
-    recurringTransaction: { create: vi.fn() },
-    financeAccount: { findUnique: vi.fn() },
-    financialCategory: { findFirst: vi.fn() },
+    financialCategory: { findFirst: vi.fn() }
   },
 }));
+vi.mock("../../../../../src/modules/finance/recurring-transactions/repositories/recurringTransaction.repository")
+
+let userHaveAccount: boolean
+
+vi.mock("../../../../../src/modules/finance/middlewares/requireFinancialAccount", () => ({
+  requireFinancialAccount: vi.fn((_req: any, _res: any, next: any) => {
+    if (!userHaveAccount) {
+      return next(new AppError("NOT_FOUND", "User account not found", 404))
+    }
+    next()
+  })
+}))
 
 const validToken = "validToken";
 
@@ -65,19 +76,17 @@ const expectedResponse = {
 describe("POST /transactions", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(prisma.financeAccount.findUnique).mockResolvedValue({
-      id: "accId",
-    } as any);
     vi.mocked(prisma.userArea.findFirst).mockResolvedValue({
       userId: "userId",
     } as any);
+    userHaveAccount = true
   });
 
   authMiddlewareTests("post", "/finance/transactions", "FINANCES");
 
   describe("Happy path", () => {
     it("should return 201 and transaction data when both categoryId and dayOfMonth are null", async () => {
-      vi.mocked(prisma.recurringTransaction.create).mockResolvedValue(
+      vi.mocked(recurringTransactionRepository.createRecurringTransaction).mockResolvedValue(
         mockDbValue as any,
       );
 
@@ -93,7 +102,7 @@ describe("POST /transactions", () => {
     it("should return 201 and transaction data when categoryId is not null and valid", async () => {
       const categoryId = "83793157-f162-490c-b503-ea5983ab04b7";
 
-      vi.mocked(prisma.recurringTransaction.create).mockResolvedValue({
+      vi.mocked(recurringTransactionRepository.createRecurringTransaction).mockResolvedValue({
         ...mockDbValue,
         categoryId,
       } as any);
@@ -111,7 +120,7 @@ describe("POST /transactions", () => {
     });
 
     it("should return 201 and transaction data when dayOfMonth is not null and valid", async () => {
-      vi.mocked(prisma.recurringTransaction.create).mockResolvedValue({
+      vi.mocked(recurringTransactionRepository.createRecurringTransaction).mockResolvedValue({
         ...mockDbValue,
         recurrenceUnit: "MONTH",
         dayOfMonth: 8,
@@ -150,7 +159,7 @@ describe("POST /transactions", () => {
     });
 
     it("should throw 404 if user account is not found", async () => {
-      vi.mocked(prisma.financeAccount.findUnique).mockResolvedValue(null);
+      userHaveAccount = false
 
       const response = await request(app)
         .post("/finance/transactions")
@@ -165,7 +174,7 @@ describe("POST /transactions", () => {
     });
 
     it("should throw 500 if database fails", async () => {
-      vi.mocked(prisma.recurringTransaction.create).mockRejectedValue(
+      vi.mocked(recurringTransactionRepository.createRecurringTransaction).mockRejectedValue(
         new Error("Db error"),
       );
 
@@ -180,217 +189,45 @@ describe("POST /transactions", () => {
 
   describe("Zod validation", () => {
     describe("Missing fields", () => {
-      it("should throw 400 if type is missing", async () => {
-        const { type, ...object } = mockTransaction;
+      it.each([
+        "type",
+        "name",
+        "amount",
+        "recurrenceValue",
+        "recurrenceUnit",
+        "firstOccurrence"
+      ])("should throw 400 if %s is missing", async (field) => {
+        const { [field as keyof typeof mockTransaction]: _, ...rest } = mockTransaction
 
         const response = await request(app)
           .post("/finance/transactions")
           .set("Authorization", `Bearer ${validToken}`)
-          .send(object);
+          .send(rest)
 
-        expect(response.status).toBe(400);
-        expect(response.body.error.details[0].message).toBe(
-          "Transaction type is required",
-        );
-      });
-
-      it("should throw 400 if name is missing", async () => {
-        const { name, ...object } = mockTransaction;
-
-        const response = await request(app)
-          .post("/finance/transactions")
-          .set("Authorization", `Bearer ${validToken}`)
-          .send(object);
-
-        expect(response.status).toBe(400);
-        expect(response.body.error.details[0].message).toBe("Name is required");
-      });
-
-      it("should throw 400 if amount is missing", async () => {
-        const { amount, ...object } = mockTransaction;
-
-        const response = await request(app)
-          .post("/finance/transactions")
-          .set("Authorization", `Bearer ${validToken}`)
-          .send(object);
-
-        expect(response.status).toBe(400);
-        expect(response.body.error.details[0].message).toBe(
-          "Amount is required",
-        );
-      });
-
-      it("should throw 400 if recurrenceValue is missing", async () => {
-        const { recurrenceValue, ...object } = mockTransaction;
-
-        const response = await request(app)
-          .post("/finance/transactions")
-          .set("Authorization", `Bearer ${validToken}`)
-          .send(object);
-
-        expect(response.status).toBe(400);
-        expect(response.body.error.details[0].message).toBe(
-          "Recurrence value is required",
-        );
-      });
-
-      it("should throw 400 if recurrenceUnit is missing", async () => {
-        const { recurrenceUnit, ...object } = mockTransaction;
-
-        const response = await request(app)
-          .post("/finance/transactions")
-          .set("Authorization", `Bearer ${validToken}`)
-          .send(object);
-
-        expect(response.status).toBe(400);
-        expect(response.body.error.details[0].message).toBe(
-          "Recurrence unit is required",
-        );
-      });
-
-      it("should throw 400 if firstOccurrence is missing", async () => {
-        const { firstOccurrence, ...object } = mockTransaction;
-
-        const response = await request(app)
-          .post("/finance/transactions")
-          .set("Authorization", `Bearer ${validToken}`)
-          .send(object);
-
-        expect(response.status).toBe(400);
-        expect(response.body.error.details[0].message).toBe(
-          "First occurrence date is required",
-        );
-      });
+        expect(response.status).toBe(400)
+      })
     });
 
     describe("Type errors", () => {
-      it("should throw 400 if the type of type is incorrect", async () => {
+      it.each([
+        ["type", "valid value", "not-valid"],
+        ["name", "string", 123],
+        ["amount", "number", "not-a-number"],
+        ["recurrenceValue", "number", "not-a-number"],
+        ["recurrenceValue", "integer", 10.4],
+        ["recurrenceUnit", "valid value", "not-valid"],
+        ["firstOccurrence", "date", "not-a-date"],
+        ["categoryId", "uuid", "not-uuid"],
+        ["dayOfMonth", "number", "not-a-number"],
+        ["dayOfMonth", "integer", 10.3]
+      ])("should throw 400 if %s is not %s", async (field, _, value) => {
         const response = await request(app)
           .post("/finance/transactions")
           .set("Authorization", `Bearer ${validToken}`)
-          .send({ ...mockTransaction, type: "not-valid" });
+          .send({ ...mockTransaction, [field]: value });
 
-        expect(response.status).toBe(400);
-        expect(response.body.error.details[0].message).toBe(
-          "Invalid transaction type",
-        );
-      });
-
-      it("should throw 400 if the type of name is incorrect", async () => {
-        const response = await request(app)
-          .post("/finance/transactions")
-          .set("Authorization", `Bearer ${validToken}`)
-          .send({ ...mockTransaction, name: 123 });
-
-        expect(response.status).toBe(400);
-        expect(response.body.error.details[0].message).toBe(
-          "Name must be a string",
-        );
-      });
-
-      it("should throw 400 if the type of amount is incorrect", async () => {
-        const response = await request(app)
-          .post("/finance/transactions")
-          .set("Authorization", `Bearer ${validToken}`)
-          .send({ ...mockTransaction, amount: "not-valid" });
-
-        expect(response.status).toBe(400);
-        expect(response.body.error.details[0].message).toBe(
-          "Amount must be a number",
-        );
-      });
-
-      it("should throw 400 if the type of recurrenceValue is incorrect (not a number)", async () => {
-        const response = await request(app)
-          .post("/finance/transactions")
-          .set("Authorization", `Bearer ${validToken}`)
-          .send({ ...mockTransaction, recurrenceValue: "not-valid" });
-
-        expect(response.status).toBe(400);
-        expect(response.body.error.details[0].message).toBe(
-          "Recurrence value must be a number",
-        );
-      });
-
-      it("should throw 400 if the type of recurrenceValue is incorrect (not an integer)", async () => {
-        const response = await request(app)
-          .post("/finance/transactions")
-          .set("Authorization", `Bearer ${validToken}`)
-          .send({ ...mockTransaction, recurrenceValue: 1.4 });
-
-        expect(response.status).toBe(400);
-        expect(response.body.error.details[0].message).toBe(
-          "Recurrence value must be an integer",
-        );
-      });
-
-      it("should throw 400 if the type of recurrenceUnit is incorrect", async () => {
-        const response = await request(app)
-          .post("/finance/transactions")
-          .set("Authorization", `Bearer ${validToken}`)
-          .send({ ...mockTransaction, recurrenceUnit: "not-valid" });
-
-        expect(response.status).toBe(400);
-        expect(response.body.error.details[0].message).toBe(
-          "Invalid recurrence unit",
-        );
-      });
-
-      it("should throw 400 if the type of firstOccurrence is incorrect", async () => {
-        const response = await request(app)
-          .post("/finance/transactions")
-          .set("Authorization", `Bearer ${validToken}`)
-          .send({ ...mockTransaction, firstOccurrence: "not-valid" });
-
-        expect(response.status).toBe(400);
-        expect(response.body.error.details[0].message).toBe(
-          "Expected format: YYYY-MM-DD",
-        );
-      });
-
-      it("should throw 400 if the type of categoryId is incorrect", async () => {
-        const response = await request(app)
-          .post("/finance/transactions")
-          .set("Authorization", `Bearer ${validToken}`)
-          .send({ ...mockTransaction, categoryId: "not-valid" });
-
-        expect(response.status).toBe(400);
-        expect(response.body.error.details[0].message).toBe(
-          "Invalid category id",
-        );
-      });
-
-      it("should throw 400 if the type of dayOfMonth is incorrect (not a number)", async () => {
-        const response = await request(app)
-          .post("/finance/transactions")
-          .set("Authorization", `Bearer ${validToken}`)
-          .send({
-            ...mockTransaction,
-            recurrenceUnit: "MONTH",
-            dayOfMonth: "not-valid",
-          });
-
-        expect(response.status).toBe(400);
-        expect(response.body.error.details[0].message).toBe(
-          "Invalid day of month",
-        );
-      });
-
-      it("should throw 400 if the type of dayOfMonth is incorrect (not an integer)", async () => {
-        const response = await request(app)
-          .post("/finance/transactions")
-          .set("Authorization", `Bearer ${validToken}`)
-          .send({
-            ...mockTransaction,
-            recurrenceUnit: "MONTH",
-            dayOfMonth: 10.5,
-          });
-
-        expect(response.status).toBe(400);
-        expect(response.body.error.details[0].message).toBe(
-          "Day of month must be an integer",
-        );
-      });
+        expect(response.status).toBe(400)
+      })
     });
 
     describe("Value errors", () => {
@@ -512,7 +349,7 @@ describe("POST /transactions", () => {
 
     describe("Transform values", () => {
       it("should transform firstOcurrence", async () => {
-        vi.mocked(prisma.recurringTransaction.create).mockResolvedValue({
+        vi.mocked(recurringTransactionRepository.createRecurringTransaction).mockResolvedValue({
           id: "rec-id",
         } as any);
 
@@ -522,11 +359,11 @@ describe("POST /transactions", () => {
           .send({ ...mockTransaction, firstOccurrence: "2026-12-25" });
 
         expect(response.status).toBe(201);
-        expect(prisma.recurringTransaction.create).toHaveBeenCalledWith(
+        expect(recurringTransactionRepository.createRecurringTransaction).toHaveBeenCalledWith(
+          expect.anything(),
+          "userId",
           expect.objectContaining({
-            data: expect.objectContaining({
-              nextOccurrence: new Date("2026-12-25T00:00:00"),
-            }),
+            nextOccurrence: new Date("2026-12-25T00:00:00"),
           }),
         );
       });

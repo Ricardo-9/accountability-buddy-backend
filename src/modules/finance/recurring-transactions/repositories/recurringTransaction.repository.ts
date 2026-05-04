@@ -61,19 +61,22 @@ export const recurringTransactionRepository = {
     });
   },
 
-  async findPendingTransactions(prisma: PrismaClient) {
+  async findPendingTransactions(tx: Tx) {
     const now = new Date();
-    return await prisma.recurringTransaction.findMany({
+    return await tx.recurringTransaction.findMany({
       where: {
         nextOccurrence: { lte: now },
         deletedAt: null,
       },
-      select: { id: true },
+      select: { 
+        id: true, 
+        userId: true 
+      },
     });
   },
 
   async createTransactionExecution(
-    tx: Prisma.TransactionClient,
+    tx: Tx,
     data: {
       transactionId: string;
       amount: Prisma.Decimal;
@@ -86,7 +89,7 @@ export const recurringTransactionRepository = {
   },
 
   async updateNextOccurrence(
-    tx: Prisma.TransactionClient,
+    tx: Tx,
     id: string,
     data: {
       lastExecutedAt: Date;
@@ -100,7 +103,7 @@ export const recurringTransactionRepository = {
   },
 
   async createRecurringTransaction(
-    tx: Prisma.TransactionClient | PrismaClient,
+    tx: Tx,
     userId: string,
     data: CreateRecurringTransactionDTO,
   ) {
@@ -125,4 +128,15 @@ export const recurringTransactionRepository = {
       },
     });
   },
+
+  async deleteRecurringTransaction(
+    tx: Tx,
+    userId: string,
+    id: string
+  ) {
+    return await tx.recurringTransaction.updateMany({
+      where: { id, userId, deletedAt: null },
+      data: { deletedAt: new Date() }
+    })
+  }
 };
