@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
-import { getRecurringTransactionService } from "../services/getRecurringTransaction.service.js";
 import { successResponse } from "../../../../shared/utils/apiResponse.js";
-import { getRecurringTransactionType } from "../schemas/getRecurringTransaction.schema.js";
+import { getRecurringTransactionService } from "../services/getRecurringTransaction.service.js";
+import { GetRecurringTransactionSchemaType } from "../schemas/getRecurringTransaction.schema.js";
 
 export async function getRecurringTransactionController(
   req: Request,
@@ -9,15 +9,19 @@ export async function getRecurringTransactionController(
   next: NextFunction,
 ) {
   const userId = req.user!.id;
-  const data = req.query as unknown as getRecurringTransactionType;
+  const { limit, cursor, type, categoryId, startDate, endDate } = req.query as unknown as GetRecurringTransactionSchemaType;
 
   try {
-    const recurringtransactions = await getRecurringTransactionService(
-      userId,
-      data,
-    );
+    const result = await getRecurringTransactionService(userId, limit, cursor, type, categoryId, startDate, endDate);
 
-    return successResponse(res, recurringtransactions);
+    const hasNextPage = result.length > limit;
+    const transactions = hasNextPage ? result.slice(0, -1) : result;
+    const nextCursor = hasNextPage ? transactions.at(-1)?.id : null;
+
+    return successResponse(res, { 
+      recurringTransactions: transactions, 
+      nextCursor 
+    });
   } catch (err) {
     next(err);
   }

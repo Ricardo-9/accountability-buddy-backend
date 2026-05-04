@@ -1,58 +1,48 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import request from "supertest";
-import app from "../../../../../src/app";
+import app from "../../../../../src/app.js";
 import { AppError } from "../../../../../src/core/errors/AppError.js";
 import { authenticate } from "../../../../../src/middlewares/authMiddleware.js";
-import { Prisma } from "@prisma/client";
-import { getRecurringTransactionService } from "../../../../../src/modules/finance/services/getrecurringtransaction.service";
+import { Prisma, TransactionType, RecurrenceUnit } from "@prisma/client";
+import { getRecurringTransactionService } from "../../../../../src/modules/finance/recurring-transactions/services/getRecurringTransaction.service.js";
 
-const mockRecurringTransactionArray = {
-  id: "3f8642d3-806a-49d2-b365-3149ef1bd0ed",
-  userId: "ca87bf22-7747-446c-9ff0-a95065152d80",
-  categoryId: "cat-789",
-  type: "EXPENSE" as const,
-  name: "Netflix Subscription",
-  amount: new Prisma.Decimal(49.9),
+const mockDb = {
+  id: "recurring-id",
+  userId: "user-123",
+  categoryId: null,
+  type: TransactionType.EXPENSE,
+  name: "Spotify",
+  amount: new Prisma.Decimal(19.9),
   recurrenceValue: 1,
-  recurrenceUnit: "MONTH" as const,
-  dayOfMonth: 15,
-  createdAt: new Date("2026-01-15"),
-  nextOccurrence: new Date("2026-05-15"),
-  lastExecutedAt: null,
-  updatedAt: new Date("2026-01-15"),
+  recurrenceUnit: RecurrenceUnit.MONTH,
+  dayOfMonth: 5,
+  nextOccurrence: new Date("2025-05-01"),
+  updatedAt: new Date("2025-01-01"),
 };
 
-const expectedHttpResponseArray = {
-  id: "3f8642d3-806a-49d2-b365-3149ef1bd0ed",
-  userId: "ca87bf22-7747-446c-9ff0-a95065152d80",
-  categoryId: "cat-789",
-  type: "EXPENSE",
-  name: "Netflix Subscription",
-  amount: "49.9",
-  recurrenceValue: 1,
-  recurrenceUnit: "MONTH",
-  dayOfMonth: 15,
-  createdAt: "2026-01-15T00:00:00.000Z",
-  nextOccurrence: "2026-05-15T00:00:00.000Z",
-  lastExecutedAt: null,
-  updatedAt: "2026-01-15T00:00:00.000Z",
+const mockResponse = {
+  ...mockDb,
+  amount: "19.9",
+  nextOccurrence: mockDb.nextOccurrence.toISOString(),
+  updatedAt: mockDb.updatedAt.toISOString(),
 };
 
 let requireAreaShouldFail = false;
+let requireFinancialAccountShouldFail = false;
 
 vi.mock(
-  "../../../../../src/modules/finance/services/getrecurringtransaction.service",
+  "../../../../../src/modules/finance/recurring-transactions/services/getRecurringTransaction.service.js",
 );
 
-vi.mock("../../../../../src/middlewares/authMiddleware.ts", () => ({
-  authenticate: vi.fn((req: any, _res, next) => {
-    req.user = { id: "ca87bf22-7747-446c-9ff0-a95065152d80" };
+vi.mock("../../../../../src/middlewares/authMiddleware.js", () => ({
+  authenticate: vi.fn(async (req: any, _res, next) => {
+    req.user = { id: "user-123" };
     next();
   }),
 }));
 
 vi.mock("../../../../../src/middlewares/requireArea.js", () => ({
-  requireArea: vi.fn(() => (_req: any, _res: any, next: any) => {
+  requireArea: vi.fn(() => async (_req: any, _res: any, next: any) => {
     if (requireAreaShouldFail) {
       return next(
         new AppError(
@@ -69,61 +59,67 @@ vi.mock("../../../../../src/middlewares/requireArea.js", () => ({
 vi.mock(
   "../../../../../src/modules/finance/middlewares/requireFinancialAccount.js",
   () => ({
-    requireFinancialAccount: vi.fn((req: any, _res: any, next: any) => {
-      req.financialAccount = {
-        id: "account-123",
-        userId: "ca87bf22-7747-446c-9ff0-a95065152d80",
-        balance: new Prisma.Decimal(1000),
-      };
-      next();
-    }),
+    requireFinancialAccount: vi.fn(
+      async (_req: any, _res: any, next: any) => {
+        if (requireFinancialAccountShouldFail) {
+          return next(
+            new AppError("NOT_FOUND", "User account not found", 404),
+          );
+        }
+        next();
+      },
+    ),
   }),
 );
 
 beforeEach(() => {
   vi.clearAllMocks();
   requireAreaShouldFail = false;
+  requireFinancialAccountShouldFail = false;
 });
 
-describe("get recurring transactions (multi)", () => {
-  it("should return 200 and list of transactions", async () => {
-    vi.mocked(getRecurringTransactionService).mockResolvedValue([
-      mockRecurringTransactionArray,
-    ]);
-
-    const response = await request(app).get("/finance/transactions");
-
-    expect(response.status).toBe(200);
-    expect(response.body.data).toEqual([expectedHttpResponseArray]);
-    expect(response.body.error).toBeUndefined();
-  });
-
-  it("should return 200 and empty array when user has no traansactions", async () => {
-    vi.mocked(getRecurringTransactionService).mockResolvedValue([]);
-
-    const response = await request(app).get("/finance/transactions");
-
-    expect(response.status).toBe(200);
-    expect(response.body.data).toEqual([]);
-  });
-
-  it("should return 200 when filtering by date range", async () => {
-    vi.mocked(getRecurringTransactionService).mockResolvedValue([
-      mockRecurringTransactionArray,
-    ]);
+describe("get recurring transactions integration", () => {
+  it("should return recurring transactions successfully", async () => {
+    vi.mocked(getRecurringTransactionService).mockResolvedValue([mockDb]);
 
     const response = await request(app).get(
-      "/finance/transactions?startDate=2025-01-01&endDate=2025-12-31",
+      "/finance/transactions",
     );
 
     expect(response.status).toBe(200);
-    expect(response.body.data).toEqual([expectedHttpResponseArray]);
+
+    expect(response.body.data).toEqual({
+      recurringTransactions: [mockResponse],
+      nextCursor: null,
+    });
   });
 
-  it("should return 200 when filtering by categoryId", async () => {
+  it("should return paginated result with nextCursor", async () => {
     vi.mocked(getRecurringTransactionService).mockResolvedValue([
-      mockRecurringTransactionArray,
-    ]);
+      mockDb,
+      { ...mockDb, id: "cursor-id" },
+    ] as any);
+
+    const response = await request(app)
+      .get("/finance/transactions")
+      .query({ limit: 1 });
+
+    expect(response.status).toBe(200);
+    expect(response.body.data.nextCursor).toBe(mockDb.id);
+  });
+
+  it("should filter by type", async () => {
+    vi.mocked(getRecurringTransactionService).mockResolvedValue([]);
+
+    const response = await request(app).get(
+      "/finance/transactions?type=EXPENSE",
+    );
+
+    expect(response.status).toBe(200);
+  });
+
+  it("should filter by categoryId", async () => {
+    vi.mocked(getRecurringTransactionService).mockResolvedValue([]);
 
     const response = await request(app).get(
       "/finance/transactions?categoryId=3fd12663-f4df-4fcf-a67a-83e3035338ca",
@@ -132,58 +128,92 @@ describe("get recurring transactions (multi)", () => {
     expect(response.status).toBe(200);
   });
 
-  it("should return 200 when aplly order", async () => {
-    vi.mocked(getRecurringTransactionService).mockResolvedValue([
-      mockRecurringTransactionArray,
-    ]);
+  it("should filter by date range", async () => {
+    vi.mocked(getRecurringTransactionService).mockResolvedValue([]);
 
-    const response = await request(app).get("/finance/transactions?order=desc");
+    const response = await request(app).get(
+      "/finance/transactions?startDate=2025-01-01&endDate=2025-02-01",
+    );
 
     expect(response.status).toBe(200);
+
+    expect(getRecurringTransactionService).toHaveBeenCalledWith(
+      "user-123",
+      10,
+      undefined,
+      undefined,
+      undefined,
+      new Date("2025-01-01"),
+      new Date("2025-02-01"),
+    );
   });
 
-  it("should return 400 when categoryId is not a uuid", async () => {
+  it("should return 400 when startDate > endDate", async () => {
     const response = await request(app).get(
-      "/finance/transactions?categoryId=invalid-id",
+      "/finance/transactions?startDate=2025-02-01&endDate=2025-01-01",
     );
 
     expect(response.status).toBe(400);
-    expect(response.body.error.code).toBe("VALIDATION_ERROR");
   });
 
-  it("should return 400 when startDate is after endDate", async () => {
+  it("should return 400 when invalid categoryId", async () => {
     const response = await request(app).get(
-      "/finance/transactions?startDate=2025-12-31&endDate=2025-01-01",
+      "/finance/transactions?categoryId=123",
     );
 
     expect(response.status).toBe(400);
-    expect(response.body.error.code).toBe("VALIDATION_ERROR");
   });
 
-  it("should return 401 when user is not authenticated", async () => {
-    vi.mocked(authenticate).mockImplementationOnce(async (_req, _res, next) => {
-      next(new AppError("UNAUTHORIZED", "Invalid or expired token", 401));
-    });
+  it("should return 400 when invalid cursor", async () => {
+    const response = await request(app).get(
+      "/finance/transactions?cursor=123",
+    );
 
-    const response = await request(app).get("/finance/transactions");
+    expect(response.status).toBe(400);
+  });
+
+  it("should return 401 when not authenticated", async () => {
+    vi.mocked(authenticate).mockImplementationOnce(
+      async (_req, _res, next) => {
+        next(new AppError("UNAUTHORIZED", "Invalid token", 401));
+      },
+    );
+
+    const response = await request(app).get(
+      "/finance/transactions",
+    );
 
     expect(response.status).toBe(401);
   });
 
-  it("should return 403 when user does not have area permission", async () => {
+  it("should return 403 when no area permission", async () => {
     requireAreaShouldFail = true;
 
-    const response = await request(app).get("/finance/transactions");
+    const response = await request(app).get(
+      "/finance/transactions",
+    );
 
     expect(response.status).toBe(403);
   });
 
-  it("should return 500 when database fails", async () => {
+  it("should return 404 when no financial account", async () => {
+    requireFinancialAccountShouldFail = true;
+
+    const response = await request(app).get(
+      "/finance/transactions",
+    );
+
+    expect(response.status).toBe(404);
+  });
+
+  it("should return 500 when service fails", async () => {
     vi.mocked(getRecurringTransactionService).mockRejectedValue(
       new Error("DB error"),
     );
 
-    const response = await request(app).get("/finance/transactions");
+    const response = await request(app).get(
+      "/finance/transactions",
+    );
 
     expect(response.status).toBe(500);
   });

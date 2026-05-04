@@ -1,182 +1,159 @@
-import { describe, expect, it, beforeEach, vi } from "vitest";
-import { prisma } from "../../../../../src/lib/prisma";
-import { getRecurringTransactionService } from "../../../../../src/modules/finance/services/getrecurringtransaction.service";
-import { Prisma } from "@prisma/client";
+import { describe, expect, it, vi, beforeEach } from "vitest";
+import { Prisma, TransactionType, RecurrenceUnit } from "@prisma/client";
+import { getRecurringTransactionService } from "../../../../../src/modules/finance/recurring-transactions/services/getRecurringTransaction.service";
+import { recurringTransactionRepository } from "../../../../../src/modules/finance/recurring-transactions/repositories/recurringTransaction.repository";
 
-vi.mock("../../../../../src/lib/prisma", () => ({
-  prisma: {
-    recurringTransaction: {
-      findMany: vi.fn(),
-    },
-  },
-}));
+vi.mock(
+  "../../../../../src/modules/finance/recurring-transactions/repositories/recurringTransaction.repository",
+);
 
 const mockRecurringTransactions = [
   {
-    id: "rec-1",
-    userId: "user-1",
-    categoryId: "cat-1",
-    type: "EXPENSE" as const,
+    id: "recurring-id",
+    userId: "user-123",
+    categoryId: "category-123",
+    type: TransactionType.EXPENSE,
     name: "Netflix",
-    amount: new Prisma.Decimal(49.9),
+    amount: new Prisma.Decimal(39.9),
     recurrenceValue: 1,
-    recurrenceUnit: "MONTH" as const,
-    dayOfMonth: 15,
-    nextOccurrence: new Date("2026-05-15"),
-    createdAt: new Date(),
+    recurrenceUnit: RecurrenceUnit.MONTH,
+    dayOfMonth: 10,
+    nextOccurrence: new Date(),
     updatedAt: new Date(),
-    deletedAt: null,
-    lastExecutedAt: null,
   },
 ];
 
-describe("Get recurring transactions", () => {
-  beforeEach(() => vi.clearAllMocks());
+describe("get recurring transactions service", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
 
-  it("should return recurring transactions with default pagination", async () => {
-    vi.mocked(prisma.recurringTransaction.findMany).mockResolvedValue(
-      mockRecurringTransactions,
-    );
+  it("should return recurring transactions", async () => {
+    vi.mocked(
+      recurringTransactionRepository.findManyByUserId,
+    ).mockResolvedValue(mockRecurringTransactions);
 
-    const result = await getRecurringTransactionService("user-1", {
-      page: 1,
-      limit: 10,
-      order: "asc",
-    });
+    const result = await getRecurringTransactionService("user-123");
 
     expect(result).toEqual(mockRecurringTransactions);
 
-    expect(prisma.recurringTransaction.findMany).toHaveBeenCalledWith({
-      where: {
-        userId: "user-1",
-        deletedAt: null,
-      },
-      skip: 0,
-      take: 10,
-      orderBy: { nextOccurrence: "asc" },
-    });
+    expect(
+      recurringTransactionRepository.findManyByUserId,
+    ).toHaveBeenCalledWith(
+      "user-123",
+      10,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+    );
   });
 
-  it("should filter by type", async () => {
-    vi.mocked(prisma.recurringTransaction.findMany).mockResolvedValue(
-      mockRecurringTransactions,
-    );
+  it("should pass filters correctly", async () => {
+    vi.mocked(
+      recurringTransactionRepository.findManyByUserId,
+    ).mockResolvedValue(mockRecurringTransactions);
 
-    await getRecurringTransactionService("user-1", {
-      type: "EXPENSE",
-      page: 1,
-      limit: 10,
-      order: "asc",
-    });
+    const startDate = new Date("2025-01-01");
+    const endDate = new Date("2025-02-01");
 
-    expect(prisma.recurringTransaction.findMany).toHaveBeenCalledWith({
-      where: {
-        userId: "user-1",
-        deletedAt: null,
-        type: "EXPENSE",
-      },
-      skip: 0,
-      take: 10,
-      orderBy: { nextOccurrence: "asc" },
-    });
-  });
-
-  it("should filter by categoryId", async () => {
-    vi.mocked(prisma.recurringTransaction.findMany).mockResolvedValue(
-      mockRecurringTransactions,
-    );
-
-    await getRecurringTransactionService("user-1", {
-      categoryId: "cat-1",
-      page: 1,
-      limit: 10,
-      order: "asc",
-    });
-
-    expect(prisma.recurringTransaction.findMany).toHaveBeenCalledWith({
-      where: {
-        userId: "user-1",
-        categoryId: "cat-1",
-        deletedAt: null,
-      },
-      skip: 0,
-      take: 10,
-      orderBy: { nextOccurrence: "asc" },
-    });
-  });
-
-  it("should filter by date range", async () => {
-    vi.mocked(prisma.recurringTransaction.findMany).mockResolvedValue(
-      mockRecurringTransactions,
-    );
-
-    const startDate = new Date("2026-01-01");
-    const endDate = new Date("2026-12-31");
-
-    await getRecurringTransactionService("user-1", {
+    await getRecurringTransactionService(
+      "user-123",
+      20,
+      "cursor-id",
+      TransactionType.INCOME,
+      "category-123",
       startDate,
       endDate,
-      page: 1,
-      limit: 10,
-      order: "asc",
-    });
-
-    expect(prisma.recurringTransaction.findMany).toHaveBeenCalledWith({
-      where: {
-        userId: "user-1",
-        nextOccurrence: {
-          gte: startDate,
-          lte: endDate,
-        },
-        deletedAt: null,
-      },
-      skip: 0,
-      take: 10,
-      orderBy: { nextOccurrence: "asc" },
-    });
-  });
-
-  it("should apply pagination correctly", async () => {
-    vi.mocked(prisma.recurringTransaction.findMany).mockResolvedValue(
-      mockRecurringTransactions,
     );
 
-    await getRecurringTransactionService("user-1", {
-      page: 2,
-      limit: 10,
-      order: "asc",
-    });
-
-    expect(prisma.recurringTransaction.findMany).toHaveBeenCalledWith({
-      where: {
-        userId: "user-1",
-        deletedAt: null,
-      },
-      skip: 10,
-      take: 10,
-      orderBy: { nextOccurrence: "asc" },
-    });
+    expect(
+      recurringTransactionRepository.findManyByUserId,
+    ).toHaveBeenCalledWith(
+      "user-123",
+      20,
+      "cursor-id",
+      TransactionType.INCOME,
+      "category-123",
+      startDate,
+      endDate,
+    );
   });
 
-  it("should apply descending order", async () => {
-    vi.mocked(prisma.recurringTransaction.findMany).mockResolvedValue(
-      mockRecurringTransactions,
+  it("should use default limit (10)", async () => {
+    vi.mocked(
+      recurringTransactionRepository.findManyByUserId,
+    ).mockResolvedValue(mockRecurringTransactions);
+
+    await getRecurringTransactionService("user-123");
+
+    expect(
+      recurringTransactionRepository.findManyByUserId,
+    ).toHaveBeenCalledWith(
+      "user-123",
+      10,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+    );
+  });
+
+  it("should pass custom limit", async () => {
+    vi.mocked(
+      recurringTransactionRepository.findManyByUserId,
+    ).mockResolvedValue(mockRecurringTransactions);
+
+    await getRecurringTransactionService("user-123", 5);
+
+    expect(
+      recurringTransactionRepository.findManyByUserId,
+    ).toHaveBeenCalledWith(
+      "user-123",
+      5,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+    );
+  });
+
+  it("should pass cursor", async () => {
+    vi.mocked(
+      recurringTransactionRepository.findManyByUserId,
+    ).mockResolvedValue(mockRecurringTransactions);
+
+    await getRecurringTransactionService(
+      "user-123",
+      10,
+      "cursor-123",
     );
 
-    await getRecurringTransactionService("user-1", {
-      page: 1,
-      limit: 10,
-      order: "desc",
-    });
+    expect(
+      recurringTransactionRepository.findManyByUserId,
+    ).toHaveBeenCalledWith(
+      "user-123",
+      10,
+      "cursor-123",
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+    );
+  });
 
-    expect(prisma.recurringTransaction.findMany).toHaveBeenCalledWith({
-      where: {
-        userId: "user-1",
-        deletedAt: null,
-      },
-      skip: 0,
-      take: 10,
-      orderBy: { nextOccurrence: "desc" },
-    });
+  it("should propagate repository errors", async () => {
+    const error = new Error("Database failed");
+
+    vi.mocked(
+      recurringTransactionRepository.findManyByUserId,
+    ).mockRejectedValue(error);
+
+    await expect(
+      getRecurringTransactionService("user-123"),
+    ).rejects.toThrow("Database failed");
   });
 });
