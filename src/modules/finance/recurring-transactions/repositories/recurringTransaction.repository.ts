@@ -1,6 +1,7 @@
 import { Prisma, RecurrenceUnit, TransactionType } from "@prisma/client";
 import { PrismaClient } from "@prisma/client/extension";
 import { updateRecurringTransactionBodyType } from "../schemas/updateRecurringTransaction.schema.js";
+import { prisma } from "../../../../lib/prisma.js";
 
 type Tx = Prisma.TransactionClient | PrismaClient;
 
@@ -15,10 +16,55 @@ type CreateRecurringTransactionDTO = {
   dayOfMonth: number | null;
 };
 
+
 export const recurringTransactionRepository = {
   async findById(tx: Tx, userId: string, id: string) {
     return await tx.recurringTransaction.findFirst({
       where: { id, userId, deletedAt: null },
+    });
+  },
+
+  async findManyByUserId(userId: string,
+  limit = 10,
+  cursor?: string,
+  type?: TransactionType,
+  categoryId?:string,
+  startDate?: Date,
+  endDate?: Date) {
+    
+
+    return prisma.recurringTransaction.findMany({
+      where: {
+        userId,
+        deletedAt: null,
+        ...(type && { type }),
+        ...(categoryId && { categoryId }),
+        ...((startDate || endDate) && {
+          nextOccurrence: {
+            ...(startDate && { gte: startDate }),
+            ...(endDate && { lte: endDate }),
+          },
+        }),
+      },
+      select: {
+        id: true,
+        userId: true,
+        categoryId: true,
+        type: true,
+        name: true,
+        amount: true,
+        recurrenceValue: true,
+        recurrenceUnit: true,
+        dayOfMonth: true,
+        nextOccurrence: true,
+        updatedAt: true,
+      },
+      orderBy: { nextOccurrence: "asc" },
+      take: limit + 1, 
+      ...(cursor && {
+        skip: 1, 
+        cursor: { id: cursor },
+      }),
     });
   },
 
@@ -68,9 +114,9 @@ export const recurringTransactionRepository = {
         nextOccurrence: { lte: now },
         deletedAt: null,
       },
-      select: { 
-        id: true, 
-        userId: true 
+      select: {
+        id: true,
+        userId: true,
       },
     });
   },
@@ -129,14 +175,10 @@ export const recurringTransactionRepository = {
     });
   },
 
-  async deleteRecurringTransaction(
-    tx: Tx,
-    userId: string,
-    id: string
-  ) {
+  async deleteRecurringTransaction(tx: Tx, userId: string, id: string) {
     return await tx.recurringTransaction.updateMany({
       where: { id, userId, deletedAt: null },
-      data: { deletedAt: new Date() }
-    })
-  }
+      data: { deletedAt: new Date() },
+    });
+  },
 };

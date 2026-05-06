@@ -4,7 +4,7 @@ import { fetchCategory } from "../../../../src/modules/finance/financial-categor
 import { AppError } from "../../../../src/core/errors/AppError";
 
 vi.mock(
-  "../../../src/modules/finance/financial-categories/repositories/financialCategories.repository",
+  "../../../../src/modules/finance/financial-categories/repositories/financialCategories.repository",
 );
 
 describe("fetch category helper test", () => {

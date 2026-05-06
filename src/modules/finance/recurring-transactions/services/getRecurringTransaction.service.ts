@@ -1,27 +1,22 @@
-import { getRecurringTransactionType } from "../schemas/getRecurringTransaction.schema.js";
-import { prisma } from "../../../../lib/prisma.js";
+import { TransactionType } from "@prisma/client";
+import { recurringTransactionRepository } from "../repositories/recurringTransaction.repository.js";
 
 export async function getRecurringTransactionService(
   userId: string,
-  data: getRecurringTransactionType,
-) {
-  const skip = (data.page - 1) * data.limit;
+  limit = 10,
+  cursor?: string,
+  type?: TransactionType,
+  categoryId?:string,
+  startDate?: Date,
+  endDate?: Date 
 
-  return await prisma.recurringTransaction.findMany({
-    where: {
-      userId,
-      deletedAt: null,
-      ...(data.type && { type: data.type }),
-      ...(data.categoryId && { categoryId: data.categoryId }),
-      ...((data.startDate || data.endDate) && {
-        nextOccurrence: {
-          ...(data.startDate && { gte: data.startDate }),
-          ...(data.endDate && { lte: data.endDate }),
-        },
-      }),
-    },
-    skip: skip,
-    take: data.limit,
-    orderBy: { nextOccurrence: data.order ?? "asc" },
-  });
+) {
+  return recurringTransactionRepository.findManyByUserId(userId, 
+    limit,
+    cursor,
+    type,
+    categoryId,
+    startDate,
+    endDate,
+  );
 }
