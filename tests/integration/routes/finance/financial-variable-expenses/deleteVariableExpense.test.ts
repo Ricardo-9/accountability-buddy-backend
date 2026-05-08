@@ -4,9 +4,7 @@ import app from "../../../../../src/app.js";
 import { AppError } from "../../../../../src/core/errors/AppError.js";
 import { authenticate } from "../../../../../src/middlewares/authMiddleware.js";
 import { Prisma } from "@prisma/client";
-import { deleteVariableExpenseSchema } from "../../../../../src/modules/finance/variable-expenses/schemas/deleteVariableExpense.schema.js";
 import { deleteVariableExpenseService } from "../../../../../src/modules/finance/variable-expenses/services/deleteVariableExpense.service.js";
-import { fetchExpense } from "../../../../../src/modules/finance/variable-expenses/helpers/fetchVariableExpense.helper.js";
 
 const mockExpenseDb = {
   id: "3fd12663-f4df-4fcf-a67a-83e3035338ca",
