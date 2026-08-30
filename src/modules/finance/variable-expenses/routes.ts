@@ -1,7 +1,6 @@
 import { Router } from "express";
 import { authenticate } from "../../../middlewares/authMiddleware.js";
 import { validateRequest } from "../../../middlewares/validateRequest.js";
-import { requireArea } from "../../../middlewares/requireArea.js";
 import { AccountabilityArea } from "@prisma/client";
 import { createVariableExpenseSchema } from "./schemas/createVariableExpense.schema.js";
 import { getVariableExpenseSchema } from "./schemas/getVariableExpenseById.schema.js";
@@ -13,15 +12,12 @@ import { updateVariableExpenseController } from "./controllers/updateVariableExp
 import { createVariableExpenseController } from "./controllers/createVariableExpense.controller.js";
 import { getVariableExpensesController } from "./controllers/getVariableExpenses.controller.js";
 import { getOneVariableExpenseController } from "./controllers/getOneVariableExpense.controller.js";
-import { requireFinancialAccount } from "../middlewares/requireFinancialAccount.js";
 
 const router = Router();
 
 router.get(
   "/variable-expense/:id",
   authenticate,
-  requireArea(AccountabilityArea.FINANCES),
-  requireFinancialAccount,
   validateRequest(getVariableExpenseSchema),
   getOneVariableExpenseController,
 );
@@ -29,8 +25,6 @@ router.get(
 router.get(
   "/variable-expense",
   authenticate,
-  requireArea(AccountabilityArea.FINANCES),
-  requireFinancialAccount,
   validateRequest(getVariableExpensesSchema),
   getVariableExpensesController,
 );
@@ -38,8 +32,6 @@ router.get(
 router.post(
   "/variable-expense",
   authenticate,
-  requireArea(AccountabilityArea.FINANCES),
-  requireFinancialAccount,
   validateRequest(createVariableExpenseSchema),
   createVariableExpenseController,
 );
@@ -47,8 +39,6 @@ router.post(
 router.patch(
   "/variable-expense/:id",
   authenticate,
-  requireArea(AccountabilityArea.FINANCES),
-  requireFinancialAccount,
   validateRequest(updateVariableExpenseSchema),
   updateVariableExpenseController,
 );
@@ -56,8 +46,6 @@ router.patch(
 router.delete(
   "/variable-expense/:id",
   authenticate,
-  requireArea(AccountabilityArea.FINANCES),
-  requireFinancialAccount,
   validateRequest(deleteVariableExpenseSchema),
   deleteVariableExpenseController,
 );
