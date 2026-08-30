@@ -24,8 +24,6 @@ const router = Router();
 router.get(
   "/transactions/:id",
   authenticate,
-  requireArea(AccountabilityArea.FINANCES),
-  requireFinancialAccount,
   validateRequest(getOneRecurringTransactionSchema),
   getOneRecurringTransactionController,
 );
@@ -33,8 +31,6 @@ router.get(
 router.get(
   "/transactions",
   authenticate,
-  requireArea(AccountabilityArea.FINANCES),
-  requireFinancialAccount,
   validateRequest(getRecurringTransactionSchema),
   getRecurringTransactionController,
 );
@@ -42,8 +38,6 @@ router.get(
 router.post(
   "/transactions",
   authenticate,
-  requireArea(AccountabilityArea.FINANCES),
-  requireFinancialAccount,
   validateRequest(createRecurringTransactionSchema),
   createRecurringTransactionController,
 );
@@ -51,8 +45,6 @@ router.post(
 router.patch(
   "/transactions/:id",
   authenticate,
-  requireArea(AccountabilityArea.FINANCES),
-  requireFinancialAccount,
   validateRequest(updateRecurringTransactionSchema),
   updateRecurringTransactionController,
 );
@@ -60,8 +52,6 @@ router.patch(
 router.delete(
   "/transactions/:id",
   authenticate,
-  requireArea(AccountabilityArea.FINANCES),
-  requireFinancialAccount,
   validateRequest(deleteByIdSchema),
   deleteRecurringTransactionController,
 );
