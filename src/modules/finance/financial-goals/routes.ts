@@ -1,8 +1,6 @@
 import { Router } from "express";
 import { authenticate } from "../../../middlewares/authMiddleware.js";
 import { validateRequest } from "../../../middlewares/validateRequest.js";
-import { requireArea } from "../../../middlewares/requireArea.js";
-import { requireFinancialAccount } from "../middlewares/requireFinancialAccount.js";
 import { AccountabilityArea } from "@prisma/client";
 import { createGoalController } from "./controllers/createGoal.controller.js";
 import { getGoalsController } from "./controllers/getGoals.controller.js";
@@ -20,8 +18,6 @@ const router = Router();
 router.post(
   "/goals",
   authenticate,
-  requireArea(AccountabilityArea.FINANCES),
-  requireFinancialAccount,
   validateRequest(createGoalSchema),
   createGoalController,
 );
@@ -29,8 +25,6 @@ router.post(
 router.get(
   "/goals",
   authenticate,
-  requireArea(AccountabilityArea.FINANCES),
-  requireFinancialAccount,
   validateRequest(getGoalsSchema),
   getGoalsController,
 );
@@ -38,8 +32,6 @@ router.get(
 router.patch(
   "/goals/:id",
   authenticate,
-  requireArea(AccountabilityArea.FINANCES),
-  requireFinancialAccount,
   validateRequest(updateGoalSchema),
   updateGoalController,
 );
@@ -47,8 +39,6 @@ router.patch(
 router.post(
   "/goals/deposit/:id",
   authenticate,
-  requireArea(AccountabilityArea.FINANCES),
-  requireFinancialAccount,
   validateRequest(goalDepositSchema),
   goalDepositController,
 );
@@ -56,8 +46,6 @@ router.post(
 router.delete(
   "/goals/:id",
   authenticate,
-  requireArea(AccountabilityArea.FINANCES),
-  requireFinancialAccount,
   validateRequest(deleteByIdSchema),
   deleteGoalController,
 );
