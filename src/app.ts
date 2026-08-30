@@ -9,6 +9,7 @@ import { userAreasRoutes } from "./modules/user/areas/routes.js";
 import { financialRoutes } from "./modules/finance/routes.js";
 import swaggerUi from "swagger-ui-express";
 import swaggerSpec from "./swagger.js";
+import cors from 'cors';
 
 const app = express();
 
@@ -18,6 +19,12 @@ app.use(rateLimiter);
 
 app.use(testRoutes);
 app.use(healthRouter);
+
+app.use(cors({
+  origin: '*',
+  methods: ['GET','POST','PUT','DELETE','PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
 
 // User routes
