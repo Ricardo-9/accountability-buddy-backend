@@ -16,8 +16,6 @@ const router = Router();
 
 router.post(
   "/accounts",
-  authenticate,
-  requireArea(AccountabilityArea.FINANCES),
   validateRequest(createFinancialAccountSchema),
   createFinancialAccountController,
 );
@@ -25,26 +23,20 @@ router.post(
 router.get(
   "/accounts",
   authenticate,
-  requireArea(AccountabilityArea.FINANCES),
-  requireFinancialAccount,
   getAccountController,
 );
 
 router.patch(
   "/accounts/balance",
   authenticate,
-  requireArea(AccountabilityArea.FINANCES),
   validateRequest(adjustBalanceSchema),
-  requireFinancialAccount,
   adjustBalanceController,
 );
 
 router.get(
   "/accounts/statement",
   authenticate,
-  requireArea(AccountabilityArea.FINANCES),
   validateRequest(getStatementSchema),
-  requireFinancialAccount,
   getStatementController,
 );
 
