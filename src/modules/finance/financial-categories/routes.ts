@@ -20,8 +20,6 @@ const router = Router();
 router.get(
   "/categories/:id",
   authenticate,
-  requireArea(AccountabilityArea.FINANCES),
-  requireFinancialAccount,
   validateRequest(getByIdSchema),
   getOneCategoryController
 );
@@ -29,8 +27,6 @@ router.get(
 router.get(
   "/categories",
   authenticate,
-  requireArea(AccountabilityArea.FINANCES),
-  requireFinancialAccount,
   validateRequest(getCategoriesSchema),
   getCategoriesController
 );
@@ -38,27 +34,21 @@ router.get(
 router.post(
   "/categories",
   authenticate,
-  requireArea(AccountabilityArea.FINANCES),
   validateRequest(createFinancialCategorySchema),
-  requireFinancialAccount,
   createCategoryController
 );
 
 router.patch(
   "/categories/:id",
   authenticate,
-  requireArea(AccountabilityArea.FINANCES),
   validateRequest(updateFinancialCategorySchema),
-  requireFinancialAccount,
   updateCategoryController
 );
 
 router.delete(
   "/categories/:id",
   authenticate,
-  requireArea(AccountabilityArea.FINANCES),
   validateRequest(deleteByIdSchema),
-  requireFinancialAccount,
   deleteCategoryController
 );
 
