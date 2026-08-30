@@ -1,8 +1,8 @@
 import { Router } from "express";
 import { authenticate } from "../../../middlewares/authMiddleware.js";
 import { validateRequest } from "../../../middlewares/validateRequest.js";
-import { requireArea } from "../../../middlewares/requireArea.js";
-import { requireFinancialAccount } from "../middlewares/requireFinancialAccount.js";
+// import { requireArea } from "../../../middlewares/requireArea.js";
+// import { requireFinancialAccount } from "../middlewares/requireFinancialAccount.js";
 import { AccountabilityArea } from "@prisma/client";
 import { createFinancialAccountController } from "./controllers/createFinancialAccount.controller.js";
 import { getAccountController } from "./controllers/getAccount.controller.js";
